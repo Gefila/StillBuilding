@@ -1,10 +1,11 @@
 {
-  "name": "mobile",
+  "name": "@stillbuilding/mobile",
   "main": "expo-router/entry",
   "version": "1.0.0",
   "scripts": {
     "start": "expo start",
     "dev": "expo start",
+    "build": "expo export",
     "reset-project": "node ./scripts/reset-project.js",
     "android": "expo start --android",
     "ios": "expo start --ios",
@@ -19,6 +20,7 @@
     "@react-navigation/bottom-tabs": "^7.4.0",
     "@react-navigation/elements": "^2.6.3",
     "@react-navigation/native": "^7.1.8",
+    "@stillbuilding/types": "workspace:*",
     "@tanstack/react-query": "^5.100.13",
     "axios": "^1.15.2",
     "expo": "~54.0.33",
