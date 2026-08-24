@@ -12,18 +12,26 @@ export const loginSchema = z.object({
 	rememberMe: z.boolean().optional(),
 });
 
-export const registerSchema = z.object({
-	name: z.string().min(1, "Full name is required").optional(),
-	email: z
-		.string()
-		.min(1, "Email is required")
-		.email("Invalid email address"),
-	password: z
-		.string()
-		.min(1, "Password is required")
-		.min(6, "Password must be at least 6 characters"),
-	confirmPassword: z.string().optional(),
-});
+export const registerSchema = z
+	.object({
+		name: z.string().min(1, "Full name is required").optional(),
+		email: z
+			.string()
+			.min(1, "Email is required")
+			.email("Invalid email address"),
+		password: z
+			.string()
+			.min(1, "Password is required")
+			.min(6, "Password must be at least 6 characters"),
+		confirmPassword: z.string().optional(),
+	})
+	.refine(
+		(data) => !data.confirmPassword || data.password === data.confirmPassword,
+		{
+			message: "Confirm password does not match",
+			path: ["confirmPassword"],
+		},
+	);
 
 export const refreshTokenSchema = z.object({
 	refresh_token: z.string().min(1, "Refresh token is required"),

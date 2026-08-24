@@ -32,7 +32,11 @@ const TaskSelector = ({
 
 	const renderItem = (item: Project) => (
 		<View className="flex-row items-center p-4">
-			<Ionicons name={item.icon || "folder"} size={18} color="#6366f1" />
+			<Ionicons
+				name={(item.icon as keyof typeof Ionicons.glyphMap) || "folder"}
+				size={18}
+				color="#6366f1"
+			/>
 			<Text className="text-base font-medium text-slate-700 ml-3">
 				{item.name}
 			</Text>
@@ -84,7 +88,10 @@ const TaskSelector = ({
 				renderLeftIcon={() => (
 					<View className="w-8 h-8 bg-indigo-50 rounded-xl items-center justify-center mr-3">
 						<Ionicons
-							name={selectedItem?.icon || "briefcase"}
+							name={
+								(selectedItem?.icon as keyof typeof Ionicons.glyphMap) ||
+								"briefcase"
+							}
 							size={16}
 							color="#6366f1"
 						/>
