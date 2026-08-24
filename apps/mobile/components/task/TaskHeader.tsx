@@ -93,7 +93,7 @@ export default function TaskHeader({ task }: { task: Task }) {
                     </Text>
                 </View>
                 <Text className="text-slate-600 text-base leading-6 text-justify">
-                    {task.description ? task.description : "No description provided for this task."}
+                    {task.note ? task.note : "No description provided for this task."}
                 </Text>
             </View>
         </View>

@@ -2,8 +2,17 @@ import React from 'react';
 import { View, Text } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 
+interface StatCardProps {
+    icon: keyof typeof Ionicons.glyphMap;
+    label: string;
+    value: string;
+    subValue: string;
+    iconColor: string;
+    bgColor?: string;
+}
+
 // Sub-komponen agar lebih mudah diatur
-const StatCard = ({ icon, label, value, subValue, iconColor, bgColor }) => (
+const StatCard = ({ icon, label, value, subValue, iconColor }: StatCardProps) => (
     <View className="flex-1 bg-white border border-slate-100 rounded-2xl p-4 shadow-sm shadow-slate-200">
         <View className="flex-row items-center justify-between mb-3">
             <View 
