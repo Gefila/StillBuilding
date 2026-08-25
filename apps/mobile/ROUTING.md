@@ -1,6 +1,6 @@
-# Panduan Navigasi & Perutean (*Routing & Navigation Guide*)
+# Panduan Navigasi & Perutean (_Routing & Navigation Guide_)
 
-Dokumen ini menjelaskan arsitektur navigasi berbasis berkas (*file-based routing*) pada aplikasi Kerjain Frontend menggunakan **Expo Router v6**.
+Dokumen ini menjelaskan arsitektur navigasi berbasis berkas (_file-based routing_) pada aplikasi StillBuilding Frontend menggunakan **Expo Router v6**.
 
 ---
 
@@ -15,7 +15,7 @@ Expo Router menggunakan struktur file dan folder di dalam direktori `app/` untuk
 
 ---
 
-## 2. Peta Rute Aplikasi (*Route Tree Map*)
+## 2. Peta Rute Aplikasi (_Route Tree Map_)
 
 ```
 app/
@@ -68,13 +68,21 @@ export default function RootLayout() {
       <Stack screenOptions={{ headerShown: false }}>
         <Stack.Screen name="(tabs)" options={{ headerShown: false }} />
         <Stack.Screen name="(auth)" options={{ headerShown: false }} />
-        <Stack.Screen 
-          name="task/create" 
-          options={{ presentation: "modal", headerShown: true, title: "Tambah Task" }} 
+        <Stack.Screen
+          name="task/create"
+          options={{
+            presentation: "modal",
+            headerShown: true,
+            title: "Tambah Task",
+          }}
         />
-        <Stack.Screen 
-          name="project/create" 
-          options={{ presentation: "modal", headerShown: true, title: "Tambah Proyek" }} 
+        <Stack.Screen
+          name="project/create"
+          options={{
+            presentation: "modal",
+            headerShown: true,
+            title: "Tambah Proyek",
+          }}
         />
       </Stack>
       <ToastManager />
@@ -116,7 +124,11 @@ export default function TabLayout() {
         options={{
           title: "Beranda",
           tabBarIcon: ({ color, focused }) => (
-            <Ionicons name={focused ? "home" : "home-outline"} size={22} color={color} />
+            <Ionicons
+              name={focused ? "home" : "home-outline"}
+              size={22}
+              color={color}
+            />
           ),
         }}
       />
@@ -125,7 +137,11 @@ export default function TabLayout() {
         options={{
           title: "Proyek",
           tabBarIcon: ({ color, focused }) => (
-            <Ionicons name={focused ? "folder" : "folder-outline"} size={22} color={color} />
+            <Ionicons
+              name={focused ? "folder" : "folder-outline"}
+              size={22}
+              color={color}
+            />
           ),
         }}
       />
@@ -134,7 +150,11 @@ export default function TabLayout() {
         options={{
           title: "Profil",
           tabBarIcon: ({ color, focused }) => (
-            <Ionicons name={focused ? "person" : "person-outline"} size={22} color={color} />
+            <Ionicons
+              name={focused ? "person" : "person-outline"}
+              size={22}
+              color={color}
+            />
           ),
         }}
       />
@@ -145,9 +165,10 @@ export default function TabLayout() {
 
 ---
 
-## 5. Navigasi & Pengiriman Parameter (*Route Navigation & Params*)
+## 5. Navigasi & Pengiriman Parameter (_Route Navigation & Params_)
 
 ### A. Menggunakan Hook `useRouter`
+
 Gunakan `useRouter` untuk navigasi imperatif berbasis event:
 
 ```tsx
@@ -176,6 +197,7 @@ export function TaskCard({ id, title }: { id: string; title: string }) {
 ```
 
 ### B. Membaca Parameter Layar (`useLocalSearchParams`)
+
 Gunakan `useLocalSearchParams` di dalam layar target untuk mengekstrak ID dan parameter query:
 
 ```tsx
@@ -204,10 +226,10 @@ export default function TaskDetailScreen() {
 
 ## 6. Metode Navigasi Umum
 
-| Aksi | Kode Expo Router | Keterangan |
-| :--- | :--- | :--- |
-| **Pindah Halaman** | `router.push('/task/123')` | Menambahkan halaman baru ke history stack. |
-| **Ganti Halaman (Replace)** | `router.replace('/(tabs)/home')` | Mengganti rute aktif (cocok setelah login/logout agar tidak bisa back). |
-| **Kembali ke Halaman Sebelumnya** | `router.back()` | Menutup layar aktif dan kembali ke layar sebelumnya. |
-| **Buka Modal Form** | `router.push('/task/create')` | Membuka screen dalam mode modal overlay. |
-| **Navigasi Deklaratif** | `<Link href="/pomodoro">Mulai</Link>` | Komponen link bawaan Expo Router untuk interaksi tombol sederhana. |
+| Aksi                              | Kode Expo Router                      | Keterangan                                                              |
+| :-------------------------------- | :------------------------------------ | :---------------------------------------------------------------------- |
+| **Pindah Halaman**                | `router.push('/task/123')`            | Menambahkan halaman baru ke history stack.                              |
+| **Ganti Halaman (Replace)**       | `router.replace('/(tabs)/home')`      | Mengganti rute aktif (cocok setelah login/logout agar tidak bisa back). |
+| **Kembali ke Halaman Sebelumnya** | `router.back()`                       | Menutup layar aktif dan kembali ke layar sebelumnya.                    |
+| **Buka Modal Form**               | `router.push('/task/create')`         | Membuka screen dalam mode modal overlay.                                |
+| **Navigasi Deklaratif**           | `<Link href="/pomodoro">Mulai</Link>` | Komponen link bawaan Expo Router untuk interaksi tombol sederhana.      |

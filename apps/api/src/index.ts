@@ -26,11 +26,11 @@ app.use("/blocker-logs", authMiddleware, blockerLogRoutes);
 
 // Health check
 app.get("/", (_req, res) => {
-	res.json({ status: "ok", message: "Server is running" });
+  res.json({ status: "ok", message: "Server is running" });
 });
 
 app.use(errorHandler);
 
 app.listen(port, () => {
-	console.log(`Server is running on port ${port}`);
+  console.log(`Server is running on port ${port}`);
 });

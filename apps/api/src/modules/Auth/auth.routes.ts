@@ -9,9 +9,9 @@ const router = Router();
 router.post("/register", validate(registerSchema), authController.register);
 router.post("/login", validate(loginSchema), authController.login);
 router.post(
-	"/refresh-token",
-	validate(refreshTokenSchema),
-	authController.refreshToken,
+  "/refresh-token",
+  validate(refreshTokenSchema),
+  authController.refreshToken,
 );
 
 router.get("/me", authMiddleware, authController.me);

@@ -1,6 +1,6 @@
-# Kerjain Backend - Spesifikasi & Katalog API
+# StillBuilding Backend - Spesifikasi & Katalog API
 
-Dokumentasi seluruh endpoint API backend Kerjain, skema request payload, headers, parameter URL, dan contoh respons JSON.
+Dokumentasi seluruh endpoint API backend StillBuilding, skema request payload, headers, parameter URL, dan contoh respons JSON.
 
 ---
 
@@ -10,7 +10,9 @@ Dokumentasi seluruh endpoint API backend Kerjain, skema request payload, headers
 - **Format Data**: JSON (`Content-Type: application/json`)
 
 ### Header Autentikasi
+
 Sebagian besar endpoint dilindungi oleh `authMiddleware`. Klien wajib mengirimkan access token Supabase pada header:
+
 ```http
 Authorization: Bearer <access_token>
 ```
@@ -20,15 +22,18 @@ Authorization: Bearer <access_token>
 ## 📦 Standar Format Respons
 
 ### 1. Respons Berhasil (200 OK / 201 Created)
+
 ```json
 {
   "status": "success",
   "data": { ... }
 }
 ```
-*(Atau menyertakan field `"message"` untuk aksi seperti register/logout)*
+
+_(Atau menyertakan field `"message"` untuk aksi seperti register/logout)_
 
 ### 2. Respons Error Validasi Payload (400 Bad Request)
+
 ```json
 {
   "status": "error",
@@ -43,6 +48,7 @@ Authorization: Bearer <access_token>
 ```
 
 ### 3. Respons Error Autentikasi / Not Found / Server Error (401 / 404 / 500)
+
 ```json
 {
   "status": "error",
@@ -57,7 +63,9 @@ Authorization: Bearer <access_token>
 ### 1. Auth Module (`/auth`)
 
 #### `POST /auth/register`
+
 Mendaftarkan pengguna baru ke Supabase Auth.
+
 - **Auth**: Publik
 - **Request Body**:
   ```json
@@ -75,7 +83,9 @@ Mendaftarkan pengguna baru ke Supabase Auth.
   ```
 
 #### `POST /auth/login`
+
 Autentikasi email dan password untuk mendapatkan JWT token.
+
 - **Auth**: Publik
 - **Request Body**:
   ```json
@@ -108,7 +118,9 @@ Autentikasi email dan password untuk mendapatkan JWT token.
   ```
 
 #### `POST /auth/refresh-token`
+
 Memperbarui access token menggunakan refresh token.
+
 - **Auth**: Publik
 - **Request Body**:
   ```json
@@ -130,7 +142,9 @@ Memperbarui access token menggunakan refresh token.
   ```
 
 #### `GET /auth/me`
+
 Mengambil data profil pengguna yang sedang login.
+
 - **Auth**: Wajib (`Bearer <token>`)
 - **Response (200 OK)**:
   ```json
@@ -149,7 +163,9 @@ Mengambil data profil pengguna yang sedang login.
   ```
 
 #### `POST /auth/logout`
+
 Sign out sesi pengguna saat ini.
+
 - **Auth**: Wajib (`Bearer <token>`)
 - **Response (200 OK)**:
   ```json
@@ -162,10 +178,13 @@ Sign out sesi pengguna saat ini.
 ---
 
 ### 2. Projects Module (`/projects`)
-*Semua endpoint `/projects` membutuhkan header `Authorization: Bearer <token>`.*
+
+_Semua endpoint `/projects` membutuhkan header `Authorization: Bearer <token>`._
 
 #### `GET /projects`
+
 Mengambil seluruh daftar project milik user (mengembalikan `[]` jika belum ada).
+
 - **Response (200 OK)**:
   ```json
   {
@@ -189,7 +208,9 @@ Mengambil seluruh daftar project milik user (mengembalikan `[]` jika belum ada).
   ```
 
 #### `GET /projects/:id`
+
 Mengambil detail satu project beserta daftar tasks dan blocker logs.
+
 - **Response (200 OK)**:
   ```json
   {
@@ -210,7 +231,9 @@ Mengambil detail satu project beserta daftar tasks dan blocker logs.
   ```
 
 #### `POST /projects`
+
 Membuat project baru.
+
 - **Request Body**:
   ```json
   {
@@ -239,7 +262,9 @@ Membuat project baru.
   ```
 
 #### `PUT /projects/:id`
+
 Memperbarui project.
+
 - **Request Body**:
   ```json
   {
@@ -257,7 +282,9 @@ Memperbarui project.
   ```
 
 #### `DELETE /projects/:id`
+
 Menghapus project.
+
 - **Response (200 OK)**:
   ```json
   {
@@ -269,10 +296,13 @@ Menghapus project.
 ---
 
 ### 3. Tasks Module (`/tasks`)
-*Semua endpoint `/tasks` membutuhkan header `Authorization: Bearer <token>`.*
+
+_Semua endpoint `/tasks` membutuhkan header `Authorization: Bearer <token>`._
 
 #### `GET /tasks`
+
 Mengambil semua task milik user.
+
 - **Response (200 OK)**:
   ```json
   {
@@ -297,7 +327,9 @@ Mengambil semua task milik user.
   ```
 
 #### `GET /tasks/:id`
+
 Mengambil detail satu task beserta histori sesi Pomodoro.
+
 - **Response (200 OK)**:
   ```json
   {
@@ -307,7 +339,9 @@ Mengambil detail satu task beserta histori sesi Pomodoro.
   ```
 
 #### `POST /tasks`
+
 Membuat task baru.
+
 - **Request Body**:
   ```json
   {
@@ -336,7 +370,9 @@ Membuat task baru.
   ```
 
 #### `PUT /tasks/:id`
+
 Memperbarui task (status, judul, note, priority, atau menandai selesai dengan `completed_at`).
+
 - **Request Body**:
   ```json
   {
@@ -353,7 +389,9 @@ Memperbarui task (status, judul, note, priority, atau menandai selesai dengan `c
   ```
 
 #### `DELETE /tasks/:id`
+
 Menghapus task.
+
 - **Response (200 OK)**:
   ```json
   {
@@ -365,10 +403,13 @@ Menghapus task.
 ---
 
 ### 4. Pomodoro Sessions Module (`/pomodoro-sessions`)
-*Semua endpoint `/pomodoro-sessions` membutuhkan header `Authorization: Bearer <token>`.*
+
+_Semua endpoint `/pomodoro-sessions` membutuhkan header `Authorization: Bearer <token>`._
 
 #### `GET /pomodoro-sessions`
+
 Mengambil semua sesi pomodoro user.
+
 - **Response (200 OK)**:
   ```json
   {
@@ -394,7 +435,9 @@ Mengambil semua sesi pomodoro user.
   ```
 
 #### `POST /pomodoro-sessions`
+
 Mencatat sesi fokus atau istirahat baru.
+
 - **Request Body**:
   ```json
   {
@@ -417,7 +460,9 @@ Mencatat sesi fokus atau istirahat baru.
   ```
 
 #### `PUT /pomodoro-sessions/:id`
+
 Memperbarui sesi yang sedang berjalan / waktu elapsed.
+
 - **Request Body**:
   ```json
   {
@@ -435,7 +480,9 @@ Memperbarui sesi yang sedang berjalan / waktu elapsed.
   ```
 
 #### `DELETE /pomodoro-sessions/:id`
+
 Menghapus riwayat sesi pomodoro.
+
 - **Response (200 OK)**:
   ```json
   {
@@ -447,10 +494,13 @@ Menghapus riwayat sesi pomodoro.
 ---
 
 ### 5. Blocker Logs Module (`/blocker-logs`)
-*Semua endpoint `/blocker-logs` membutuhkan header `Authorization: Bearer <token>`.*
+
+_Semua endpoint `/blocker-logs` membutuhkan header `Authorization: Bearer <token>`._
 
 #### `GET /blocker-logs`
+
 Mengambil daftar catatan blocker/gangguan fokus.
+
 - **Response (200 OK)**:
   ```json
   {
@@ -469,7 +519,9 @@ Mengambil daftar catatan blocker/gangguan fokus.
   ```
 
 #### `POST /blocker-logs`
+
 Mencatat blocker baru.
+
 - **Request Body**:
   ```json
   {
@@ -489,7 +541,9 @@ Mencatat blocker baru.
   ```
 
 #### `PUT /blocker-logs/:id`
+
 Mengubah status penyelesaian (`is_resolved`) atau mengisi catatan solusi (`solution`).
+
 - **Request Body**:
   ```json
   {
@@ -506,7 +560,9 @@ Mengubah status penyelesaian (`is_resolved`) atau mengisi catatan solusi (`solut
   ```
 
 #### `DELETE /blocker-logs/:id`
+
 Menghapus riwayat blocker.
+
 - **Response (200 OK)**:
   ```json
   {

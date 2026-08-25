@@ -1,23 +1,23 @@
-# Panduan Arsitektur Frontend (*Frontend Architecture*)
+# Panduan Arsitektur Frontend (_Frontend Architecture_)
 
-Dokumen ini menjelaskan struktur direktori, prinsip pemisahan tanggung jawab (*Separation of Concerns*), dan pola pengembangan aplikasi Kerjain Frontend agar kode tetap modular, terisolasi dengan baik, dan mudah diperluas (*scalable*).
+Dokumen ini menjelaskan struktur direktori, prinsip pemisahan tanggung jawab (_Separation of Concerns_), dan pola pengembangan aplikasi StillBuilding Frontend agar kode tetap modular, terisolasi dengan baik, dan mudah diperluas (_scalable_).
 
 ---
 
-## 1. Prinsip Utama Arsitektur (*Core Architectural Principles*)
+## 1. Prinsip Utama Arsitektur (_Core Architectural Principles_)
 
 1. **Feature-Driven Structure**: Logika domain (seperti `task`, `project`, `pomodoro`) dikelompokkan dalam direktori `features/`. Setiap fitur memiliki komponen internal, hooks, servis API, dan deklarasi tipe datanya sendiri.
-2. **Thin Route Screens**: File-file di dalam direktori `app/` (Expo Router) hanya berfungsi sebagai *entry point* / perutean (*routing wrapper*). Layar tidak boleh memuat logika bisnis yang kompleks ataupun query API langsung.
+2. **Thin Route Screens**: File-file di dalam direktori `app/` (Expo Router) hanya berfungsi sebagai _entry point_ / perutean (_routing wrapper_). Layar tidak boleh memuat logika bisnis yang kompleks ataupun query API langsung.
 3. **Decoupled Business & API Logic**: Logika interaksi API diisolasi ke dalam `services/`, dibungkus oleh custom React Query hooks di `hooks/`, sehingga komponen UI murni fokus pada presentasi dan interaksi pengguna.
 4. **Shared Atomic Components**: Komponen yang bersifat umum (seperti tombol, form field input, card, badge, modal) diletakkan di `components/` dan tidak boleh memiliki dependensi pada logika spesifik domain tertentu.
-5. **Strict TypeScript Typing**: Seluruh entity model, request payload, dan response payload didefinisikan secara eksplisit di dalam `types/`. Penggunaan tipe `any` dilarang.
+5. **Strict TypeScript Typing**: Seluruh entity model, request payload, dan response payload didefinisikan secara eksplisit di dalam `types/` / `@stillbuilding/types`. Penggunaan tipe `any` dilarang.
 
 ---
 
-## 2. Struktur Direktori (*Directory Structure*)
+## 2. Struktur Direktori (_Directory Structure_)
 
 ```
-frontend/
+apps/mobile/
 ├── app/                              # Layer Navigasi & Halaman (Expo Router)
 │   ├── (auth)/                       # Rute khusus user belum login
 │   │   ├── _layout.tsx
@@ -81,7 +81,7 @@ frontend/
 
 ---
 
-## 3. Pembagian Tanggung Jawab Modul (*Layer Responsibilities*)
+## 3. Pembagian Tanggung Jawab Modul (_Layer Responsibilities_)
 
 ```mermaid
 graph TD
@@ -97,6 +97,7 @@ graph TD
 ```
 
 ### 1. Layer `app/` (Screens & Navigation)
+
 - **Tanggung Jawab**: Mendefinisikan rute dan parameter layar menggunakan Expo Router.
 - **Batasan**:
   - Hanya merender layout dan komponen fitur.
@@ -104,29 +105,33 @@ graph TD
   - **TIDAK BOLEH** menuliskan query database/API langsung atau logika kalkulasi yang rumit.
 
 ### 2. Layer `features/<feature>/` (Domain Logic)
+
 - **`types/`**: Mendefinisikan schema TypeScript untuk model data, payload input, dan response API.
 - **`services/`**: Berisi fungsi asinkron murni yang memanggil endpoint API menggunakan instance `lib/axios.ts`.
 - **`hooks/`**: Membungkus pemanggilan service ke dalam TanStack Query (`useQuery`, `useMutation`) dengan manajemen cache yang tepat.
 - **`components/`**: Komponen visual yang hanya relevan dengan fitur tersebut (contoh: `TaskPriorityBadge`, `PomodoroClockFace`).
 
 ### 3. Layer `components/` (Shared Atomic UI)
-- **Tanggung Jawab**: Komponen UI independen (*pure presentation*) yang dapat digunakan di fitur manapun.
+
+- **Tanggung Jawab**: Komponen UI independen (_pure presentation_) yang dapat digunakan di fitur manapun.
 - **Karakteristik**:
   - Diberi styling menggunakan utility class NativeWind.
   - Memiliki varian prop (misal: `variant="primary" | "secondary" | "danger"`, `size="sm" | "md" | "lg"`).
   - Tidak terikat pada state domain spesifik.
 
 ### 4. Layer `lib/` (Infrastructure Setup)
+
 - **Tanggung Jawab**: Instansiasi client library seperti Axios dan React Query.
 - **Aturan**: Interceptor request menyisipkan bearer token Supabase Auth, dan interceptor response menangani error HTTP global (401, 403, 500).
 
 ---
 
-## 4. Panduan Menambahkan Fitur Baru (*Step-by-Step New Feature Guide*)
+## 4. Panduan Menambahkan Fitur Baru (_Step-by-Step New Feature Guide_)
 
 Ketika menambahkan modul fitur baru (misal: `habit_tracker`):
 
 1. **Definisikan Tipe Data** di `features/habit_tracker/types/index.ts`:
+
    ```typescript
    export interface Habit {
      id: string;
@@ -143,6 +148,7 @@ Ketika menambahkan modul fitur baru (misal: `habit_tracker`):
    ```
 
 2. **Buat Service API** di `features/habit_tracker/services/habitService.ts`:
+
    ```typescript
    import api from "@/lib/axios";
    import { Habit, CreateHabitDTO } from "../types";
@@ -152,15 +158,22 @@ Ketika menambahkan modul fitur baru (misal: `habit_tracker`):
      return response.data.data;
    };
 
-   export const createHabit = async (payload: CreateHabitDTO): Promise<Habit> => {
+   export const createHabit = async (
+     payload: CreateHabitDTO,
+   ): Promise<Habit> => {
      const response = await api.post<{ data: Habit }>("/habits", payload);
      return response.data.data;
    };
    ```
 
 3. **Buat Custom Hook Query & Mutation** di `features/habit_tracker/hooks/useHabits.ts`:
+
    ```typescript
-   import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
+   import {
+     useQuery,
+     useMutation,
+     useQueryClient,
+   } from "@tanstack/react-query";
    import { getHabits, createHabit } from "../services/habitService";
    import { habitKeys } from "./queryKeys";
 
@@ -191,13 +204,13 @@ Ketika menambahkan modul fitur baru (misal: `habit_tracker`):
 
 ---
 
-## 5. Konvensi Penamaan (*Naming Conventions*)
+## 5. Konvensi Penamaan (_Naming Conventions_)
 
-| Item | Konvensi | Contoh |
-| :--- | :--- | :--- |
-| **Komponen React** | PascalCase | `Button.tsx`, `TaskCard.tsx` |
-| **Custom Hooks** | camelCase diawali `use` | `useTasks.ts`, `usePomodoroTimer.ts` |
-| **Services / Helpers** | camelCase | `taskService.ts`, `formatDate.ts` |
-| **Tipe / Interface** | PascalCase | `Task`, `CreateTaskInput`, `PomodoroSession` |
-| **Zustand Store** | camelCase diawali `use` dan berakhiran `Store` | `useAuthStore.ts`, `useTimerStore.ts` |
-| **File Rute (Expo Router)** | kebab-case / camelCase / parameter bracket | `[id].tsx`, `_layout.tsx`, `create.tsx` |
+| Item                        | Konvensi                                       | Contoh                                       |
+| :-------------------------- | :--------------------------------------------- | :------------------------------------------- |
+| **Komponen React**          | PascalCase                                     | `Button.tsx`, `TaskCard.tsx`                 |
+| **Custom Hooks**            | camelCase diawali `use`                        | `useTasks.ts`, `usePomodoroTimer.ts`         |
+| **Services / Helpers**      | camelCase                                      | `taskService.ts`, `formatDate.ts`            |
+| **Tipe / Interface**        | PascalCase                                     | `Task`, `CreateTaskInput`, `PomodoroSession` |
+| **Zustand Store**           | camelCase diawali `use` dan berakhiran `Store` | `useAuthStore.ts`, `useTimerStore.ts`        |
+| **File Rute (Expo Router)** | kebab-case / camelCase / parameter bracket     | `[id].tsx`, `_layout.tsx`, `create.tsx`      |

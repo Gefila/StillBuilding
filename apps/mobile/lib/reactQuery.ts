@@ -1,39 +1,39 @@
 import {
-	UseMutationOptions,
-	DefaultOptions,
-	QueryClient,
+  UseMutationOptions,
+  DefaultOptions,
+  QueryClient,
 } from "@tanstack/react-query";
 
 export const queryConfig = {
-	queries: {
-		refetchOnWindowFocus: false,
-		retry: 1,
-		staleTime: 1000 * 60 * 5,
-		gcTime: 1000 * 60 * 10,
-	},
-	mutations: {
-		onError: (error: Error) => {
-			console.log("Mutation error:", error.message);
-		},
-	},
+  queries: {
+    refetchOnWindowFocus: false,
+    retry: 1,
+    staleTime: 1000 * 60 * 5,
+    gcTime: 1000 * 60 * 10,
+  },
+  mutations: {
+    onError: (error: Error) => {
+      console.log("Mutation error:", error.message);
+    },
+  },
 } satisfies DefaultOptions;
 
 export const queryClient = new QueryClient({
-	defaultOptions: queryConfig,
+  defaultOptions: queryConfig,
 });
 
 export type ApiFnReturnType<FnType extends (...args: any) => Promise<any>> =
-	Awaited<ReturnType<FnType>>;
+  Awaited<ReturnType<FnType>>;
 
 export type QueryConfig<T extends (...args: any[]) => any> = Omit<
-	ReturnType<T>,
-	"queryKey" | "queryFn"
+  ReturnType<T>,
+  "queryKey" | "queryFn"
 >;
 
 export type MutationConfig<
-	MutationFnType extends (...args: any) => Promise<any>,
+  MutationFnType extends (...args: any) => Promise<any>,
 > = UseMutationOptions<
-	ApiFnReturnType<MutationFnType>,
-	Error,
-	Parameters<MutationFnType>[0]
+  ApiFnReturnType<MutationFnType>,
+  Error,
+  Parameters<MutationFnType>[0]
 >;

@@ -7,84 +7,84 @@ export const getPomodoroQueryKey = () => ["pomodoro"];
 export const getPomodoroByIdQueryKey = (id: string) => ["pomodoro", id];
 
 export const getPomodorosQueryOptions = () => {
-	return queryOptions({
-		queryKey: getPomodoroQueryKey(),
-		queryFn: () => pomodoroService.getAll(),
-	});
+  return queryOptions({
+    queryKey: getPomodoroQueryKey(),
+    queryFn: () => pomodoroService.getAll(),
+  });
 };
 
 export const getPomodoroByIdQueryOptions = (id: string) => {
-	return queryOptions({
-		queryKey: getPomodoroByIdQueryKey(id),
-		queryFn: () => pomodoroService.getById(id),
-	});
+  return queryOptions({
+    queryKey: getPomodoroByIdQueryKey(id),
+    queryFn: () => pomodoroService.getById(id),
+  });
 };
 
 type UseGetPomodorosOptions = {
-	queryConfig?: QueryConfig<typeof getPomodorosQueryOptions>;
+  queryConfig?: QueryConfig<typeof getPomodorosQueryOptions>;
 };
 
 type UseGetPomodoroByIdOptions = {
-	id: string;
-	queryConfig?: QueryConfig<typeof getPomodoroByIdQueryOptions>;
+  id: string;
+  queryConfig?: QueryConfig<typeof getPomodoroByIdQueryOptions>;
 };
 
 type UseCreatePomodoroOptions = {
-	mutationConfig?: MutationConfig<typeof pomodoroService.create>;
+  mutationConfig?: MutationConfig<typeof pomodoroService.create>;
 };
 
 type UseUpdatePomodoroOptions = {
-	mutationConfig?: MutationConfig<typeof pomodoroService.update>;
+  mutationConfig?: MutationConfig<typeof pomodoroService.update>;
 };
 
 export const useGetPomodoros = ({
-	queryConfig = {},
+  queryConfig = {},
 }: UseGetPomodorosOptions = {}) => {
-	return useQuery({
-		...getPomodorosQueryOptions(),
-		...queryConfig,
-	});
+  return useQuery({
+    ...getPomodorosQueryOptions(),
+    ...queryConfig,
+  });
 };
 
 export const useGetPomodoroById = ({
-	id,
-	queryConfig = {},
+  id,
+  queryConfig = {},
 }: UseGetPomodoroByIdOptions) => {
-	return useQuery({
-		...getPomodoroByIdQueryOptions(id),
-		...queryConfig,
-	});
+  return useQuery({
+    ...getPomodoroByIdQueryOptions(id),
+    ...queryConfig,
+  });
 };
 
 export const useUpdatePomodoro = ({
-	mutationConfig = {},
+  mutationConfig = {},
 }: UseUpdatePomodoroOptions = {}) => {
-	return useMutation({
-		mutationFn: ({
-			id,
-			data,
-		}: {
-			id: string;
-			data: Partial<CreatePomodoroSessionDTO>;
-		}) => pomodoroService.update({ id, data }),
-		...mutationConfig,
-		onSuccess: (data, variables, onMutateResult, context) => {
-			queryClient.invalidateQueries({
-				queryKey: getPomodoroByIdQueryKey(variables.id),
-			});
-			queryClient.invalidateQueries({ queryKey: getPomodoroQueryKey() });
+  return useMutation({
+    mutationFn: ({
+      id,
+      data,
+    }: {
+      id: string;
+      data: Partial<CreatePomodoroSessionDTO>;
+    }) => pomodoroService.update({ id, data }),
+    ...mutationConfig,
+    onSuccess: (data, variables, onMutateResult, context) => {
+      queryClient.invalidateQueries({
+        queryKey: getPomodoroByIdQueryKey(variables.id),
+      });
+      queryClient.invalidateQueries({ queryKey: getPomodoroQueryKey() });
 
-			mutationConfig.onSuccess?.(data, variables, onMutateResult, context);
-		},
-	});
+      mutationConfig.onSuccess?.(data, variables, onMutateResult, context);
+    },
+  });
 };
 
 export const useCreatePomodoro = ({
-	mutationConfig = {},
+  mutationConfig = {},
 }: UseCreatePomodoroOptions = {}) => {
-	return useMutation({
-		mutationFn: (pomodoroData: CreatePomodoroSessionDTO) =>
-			pomodoroService.create(pomodoroData),
-		...mutationConfig,
-	});
+  return useMutation({
+    mutationFn: (pomodoroData: CreatePomodoroSessionDTO) =>
+      pomodoroService.create(pomodoroData),
+    ...mutationConfig,
+  });
 };

@@ -1,7 +1,9 @@
 # Project StillBuilding - AI Agent Guidelines
 
 ## 1. Project Overview & Workflow
+
 **StillBuilding** is a personal productivity and deep-work companion application consisting of:
+
 - **Personal Task & Project Manager**: Organizing individual goals, projects, and actionable tasks.
 - **Pomodoro Tracker**: Focused work interval timer linked to active tasks and projects.
 - **Blocker Logger**: Tracking friction points, interruptions, and blockers encountered during deep work sessions.
@@ -9,6 +11,7 @@
 ---
 
 ## 2. Monorepo & Git Repository Structure
+
 - **Monorepo Structure**: The repository uses **pnpm workspaces** and **Turborepo**:
   - `apps/api/` - Express.js API backend (`@stillbuilding/api`).
   - `apps/mobile/` - React Native Expo application (`@stillbuilding/mobile`).
@@ -28,6 +31,7 @@
 ## 3. Tech Stack & Architecture
 
 ### Backend API (`apps/api`)
+
 - **Runtime & Language**: Node.js, TypeScript (`tsx` for dev watcher, `tsc` for build)
 - **Framework**: Express.js (v5) with Helmet, CORS, and Morgan
 - **Database & Auth**: Supabase (`@supabase/supabase-js`)
@@ -43,6 +47,7 @@
   - Middlewares (`src/middlewares/`): `auth.middleware.ts`, `error.middleware.ts`.
 
 ### Mobile App (`apps/mobile`)
+
 - **Framework**: React Native with Expo (SDK 54) & Expo Router v6 (`app/` file-based routing).
 - **Bundler & Styling**: Metro configured for monorepo workspace resolution (`metro.config.js`), NativeWind v5 / Tailwind CSS v4.
 - **State Management**:
@@ -58,6 +63,7 @@
   - `utils/` - Shared utility functions.
 
 ### Shared Types Package (`packages/types`)
+
 - Contains domain models, TypeScript interfaces, and Zod validation schemas (`@stillbuilding/types`):
   - `auth.types.ts`, `blocker.types.ts`, `pomodoro.types.ts`, `project.types.ts`, `task.types.ts`.
 

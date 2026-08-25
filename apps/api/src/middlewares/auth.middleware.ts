@@ -5,43 +5,43 @@ import { AppError } from "../utils/AppError";
 
 // Extend Express Request agar bisa menyimpan user
 declare global {
-	namespace Express {
-		interface Request {
-			user?: AuthUser;
-		}
-	}
+  namespace Express {
+    interface Request {
+      user?: AuthUser;
+    }
+  }
 }
 
 export const authMiddleware = async (
-	req: Request,
-	_res: Response,
-	next: NextFunction,
+  req: Request,
+  _res: Response,
+  next: NextFunction,
 ) => {
-	const authHeader = req.headers.authorization;
+  const authHeader = req.headers.authorization;
 
-	if (!authHeader || !authHeader.startsWith("Bearer ")) {
-		throw new AppError("Unauthorized: No token provided", 401);
-	}
+  if (!authHeader || !authHeader.startsWith("Bearer ")) {
+    throw new AppError("Unauthorized: No token provided", 401);
+  }
 
-	const token = authHeader.split(" ")[1];
+  const token = authHeader.split(" ")[1];
 
-	// Verifikasi token ke Supabase
-	const { data, error } = await supabase.auth.getUser(token);
+  // Verifikasi token ke Supabase
+  const { data, error } = await supabase.auth.getUser(token);
 
-	if (error || !data.user) {
-		throw new AppError("Unauthorized: Invalid or expired token", 401);
-	}
-	// Ambil profile dari table profiles
-	const { data: profile, error: profileError } = await supabase
-		.from("profiles")
-		.select("id, username, full_name")
-		.eq("id", data.user.id)
-		.single();
+  if (error || !data.user) {
+    throw new AppError("Unauthorized: Invalid or expired token", 401);
+  }
+  // Ambil profile dari table profiles
+  const { data: profile, error: profileError } = await supabase
+    .from("profiles")
+    .select("id, username, full_name")
+    .eq("id", data.user.id)
+    .single();
 
-	if (profileError || !profile) {
-		throw new AppError("Unauthorized: Profile not found", 401);
-	}
+  if (profileError || !profile) {
+    throw new AppError("Unauthorized: Profile not found", 401);
+  }
 
-	req.user = profile as AuthUser;
-	next();
+  req.user = profile as AuthUser;
+  next();
 };

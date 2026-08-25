@@ -5,20 +5,20 @@ import { Task } from "@/features/task/types/task.types";
 import { Project } from "../types/project.types";
 
 export default function ProjectTasks({
-	tasks,
-	project,
+  tasks,
+  project,
 }: {
-	tasks: Task[];
-	project: Project;
+  tasks: Task[];
+  project: Project;
 }) {
-	return (
-		<View>
-			<Tasks
-				tasks={tasks}
-				title="Daftar Tugas Proyek"
-				projectName={project.name}
-				projectId={project.id}
-			/>
-		</View>
-	);
+  return (
+    <View>
+      <Tasks
+        tasks={tasks}
+        title="Daftar Tugas Proyek"
+        projectName={project.name}
+        projectId={project.id}
+      />
+    </View>
+  );
 }

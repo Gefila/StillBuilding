@@ -1,32 +1,35 @@
-# Panduan Manajemen State & Integrasi API (*State Management & API Guide*)
+# Panduan Manajemen State & Integrasi API (_State Management & API Guide_)
 
-Dokumen ini mengatur arsitektur manajemen state dan alur komunikasi data antara frontend dan backend Express/Supabase pada aplikasi Kerjain.
+Dokumen ini mengatur arsitektur manajemen state dan alur komunikasi data antara frontend dan backend Express/Supabase pada aplikasi StillBuilding.
 
 ---
 
-## 1. Pembagian Kategori State (*State Categories*)
+## 1. Pembagian Kategori State (_State Categories_)
 
-Aplikasi Kerjain membagi state menjadi 3 kategori utama:
+Aplikasi StillBuilding membagi state menjadi 3 kategori utama:
 
-| Kategori State | Solusi Teknologi | Kapan Digunakan? | Contoh Kasus |
-| :--- | :--- | :--- | :--- |
-| **Server State** | **TanStack Query v5** (`@tanstack/react-query`) | Data yang bersumber dari API backend, memerlukan caching, sinkronisasi, refetching, dan deduplikasi request. | Daftar Task, Detail Project, Riwayat Sesi Pomodoro, Log Blocker. |
-| **Global Client State** | **Zustand v5** (`zustand`) | State reaktif antar komponen/halaman yang tidak berasal langsung dari backend atau butuh kontrol real-time/timer. | Active Pomodoro Timer (countdown, pause, resume), Active Session ID, Global UI Drawer/Modal state. |
-| **Local Component State** | **React `useState` / `useReducer`** | State yang hanya relevan di satu komponen visual tertentu dan tidak dibagi ke komponen lain. | Input toggle password visibility, tab lokal di dalam modal, dropdown open/close state. |
+| Kategori State            | Solusi Teknologi                                | Kapan Digunakan?                                                                                                  | Contoh Kasus                                                                                       |
+| :------------------------ | :---------------------------------------------- | :---------------------------------------------------------------------------------------------------------------- | :------------------------------------------------------------------------------------------------- |
+| **Server State**          | **TanStack Query v5** (`@tanstack/react-query`) | Data yang bersumber dari API backend, memerlukan caching, sinkronisasi, refetching, dan deduplikasi request.      | Daftar Task, Detail Project, Riwayat Sesi Pomodoro, Log Blocker.                                   |
+| **Global Client State**   | **Zustand v5** (`zustand`)                      | State reaktif antar komponen/halaman yang tidak berasal langsung dari backend atau butuh kontrol real-time/timer. | Active Pomodoro Timer (countdown, pause, resume), Active Session ID, Global UI Drawer/Modal state. |
+| **Local Component State** | **React `useState` / `useReducer`**             | State yang hanya relevan di satu komponen visual tertentu dan tidak dibagi ke komponen lain.                      | Input toggle password visibility, tab lokal di dalam modal, dropdown open/close state.             |
 
 ---
 
 ## 2. Server State: TanStack Query v5
 
 ### A. Konfigurasi Global (`lib/reactQuery.ts`)
+
 Default options telah dikonfigurasi untuk mencegah request berlebih namun tetap menjaga data mutakhir:
+
 - `staleTime`: **5 menit** (data dianggap segar selama 5 menit tanpa refetch otomatis).
 - `gcTime`: **10 menit** (data yang tidak digunakan disimpan di memori selama 10 menit sebelum dihapus).
 - `retry`: **1 kali** untuk query yang gagal.
 - `refetchOnWindowFocus`: **false** (agar tidak refetch berulang saat berpindah window di mobile).
 
-### B. Hierarki & Konvensi Query Keys (*Query Key Factory*)
-Hindari menulis query key dalam format string sembarangan. Gunakan pola *Query Key Factory* di setiap feature untuk memudahkan invalidasi cache yang presisi:
+### B. Hierarki & Konvensi Query Keys (_Query Key Factory_)
+
+Hindari menulis query key dalam format string sembarangan. Gunakan pola _Query Key Factory_ di setiap feature untuk memudahkan invalidasi cache yang presisi:
 
 ```typescript
 // features/task/hooks/taskKeys.ts
@@ -41,13 +44,16 @@ export const taskKeys = {
 ```
 
 ### C. Implementasi Query (`useQuery`)
+
 ```typescript
 // features/task/hooks/useTasks.ts
 import { useQuery } from "@tanstack/react-query";
 import { getTasks } from "../services/taskService";
 import { taskKeys } from "./taskKeys";
 
-export const useTasks = (filters: { status?: string; projectId?: string } = {}) => {
+export const useTasks = (
+  filters: { status?: string; projectId?: string } = {},
+) => {
   return useQuery({
     queryKey: taskKeys.list(filters),
     queryFn: () => getTasks(filters),
@@ -64,6 +70,7 @@ export const useTaskDetail = (id: string) => {
 ```
 
 ### D. Implementasi Mutasi & Invalidasi Cache (`useMutation`)
+
 Setiap kali melakukan operasi create, update, atau delete, lakukan invalidasi query cache agar data pada list otomatis ter-update:
 
 ```typescript
@@ -81,10 +88,12 @@ export const useCreateTask = () => {
     onSuccess: (newTask) => {
       // Invalidate semua daftar task
       queryClient.invalidateQueries({ queryKey: taskKeys.lists() });
-      
+
       // Jika task terikat ke project tertentu, invalidate detail project tersebut
       if (newTask.project_id) {
-        queryClient.invalidateQueries({ queryKey: projectKeys.detail(newTask.project_id) });
+        queryClient.invalidateQueries({
+          queryKey: projectKeys.detail(newTask.project_id),
+        });
       }
     },
   });
@@ -94,10 +103,13 @@ export const useUpdateTask = () => {
   const queryClient = useQueryClient();
 
   return useMutation({
-    mutationFn: ({ id, data }: { id: string; data: UpdateTaskDTO }) => updateTask(id, data),
+    mutationFn: ({ id, data }: { id: string; data: UpdateTaskDTO }) =>
+      updateTask(id, data),
     onSuccess: (updatedTask, variables) => {
       // Invalidate detail task yang diupdate
-      queryClient.invalidateQueries({ queryKey: taskKeys.detail(variables.id) });
+      queryClient.invalidateQueries({
+        queryKey: taskKeys.detail(variables.id),
+      });
       // Invalidate list task
       queryClient.invalidateQueries({ queryKey: taskKeys.lists() });
     },
@@ -109,9 +121,10 @@ export const useUpdateTask = () => {
 
 ## 3. Global Client State: Zustand v5
 
-Zustand digunakan untuk state yang membutuhkan akses global, performa tinggi, dan kontrol waktu tanpa *re-render* yang tidak perlu.
+Zustand digunakan untuk state yang membutuhkan akses global, performa tinggi, dan kontrol waktu tanpa _re-render_ yang tidak perlu.
 
 ### Contoh Kasus: Pomodoro Timer Store (`features/pomodoro/stores/usePomodoroStore.ts`)
+
 ```typescript
 import { create } from "zustand";
 
@@ -123,7 +136,7 @@ interface PomodoroState {
   isRunning: boolean;
   activeTaskId: string | null;
   activeSessionId: string | null;
-  
+
   // Actions
   setMode: (mode: PomodoroMode) => void;
   setTimeLeft: (seconds: number) => void;
@@ -169,6 +182,7 @@ export const usePomodoroStore = create<PomodoroState>((set, get) => ({
 ## 4. Integrasi API & Axios Client (`lib/axios.ts`)
 
 ### A. Konfigurasi Interceptor Request (Injeksi Token)
+
 Token JWT Supabase diambil dari storage/auth store dan otomatis disematkan pada setiap request:
 
 ```typescript
@@ -195,6 +209,7 @@ api.interceptors.request.use(async (config) => {
 ```
 
 ### B. Konfigurasi Interceptor Response (Error Handling Global)
+
 ```typescript
 import { Toast } from "toastify-react-native";
 
@@ -203,7 +218,7 @@ api.interceptors.response.use(
   async (error) => {
     if (axios.isAxiosError(error) && error.response) {
       const { status, data } = error.response;
-      
+
       switch (status) {
         case 401:
           // Token expired atau unauthorized
@@ -224,10 +239,10 @@ api.interceptors.response.use(
       }
       return Promise.reject(data);
     }
-    
+
     Toast.error("Koneksi jaringan terganggu.");
     return Promise.reject(error);
-  }
+  },
 );
 
 export default api;
@@ -237,9 +252,9 @@ export default api;
 
 ## 5. Do's and Don'ts
 
-| ✅ DO | ❌ DON'T |
-| :--- | :--- |
-| Gunakan query keys factory objek yang terstruktur. | Jangan gunakan string *hardcoded* seperti `queryKey: ['task', id]` di berbagai tempat secara acak. |
-| Invalidate query yang terdampak setelah mutasi berhasil di `onSuccess`. | Jangan memanggil fungsi fetch manual di dalam `useEffect` setelah submit form. |
-| Simpan token sensitif menggunakan `expo-secure-store`. | Jangan simpan token auth di `AsyncStorage` biasa yang tidak terenkripsi. |
+| ✅ DO                                                                                                             | ❌ DON'T                                                                                               |
+| :---------------------------------------------------------------------------------------------------------------- | :----------------------------------------------------------------------------------------------------- |
+| Gunakan query keys factory objek yang terstruktur.                                                                | Jangan gunakan string _hardcoded_ seperti `queryKey: ['task', id]` di berbagai tempat secara acak.     |
+| Invalidate query yang terdampak setelah mutasi berhasil di `onSuccess`.                                           | Jangan memanggil fungsi fetch manual di dalam `useEffect` setelah submit form.                         |
+| Simpan token sensitif menggunakan `expo-secure-store`.                                                            | Jangan simpan token auth di `AsyncStorage` biasa yang tidak terenkripsi.                               |
 | Pilih state terkecil yang dibutuhkan pada Zustand (`const timeLeft = usePomodoroStore(state => state.timeLeft)`). | Jangan subscribe ke seluruh store jika hanya butuh 1 variabel untuk menghindari unnecessary re-render. |

@@ -13,181 +13,181 @@ import { usePomodoroStore } from "@/features/pomodoro/store/usePomodoroStore";
 import { Task } from "@/features/task/types/task.types";
 
 export default function FocusTab() {
-	const router = useRouter();
-	const insets = useSafeAreaInsets();
-	const { id } = useLocalSearchParams();
-	const [taskPickerVisible, setTaskPickerVisible] = useState(false);
+  const router = useRouter();
+  const insets = useSafeAreaInsets();
+  const { id } = useLocalSearchParams();
+  const [taskPickerVisible, setTaskPickerVisible] = useState(false);
 
-	const { activeTask, setActiveTask, isActive, isPaused, pauseTimer } =
-		usePomodoroStore();
-	const updateTaskMutation = useUpdateTask();
+  const { activeTask, setActiveTask, isActive, isPaused, pauseTimer } =
+    usePomodoroStore();
+  const updateTaskMutation = useUpdateTask();
 
-	const taskQuery = useGetTaskById({
-		id: (id as string) || "",
-		queryConfig: {
-			enabled: !!id,
-			staleTime: 0,
-		},
-	});
+  const taskQuery = useGetTaskById({
+    id: (id as string) || "",
+    queryConfig: {
+      enabled: !!id,
+      staleTime: 0,
+    },
+  });
 
-	// Sync task param only if the task is not Done
-	useEffect(() => {
-		if (taskQuery.data) {
-			if (taskQuery.data.status === "Done") {
-				setActiveTask(null);
-				router.setParams({ id: "" });
-			} else {
-				setActiveTask({
-					id: taskQuery.data.id,
-					title: taskQuery.data.title,
-					project_id: taskQuery.data.project_id || taskQuery.data.project?.id,
-					projectName: taskQuery.data.project?.name,
-				});
-			}
-		}
-	}, [taskQuery.data, setActiveTask, router]);
+  // Sync task param only if the task is not Done
+  useEffect(() => {
+    if (taskQuery.data) {
+      if (taskQuery.data.status === "Done") {
+        setActiveTask(null);
+        router.setParams({ id: "" });
+      } else {
+        setActiveTask({
+          id: taskQuery.data.id,
+          title: taskQuery.data.title,
+          project_id: taskQuery.data.project_id || taskQuery.data.project?.id,
+          projectName: taskQuery.data.project?.name,
+        });
+      }
+    }
+  }, [taskQuery.data, setActiveTask, router]);
 
-	const handleSelectTask = (task: Task | null) => {
-		if (task) {
-			setActiveTask({
-				id: task.id,
-				title: task.title,
-				project_id: task.project_id || task.project?.id,
-				projectName: task.project?.name,
-			});
-			router.setParams({ id: task.id });
-		} else {
-			setActiveTask(null);
-			router.setParams({ id: "" });
-		}
-	};
+  const handleSelectTask = (task: Task | null) => {
+    if (task) {
+      setActiveTask({
+        id: task.id,
+        title: task.title,
+        project_id: task.project_id || task.project?.id,
+        projectName: task.project?.name,
+      });
+      router.setParams({ id: task.id });
+    } else {
+      setActiveTask(null);
+      router.setParams({ id: "" });
+    }
+  };
 
-	const handleMarkTaskComplete = () => {
-		if (!activeTask?.id) return;
+  const handleMarkTaskComplete = () => {
+    if (!activeTask?.id) return;
 
-		Alert.alert(
-			"Tandai Selesai",
-			`Apakah Anda yakin ingin menandai tugas "${activeTask.title}" sebagai selesai?`,
-			[
-				{ text: "Batal", style: "cancel" },
-				{
-					text: "Tandai Selesai",
-					style: "default",
-					onPress: () => {
-						const taskId = activeTask.id;
+    Alert.alert(
+      "Tandai Selesai",
+      `Apakah Anda yakin ingin menandai tugas "${activeTask.title}" sebagai selesai?`,
+      [
+        { text: "Batal", style: "cancel" },
+        {
+          text: "Tandai Selesai",
+          style: "default",
+          onPress: () => {
+            const taskId = activeTask.id;
 
-						// Pause running timer so user doesn't lose focus time while selecting next task
-						if (isActive && !isPaused) {
-							pauseTimer();
-						}
+            // Pause running timer so user doesn't lose focus time while selecting next task
+            if (isActive && !isPaused) {
+              pauseTimer();
+            }
 
-						updateTaskMutation.mutate(
-							{
-								id: taskId,
-								data: {
-									status: "Done",
-									completed_at: new Date().toISOString(),
-								},
-							},
-							{
-								onSuccess: () => {
-									Haptics.notificationAsync(
-										Haptics.NotificationFeedbackType.Success,
-									);
-									setActiveTask(null);
-									router.setParams({ id: "" });
-									// Open task picker so user can pick their next target task
-									setTaskPickerVisible(true);
-								},
-							},
-						);
-					},
-				},
-			],
-		);
-	};
+            updateTaskMutation.mutate(
+              {
+                id: taskId,
+                data: {
+                  status: "Done",
+                  completed_at: new Date().toISOString(),
+                },
+              },
+              {
+                onSuccess: () => {
+                  Haptics.notificationAsync(
+                    Haptics.NotificationFeedbackType.Success,
+                  );
+                  setActiveTask(null);
+                  router.setParams({ id: "" });
+                  // Open task picker so user can pick their next target task
+                  setTaskPickerVisible(true);
+                },
+              },
+            );
+          },
+        },
+      ],
+    );
+  };
 
-	return (
-		<View
-			className="flex-1 bg-background"
-			style={{ paddingTop: Math.max(insets.top, 12) }}
-		>
-			<ScrollView
-				className="flex-1 px-4 pt-2"
-				showsVerticalScrollIndicator={false}
-			>
-				{/* 1. Header */}
-				<ScreenHeader
-					title="Sesi Fokus"
-					subtitle="Tingkatkan konsentrasi melalui interval Pomodoro"
-				/>
+  return (
+    <View
+      className="flex-1 bg-background"
+      style={{ paddingTop: Math.max(insets.top, 12) }}
+    >
+      <ScrollView
+        className="flex-1 px-4 pt-2"
+        showsVerticalScrollIndicator={false}
+      >
+        {/* 1. Header */}
+        <ScreenHeader
+          title="Sesi Fokus"
+          subtitle="Tingkatkan konsentrasi melalui interval Pomodoro"
+        />
 
-				{/* 2. Target Task Selector Card */}
-				<TouchableOpacity
-					activeOpacity={0.8}
-					onPress={() => setTaskPickerVisible(true)}
-					className="bg-surface p-4 rounded-2xl flex-row items-center my-3 border border-border shadow-xs"
-				>
-					<View className="w-10 h-10 rounded-xl bg-surface-subtle border border-border items-center justify-center mr-3">
-						<Ionicons
-							name={activeTask ? "flash" : "flash-outline"}
-							size={18}
-							color="#18181b"
-						/>
-					</View>
-					<View className="flex-1 mr-2">
-						<Text className="text-muted text-[11px] font-semibold uppercase tracking-wider">
-							Target Fokus
-						</Text>
-						<Text
-							className="text-foreground text-sm font-bold mt-0.5"
-							numberOfLines={1}
-						>
-							{activeTask?.title || "Pilih Tugas yang Ingin Difokuskan"}
-						</Text>
-					</View>
+        {/* 2. Target Task Selector Card */}
+        <TouchableOpacity
+          activeOpacity={0.8}
+          onPress={() => setTaskPickerVisible(true)}
+          className="bg-surface p-4 rounded-2xl flex-row items-center my-3 border border-border shadow-xs"
+        >
+          <View className="w-10 h-10 rounded-xl bg-surface-subtle border border-border items-center justify-center mr-3">
+            <Ionicons
+              name={activeTask ? "flash" : "flash-outline"}
+              size={18}
+              color="#18181b"
+            />
+          </View>
+          <View className="flex-1 mr-2">
+            <Text className="text-muted text-[11px] font-semibold uppercase tracking-wider">
+              Target Fokus
+            </Text>
+            <Text
+              className="text-foreground text-sm font-bold mt-0.5"
+              numberOfLines={1}
+            >
+              {activeTask?.title || "Pilih Tugas yang Ingin Difokuskan"}
+            </Text>
+          </View>
 
-					<View className="flex-row items-center bg-surface-subtle px-2.5 py-1.5 rounded-xl border border-border">
-						<Text className="text-foreground font-semibold text-xs mr-1">
-							{activeTask ? "Ganti" : "Pilih"}
-						</Text>
-						<Ionicons name="swap-vertical" size={13} color="#18181b" />
-					</View>
-				</TouchableOpacity>
+          <View className="flex-row items-center bg-surface-subtle px-2.5 py-1.5 rounded-xl border border-border">
+            <Text className="text-foreground font-semibold text-xs mr-1">
+              {activeTask ? "Ganti" : "Pilih"}
+            </Text>
+            <Ionicons name="swap-vertical" size={13} color="#18181b" />
+          </View>
+        </TouchableOpacity>
 
-				{/* 3. Pomodoro Timer Component */}
-				<View className="bg-surface p-5 rounded-2xl border border-border my-1 items-center shadow-xs">
-					<PomodoroTimer />
-				</View>
+        {/* 3. Pomodoro Timer Component */}
+        <View className="bg-surface p-5 rounded-2xl border border-border my-1 items-center shadow-xs">
+          <PomodoroTimer />
+        </View>
 
-				<View style={{ height: Math.max(insets.bottom + 80, 90) }} />
-			</ScrollView>
+        <View style={{ height: Math.max(insets.bottom + 80, 90) }} />
+      </ScrollView>
 
-			{/* Sticky Bottom Action (Mark Task Complete) */}
-			{activeTask && (
-				<View
-					style={{ paddingBottom: Math.max(insets.bottom, 16) }}
-					className="px-4 pt-3 bg-surface border-t border-border shadow-md"
-				>
-					<Button
-						iconLeft={
-							<Ionicons name="checkmark-circle" size={18} color="#ffffff" />
-						}
-						label="Tandai Tugas Ini Selesai"
-						variant="primary"
-						isLoading={updateTaskMutation.isPending}
-						onPress={handleMarkTaskComplete}
-					/>
-				</View>
-			)}
+      {/* Sticky Bottom Action (Mark Task Complete) */}
+      {activeTask && (
+        <View
+          style={{ paddingBottom: Math.max(insets.bottom, 16) }}
+          className="px-4 pt-3 bg-surface border-t border-border shadow-md"
+        >
+          <Button
+            iconLeft={
+              <Ionicons name="checkmark-circle" size={18} color="#ffffff" />
+            }
+            label="Tandai Tugas Ini Selesai"
+            variant="primary"
+            isLoading={updateTaskMutation.isPending}
+            onPress={handleMarkTaskComplete}
+          />
+        </View>
+      )}
 
-			{/* Task Picker Modal */}
-			<TaskPickerModal
-				visible={taskPickerVisible}
-				onClose={() => setTaskPickerVisible(false)}
-				onSelectTask={handleSelectTask}
-				selectedTaskId={activeTask?.id}
-			/>
-		</View>
-	);
+      {/* Task Picker Modal */}
+      <TaskPickerModal
+        visible={taskPickerVisible}
+        onClose={() => setTaskPickerVisible(false)}
+        onSelectTask={handleSelectTask}
+        selectedTaskId={activeTask?.id}
+      />
+    </View>
+  );
 }
