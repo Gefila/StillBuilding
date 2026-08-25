@@ -9,22 +9,25 @@ export default function ProjectItem({ project }: { project: Project }) {
 
   const statusStyles: Record<
     "Active" | "On Hold" | "Completed",
-    { chip: string; text: string; dot: string }
+    { chip: string; text: string; dot: string; label: string }
   > = {
     Active: {
       chip: "bg-surface-subtle border-border",
       text: "text-foreground",
-      dot: "bg-foreground",
+      dot: "bg-emerald-500",
+      label: "Aktif",
     },
     "On Hold": {
       chip: "bg-amber-50 border-amber-200",
       text: "text-amber-800",
       dot: "bg-amber-500",
+      label: "On Hold",
     },
     Completed: {
       chip: "bg-emerald-50 border-emerald-200",
       text: "text-emerald-800",
-      dot: "bg-emerald-500",
+      dot: "bg-emerald-600",
+      label: "Selesai",
     },
   };
 
@@ -43,9 +46,9 @@ export default function ProjectItem({ project }: { project: Project }) {
 
   return (
     <TouchableOpacity
-      activeOpacity={0.8}
+      activeOpacity={0.7}
       onPress={() => router.push(`/project/${project.id}`)}
-      className="flex-col bg-surface p-4 border border-border rounded-2xl mb-3 shadow-xs"
+      className="flex-col bg-surface p-3.5 border border-border rounded-2xl mb-2.5 shadow-2xs"
     >
       <View className="flex-row items-center gap-3">
         <View className="w-10 h-10 bg-surface-subtle border border-border rounded-xl justify-center items-center">
@@ -57,7 +60,7 @@ export default function ProjectItem({ project }: { project: Project }) {
         </View>
         <View className="flex-1">
           <Text
-            className="text-base font-semibold text-foreground tracking-tight"
+            className="text-[15px] font-semibold text-foreground tracking-tight"
             numberOfLines={1}
           >
             {project.name}
@@ -71,21 +74,23 @@ export default function ProjectItem({ project }: { project: Project }) {
         <View
           className={`flex-row items-center px-2 py-0.5 rounded-full border ${badge.chip}`}
         >
-          <View className={`w-1.5 h-1.5 rounded-full mr-1 ${badge.dot}`} />
+          <View className={`w-1.5 h-1.5 rounded-full mr-1.5 ${badge.dot}`} />
           <Text className={`text-[10px] font-bold ${badge.text}`}>
-            {project.status || "Active"}
+            {badge.label}
           </Text>
         </View>
       </View>
 
-      <View className="mt-3 pt-3 border-t border-divider">
+      <View className="mt-3 pt-2.5 border-t border-divider">
         <View className="flex-row justify-between items-center w-full mb-1.5">
-          <Text className="text-xs font-medium text-muted">Progres Tugas</Text>
-          <Text className="text-xs font-semibold text-foreground">
+          <Text className="text-[11px] font-medium text-muted">
+            Progres Tugas
+          </Text>
+          <Text className="text-[11px] font-semibold text-foreground">
             {doneTasks}/{totalTasks} ({progressPercent}%)
           </Text>
         </View>
-        <View className="w-full h-1.5 bg-surface-subtle rounded-full overflow-hidden border border-border/50">
+        <View className="w-full h-1.5 bg-surface-subtle rounded-full overflow-hidden border border-border/40">
           <View
             className="h-full bg-primary rounded-full"
             style={{

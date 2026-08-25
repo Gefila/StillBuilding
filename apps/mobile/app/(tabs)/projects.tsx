@@ -4,6 +4,7 @@ import { useRouter } from "expo-router";
 import { useIsFocused } from "@react-navigation/native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useGetProjects } from "@/features/project/hooks/useProject";
+import { useGetPomodoros } from "@/features/pomodoro/hooks/usePomodoro";
 import { ScreenHeader } from "@/components/ScreenHeader";
 import { Button } from "@/components/Button";
 import ProjectsStats from "@/features/project/components/ProjectsStats";
@@ -16,6 +17,13 @@ export default function Projects() {
   const insets = useSafeAreaInsets();
 
   const projectsQuery = useGetProjects({
+    queryConfig: {
+      subscribed: isFocused,
+      staleTime: 1000,
+    },
+  });
+
+  const pomodorosQuery = useGetPomodoros({
     queryConfig: {
       subscribed: isFocused,
       staleTime: 1000,
@@ -47,8 +55,11 @@ export default function Projects() {
         />
 
         {/* 2. Projects Summary Stats */}
-        <View className="my-2">
-          <ProjectsStats />
+        <View className="my-2.5">
+          <ProjectsStats
+            projects={projectsQuery.data || []}
+            pomodoros={pomodorosQuery.data || []}
+          />
         </View>
 
         {/* 3. Projects List */}
