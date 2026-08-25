@@ -161,12 +161,21 @@ export default function TaskPickerModal({
                       />
                     </View>
                     <View className="flex-1">
-                      <Text
-                        className="text-xs font-bold text-foreground"
-                        numberOfLines={1}
-                      >
-                        {task.title}
-                      </Text>
+                      <View className="flex-row items-center gap-1.5">
+                        <Text
+                          className="text-xs font-bold text-foreground flex-1"
+                          numberOfLines={1}
+                        >
+                          {task.title}
+                        </Text>
+                        {task.status === "Active" && (
+                          <View className="bg-emerald-50 border border-emerald-200 px-1.5 py-0.2 rounded-full">
+                            <Text className="text-[9px] font-bold text-emerald-700">
+                              Aktif
+                            </Text>
+                          </View>
+                        )}
+                      </View>
                       <View className="flex-row items-center gap-2 mt-0.5">
                         {task.project ? (
                           <Text className="text-[10px] font-semibold text-muted">

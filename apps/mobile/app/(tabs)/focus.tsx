@@ -25,14 +25,14 @@ export default function FocusTab() {
   const taskQuery = useGetTaskById({
     id: (id as string) || "",
     queryConfig: {
-      enabled: !!id,
+      enabled: !!id && id !== "",
       staleTime: 0,
     },
   });
 
-  // Sync task param only if the task is not Done
+  // Sync task param and mark active when opened via route param ?id=...
   useEffect(() => {
-    if (taskQuery.data) {
+    if (id && taskQuery.data) {
       if (taskQuery.data.status === "Done") {
         setActiveTask(null);
         router.setParams({ id: "" });
@@ -43,9 +43,17 @@ export default function FocusTab() {
           project_id: taskQuery.data.project_id || taskQuery.data.project?.id,
           projectName: taskQuery.data.project?.name,
         });
+
+        // Ensure task status is marked Active in database
+        if (taskQuery.data.status !== "Active") {
+          updateTaskMutation.mutate({
+            id: taskQuery.data.id,
+            data: { status: "Active" },
+          });
+        }
       }
     }
-  }, [taskQuery.data, setActiveTask, router]);
+  }, [id, taskQuery.data]);
 
   const handleSelectTask = (task: Task | null) => {
     if (task) {
@@ -56,9 +64,26 @@ export default function FocusTab() {
         projectName: task.project?.name,
       });
       router.setParams({ id: task.id });
+
+      // Mark the selected task as Active
+      if (task.status !== "Active") {
+        updateTaskMutation.mutate({
+          id: task.id,
+          data: { status: "Active" },
+        });
+      }
     } else {
+      // User chose Standalone Focus (Quick Focus) without specific task
+      const prevTaskId = activeTask?.id;
       setActiveTask(null);
       router.setParams({ id: "" });
+
+      if (prevTaskId) {
+        updateTaskMutation.mutate({
+          id: prevTaskId,
+          data: { status: "Pending" },
+        });
+      }
     }
   };
 
@@ -136,9 +161,18 @@ export default function FocusTab() {
             />
           </View>
           <View className="flex-1 mr-2">
-            <Text className="text-muted text-[11px] font-semibold uppercase tracking-wider">
-              Target Fokus
-            </Text>
+            <View className="flex-row items-center gap-1.5">
+              <Text className="text-muted text-[11px] font-semibold uppercase tracking-wider">
+                Target Fokus
+              </Text>
+              {activeTask && (
+                <View className="bg-emerald-50 border border-emerald-200 px-1.5 py-0.2 rounded-full">
+                  <Text className="text-[9px] font-bold text-emerald-700">
+                    Aktif
+                  </Text>
+                </View>
+              )}
+            </View>
             <Text
               className="text-foreground text-sm font-bold mt-0.5"
               numberOfLines={1}

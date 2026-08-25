@@ -63,9 +63,11 @@ export function TaskItem({
   return (
     <TouchableOpacity
       activeOpacity={0.8}
-      className={`flex-row items-center mb-2.5 bg-surface p-3.5 rounded-2xl border border-border shadow-xs ${
-        isDone ? "opacity-60 bg-surface-subtle" : ""
-      }`}
+      className={`flex-row items-center mb-2.5 bg-surface p-3.5 rounded-2xl border ${
+        task.status === "Active"
+          ? "border-emerald-300 shadow-2xs"
+          : "border-border shadow-xs"
+      } ${isDone ? "opacity-60 bg-surface-subtle" : ""}`}
       onPress={() => router.push(`/task/${task.id}`)}
     >
       {/* Checkbox / Status Toggle */}
@@ -100,13 +102,24 @@ export function TaskItem({
             {task.title}
           </Text>
 
-          <View
-            className={`flex-row items-center px-2 py-0.5 rounded-full border shrink-0 ${style.chip}`}
-          >
-            <View className={`w-1.5 h-1.5 rounded-full mr-1 ${style.dot}`} />
-            <Text className={`text-[10px] font-bold ${style.label}`}>
-              {task.priority || "Normal"}
-            </Text>
+          <View className="flex-row items-center gap-1 shrink-0">
+            {task.status === "Active" && (
+              <View className="flex-row items-center bg-emerald-50 border border-emerald-200 px-1.5 py-0.5 rounded-full">
+                <View className="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-1" />
+                <Text className="text-[9px] font-bold text-emerald-700">
+                  Aktif
+                </Text>
+              </View>
+            )}
+
+            <View
+              className={`flex-row items-center px-2 py-0.5 rounded-full border shrink-0 ${style.chip}`}
+            >
+              <View className={`w-1.5 h-1.5 rounded-full mr-1 ${style.dot}`} />
+              <Text className={`text-[10px] font-bold ${style.label}`}>
+                {task.priority || "Normal"}
+              </Text>
+            </View>
           </View>
         </View>
 

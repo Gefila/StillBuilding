@@ -68,6 +68,23 @@ export const taskService = {
       }
     }
 
+    // Single Active Task Rule: jika task berstatus "Active", demote task aktif lainnya milik user menjadi "Pending"
+    if (task.status === "Active") {
+      const { data: userProjects } = await supabase
+        .from("projects")
+        .select("id")
+        .eq("user_id", userId);
+
+      if (userProjects && userProjects.length > 0) {
+        const projectIds = userProjects.map((p) => p.id);
+        await supabase
+          .from(TABLE)
+          .update({ status: "Pending" })
+          .in("project_id", projectIds)
+          .eq("status", "Active");
+      }
+    }
+
     const { data, error } = await supabase
       .from(TABLE)
       .insert(task)
@@ -101,6 +118,24 @@ export const taskService = {
 
       if (projError || !project) {
         throw new AppError("Target project not found or unauthorized", 404);
+      }
+    }
+
+    // 3. Single Active Task Rule: jika status diubah ke "Active", demote task aktif lainnya milik user menjadi "Pending"
+    if (task.status === "Active") {
+      const { data: userProjects } = await supabase
+        .from("projects")
+        .select("id")
+        .eq("user_id", userId);
+
+      if (userProjects && userProjects.length > 0) {
+        const projectIds = userProjects.map((p) => p.id);
+        await supabase
+          .from(TABLE)
+          .update({ status: "Pending" })
+          .in("project_id", projectIds)
+          .eq("status", "Active")
+          .neq("id", id);
       }
     }
 

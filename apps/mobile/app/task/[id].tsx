@@ -93,6 +93,12 @@ export default function TaskDetail() {
   };
 
   const handleStartFocus = () => {
+    if (task.status !== "Active") {
+      updateTaskMutation.mutate({
+        id: task.id,
+        data: { status: "Active" },
+      });
+    }
     router.push({
       pathname: "/(tabs)/focus",
       params: { id: task.id },
