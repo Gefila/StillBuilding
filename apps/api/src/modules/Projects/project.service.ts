@@ -56,7 +56,15 @@ export const projectService = {
     if (!data) {
       throw new AppError(`Project with id ${id} not found`, 404);
     }
-    return data as Project;
+    const tasks = (data.tasks || []) as Array<{ status?: string }>;
+    const total_tasks = tasks.length;
+    const done_tasks = tasks.filter((t) => t.status === "Done").length;
+
+    return {
+      ...data,
+      total_tasks,
+      done_tasks,
+    } as Project;
   },
 
   async create(project: CreateProjectDTO): Promise<Project> {

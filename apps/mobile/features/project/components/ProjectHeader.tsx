@@ -4,8 +4,10 @@ import { Ionicons } from "@expo/vector-icons";
 import { Project } from "@/features/project/types/project.types";
 
 export default function ProjectHeader({ project }: { project: Project }) {
-  const doneTasks = project.done_tasks || 0;
-  const totalTasks = project.total_tasks || 0;
+  const tasks = project.tasks || [];
+  const totalTasks = project.total_tasks ?? tasks.length;
+  const doneTasks =
+    project.done_tasks ?? tasks.filter((t) => t.status === "Done").length;
   const progressPercent =
     totalTasks > 0
       ? Math.min(100, Math.round((doneTasks / totalTasks) * 100))

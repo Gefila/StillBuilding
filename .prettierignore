@@ -1,0 +1,8 @@
+# Ignore backend since it uses Biome for formatting and linting
+apps/api/**
+
+# Build artifacts & dependencies
+node_modules/**
+.turbo/**
+dist/**
+.expo/**

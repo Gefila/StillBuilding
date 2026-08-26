@@ -5,7 +5,7 @@
 		"build": "turbo run build",
 		"dev": "turbo run dev --ui=tui",
 		"lint": "turbo run lint",
-		"format": "prettier --write \"**/*.{ts,tsx,md}\"",
+		"format": "prettier --write \"**/*.{ts,tsx,md}\" && pnpm --filter @stillbuilding/api check",
 		"check-types": "turbo run check-types"
 	},
 	"devDependencies": {
