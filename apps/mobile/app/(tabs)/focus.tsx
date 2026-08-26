@@ -237,7 +237,9 @@ export default function FocusTab() {
 
         {/* 3. Pomodoro Timer Component */}
         <View className="bg-surface p-5 rounded-2xl border border-border my-1 items-center shadow-xs">
-          <PomodoroTimer />
+          <PomodoroTimer
+            onRequestOpenTaskPicker={() => setTaskPickerVisible(true)}
+          />
         </View>
 
         <View style={{ height: Math.max(insets.bottom + 80, 90) }} />

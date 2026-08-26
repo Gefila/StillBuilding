@@ -24,6 +24,7 @@ import { getPomodoroQueryKey, useCreatePomodoro } from "../hooks/usePomodoro";
 import {
   getTaskByIdQueryKey,
   getTaskQueryKey,
+  useUpdateTask,
 } from "@/features/task/hooks/useTask";
 import QuickBlockerModal from "./QuickBlockerModal";
 
@@ -35,9 +36,16 @@ const TABS: { key: PomodoroMode; label: string }[] = [
 
 const CIRCUMFERENCE = 2 * Math.PI * 100;
 
-export default function PomodoroTimer() {
+type PomodoroTimerProps = {
+  onRequestOpenTaskPicker?: () => void;
+};
+
+export default function PomodoroTimer({
+  onRequestOpenTaskPicker,
+}: PomodoroTimerProps = {}) {
   const queryClient = useQueryClient();
   const createPomodoroMutation = useCreatePomodoro();
+  const updateTaskMutation = useUpdateTask();
 
   const {
     mode,
@@ -48,6 +56,7 @@ export default function PomodoroTimer() {
     sessionsCount,
     cycleIndex,
     activeTask,
+    setActiveTask,
     startedAt,
     startTimer,
     pauseTimer,
@@ -63,6 +72,7 @@ export default function PomodoroTimer() {
   const [completionModalVisible, setCompletionModalVisible] = useState(false);
   const [lastCompletedMode, setLastCompletedMode] =
     useState<PomodoroMode>("pomodoro");
+  const pendingActionOnModalHideRef = useRef<(() => void) | null>(null);
 
   // Interval & Wall-Clock Countdown management
   useEffect(() => {
@@ -438,6 +448,13 @@ export default function PomodoroTimer() {
         isVisible={completionModalVisible}
         onBackdropPress={() => setCompletionModalVisible(false)}
         onBackButtonPress={() => setCompletionModalVisible(false)}
+        onModalHide={() => {
+          if (pendingActionOnModalHideRef.current) {
+            const action = pendingActionOnModalHideRef.current;
+            pendingActionOnModalHideRef.current = null;
+            action();
+          }
+        }}
         backdropOpacity={0.65}
         backdropColor="#000000"
         animationIn="fadeIn"
@@ -445,48 +462,123 @@ export default function PomodoroTimer() {
         animationInTiming={250}
         animationOutTiming={200}
         useNativeDriver={true}
-        hideModalContentWhileAnimating={true}
+        useNativeDriverForBackdrop={true}
         backdropTransitionOutTiming={1}
         style={{ margin: 20, justifyContent: "center", alignItems: "center" }}
       >
         <View className="w-full max-w-sm bg-surface rounded-3xl p-6 border border-border items-center shadow-2xl">
-          <View className="w-14 h-14 rounded-2xl bg-emerald-100 items-center justify-center mb-3">
-            <Ionicons name="checkmark-circle" size={32} color="#16a34a" />
-          </View>
-          <Text className="text-lg font-bold text-foreground text-center">
-            {lastCompletedMode === "pomodoro"
-              ? "Sesi Fokus Tuntas! 🎉"
-              : "Waktu Istirahat Selesai!"}
-          </Text>
-          <Text className="text-xs text-muted text-center mt-1 mb-5 leading-relaxed">
-            {lastCompletedMode === "pomodoro"
-              ? `Kerja bagus! 25 menit fokus telah dicatat.${
-                  activeTask ? ` Progres '${activeTask.title}' bertambah.` : ""
-                } Saatnya rehat sejenak.`
-              : "Pikiran Anda telah segar kembali. Siap melanjutkan deep work?"}
-          </Text>
+          {lastCompletedMode === "pomodoro" ? (
+            <>
+              {/* Pomodoro Finished State */}
+              <View className="w-14 h-14 rounded-2xl bg-emerald-100 items-center justify-center mb-3">
+                <Ionicons name="checkmark-circle" size={32} color="#16a34a" />
+              </View>
+              <Text className="text-lg font-bold text-foreground text-center">
+                Sesi Fokus Tuntas! 🎉
+              </Text>
+              <Text className="text-xs text-muted text-center mt-1 mb-5 leading-relaxed">
+                Kerja bagus! 25 menit fokus telah dicatat. Saatnya rehat
+                sejenak.
+              </Text>
 
-          <TouchableOpacity
-            onPress={() => {
-              setCompletionModalVisible(false);
-              startTimer();
-            }}
-            activeOpacity={0.8}
-            className="w-full py-3 bg-foreground rounded-2xl items-center mb-2"
-          >
-            <Text className="text-sm font-bold text-background">
-              {lastCompletedMode === "pomodoro"
-                ? "Mulai Istirahat Sekarang"
-                : "Mulai Sesi Fokus Berikutnya"}
-            </Text>
-          </TouchableOpacity>
+              {/* Primary Action: Start Break */}
+              <TouchableOpacity
+                onPress={() => {
+                  pendingActionOnModalHideRef.current = () => {
+                    startTimer();
+                  };
+                  setCompletionModalVisible(false);
+                }}
+                activeOpacity={0.8}
+                className="w-full py-3.5 bg-foreground rounded-2xl items-center mb-2.5 flex-row justify-center gap-2"
+              >
+                <Ionicons name="cafe-outline" size={16} color="#ffffff" />
+                <Text className="text-sm font-bold text-background">
+                  Mulai Istirahat Sekarang
+                </Text>
+              </TouchableOpacity>
 
-          <TouchableOpacity
-            onPress={() => setCompletionModalVisible(false)}
-            className="py-2"
-          >
-            <Text className="text-xs font-semibold text-muted">Tutup</Text>
-          </TouchableOpacity>
+              {/* Secondary Action: Mark Task Complete & Pick Next Task */}
+              {activeTask && (
+                <TouchableOpacity
+                  onPress={() => {
+                    if (activeTask?.id) {
+                      const taskId = activeTask.id;
+                      Haptics.notificationAsync(
+                        Haptics.NotificationFeedbackType.Success,
+                      );
+                      updateTaskMutation.mutate({
+                        id: taskId,
+                        data: {
+                          status: "Done",
+                          completed_at: new Date().toISOString(),
+                        },
+                      });
+                      setActiveTask(null);
+                    }
+                    pendingActionOnModalHideRef.current = () => {
+                      onRequestOpenTaskPicker?.();
+                    };
+                    setCompletionModalVisible(false);
+                  }}
+                  activeOpacity={0.8}
+                  disabled={updateTaskMutation.isPending}
+                  className="w-full py-3 bg-surface-subtle border border-border rounded-2xl items-center mb-2 flex-row justify-center gap-2"
+                >
+                  <Ionicons name="checkmark-done" size={16} color="#18181b" />
+                  <Text className="text-xs font-bold text-foreground">
+                    Tandai Tugas Selesai & Ganti Tugas
+                  </Text>
+                </TouchableOpacity>
+              )}
+
+              {/* Dismiss / Close */}
+              <TouchableOpacity
+                onPress={() => setCompletionModalVisible(false)}
+                className="py-2"
+              >
+                <Text className="text-xs font-semibold text-muted">Tutup</Text>
+              </TouchableOpacity>
+            </>
+          ) : (
+            <>
+              {/* Break Finished State */}
+              <View className="w-14 h-14 rounded-2xl bg-blue-100 items-center justify-center mb-3">
+                <Ionicons name="sparkles" size={28} color="#2563eb" />
+              </View>
+              <Text className="text-lg font-bold text-foreground text-center">
+                Waktu Istirahat Selesai!
+              </Text>
+              <Text className="text-xs text-muted text-center mt-1 mb-5 leading-relaxed">
+                Pikiran Anda telah segar kembali. Siap melanjutkan deep work?
+              </Text>
+
+              {/* Primary Action: Start Focus Session */}
+              <TouchableOpacity
+                onPress={() => {
+                  pendingActionOnModalHideRef.current = () => {
+                    startTimer();
+                  };
+                  setCompletionModalVisible(false);
+                }}
+                activeOpacity={0.8}
+                className="w-full py-3.5 bg-foreground rounded-2xl items-center mb-2 flex-row justify-center gap-2"
+              >
+                <Ionicons name="play" size={16} color="#ffffff" />
+                <Text className="text-sm font-bold text-background">
+                  Mulai Sesi Fokus Berikutnya
+                </Text>
+              </TouchableOpacity>
+
+              {/* Dismiss / Close */}
+              <TouchableOpacity
+                onPress={() => setCompletionModalVisible(false)}
+                className="py-2"
+              >
+                <Text className="text-xs font-semibold text-muted">Tutup</Text>
+              </TouchableOpacity>
+            </>
+          )}
         </View>
       </Modal>
     </View>

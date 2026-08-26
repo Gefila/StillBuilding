@@ -16,8 +16,8 @@ export const COLORS: Record<PomodoroMode, string> = {
 
 export const MODE_LABELS: Record<PomodoroMode, string> = {
   pomodoro: "Deep Work",
-  shortBreak: "Istirahat Pendek",
-  longBreak: "Istirahat Panjang",
+  shortBreak: "Short Break",
+  longBreak: "Long Break",
 };
 
 export const CYCLE: PomodoroMode[] = [
