@@ -1,10 +1,14 @@
-import React, { useEffect, useState } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { Alert, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
-import { useGetTaskById, useUpdateTask } from "@/features/task/hooks/useTask";
+import {
+  useGetTaskById,
+  useGetTasks,
+  useUpdateTask,
+} from "@/features/task/hooks/useTask";
 import { ScreenHeader } from "@/components/ScreenHeader";
 import { Button } from "@/components/Button";
 import PomodoroTimer from "@/features/pomodoro/components/PomodoroTimer";
@@ -15,12 +19,15 @@ import { Task } from "@/features/task/types/task.types";
 export default function FocusTab() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { id } = useLocalSearchParams();
+  const { id } = useLocalSearchParams<{ id?: string }>();
   const [taskPickerVisible, setTaskPickerVisible] = useState(false);
+  const hasInitializedFromDb = useRef(false);
+  const lastProcessedIdRef = useRef<string | null>(null);
 
   const { activeTask, setActiveTask, isActive, isPaused, pauseTimer } =
     usePomodoroStore();
   const updateTaskMutation = useUpdateTask();
+  const { data: allTasks } = useGetTasks();
 
   const taskQuery = useGetTaskById({
     id: (id as string) || "",
@@ -30,12 +37,13 @@ export default function FocusTab() {
     },
   });
 
-  // Sync task param and mark active when opened via route param ?id=...
+  // Sync task param and mark active when opened via route param ?id=... (from external navigation)
   useEffect(() => {
-    if (id && taskQuery.data) {
+    if (id && id !== lastProcessedIdRef.current && taskQuery.data) {
+      lastProcessedIdRef.current = id;
+      hasInitializedFromDb.current = true;
       if (taskQuery.data.status === "Done") {
         setActiveTask(null);
-        router.setParams({ id: "" });
       } else {
         setActiveTask({
           id: taskQuery.data.id,
@@ -55,15 +63,55 @@ export default function FocusTab() {
     }
   }, [id, taskQuery.data]);
 
+  // Default target focus to task with status "Active" once on initial load
+  useEffect(() => {
+    if (!id && allTasks && !hasInitializedFromDb.current) {
+      hasInitializedFromDb.current = true;
+      if (!activeTask) {
+        const activeDbTask = allTasks.find((t) => t.status === "Active");
+        if (activeDbTask) {
+          setActiveTask({
+            id: activeDbTask.id,
+            title: activeDbTask.title,
+            project_id: activeDbTask.project_id || activeDbTask.project?.id,
+            projectName: activeDbTask.project?.name,
+          });
+        }
+      }
+    }
+  }, [id, allTasks, activeTask, setActiveTask]);
+
+  // Sync if current activeTask in store was marked Done in DB
+  useEffect(() => {
+    if (activeTask && allTasks) {
+      const matchingTask = allTasks.find((t) => t.id === activeTask.id);
+      if (matchingTask && matchingTask.status === "Done") {
+        setActiveTask(null);
+      }
+    }
+  }, [allTasks, activeTask, setActiveTask]);
+
   const handleSelectTask = (task: Task | null) => {
+    hasInitializedFromDb.current = true;
+    const prevTaskId = activeTask?.id;
+
     if (task) {
+      lastProcessedIdRef.current = task.id;
+
+      // Revert previous active task back to Pending if selecting a different task
+      if (prevTaskId && prevTaskId !== task.id) {
+        updateTaskMutation.mutate({
+          id: prevTaskId,
+          data: { status: "Pending" },
+        });
+      }
+
       setActiveTask({
         id: task.id,
         title: task.title,
         project_id: task.project_id || task.project?.id,
         projectName: task.project?.name,
       });
-      router.setParams({ id: task.id });
 
       // Mark the selected task as Active
       if (task.status !== "Active") {
@@ -74,9 +122,8 @@ export default function FocusTab() {
       }
     } else {
       // User chose Standalone Focus (Quick Focus) without specific task
-      const prevTaskId = activeTask?.id;
+      lastProcessedIdRef.current = null;
       setActiveTask(null);
-      router.setParams({ id: "" });
 
       if (prevTaskId) {
         updateTaskMutation.mutate({
@@ -120,7 +167,6 @@ export default function FocusTab() {
                     Haptics.NotificationFeedbackType.Success,
                   );
                   setActiveTask(null);
-                  router.setParams({ id: "" });
                   // Open task picker so user can pick their next target task
                   setTaskPickerVisible(true);
                 },

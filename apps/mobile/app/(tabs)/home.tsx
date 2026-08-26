@@ -36,9 +36,7 @@ export default function Home() {
   }, [refetch]);
 
   const completedCount = taskList.filter((t) => t.status === "Done").length;
-  const activeTask = taskList.find(
-    (t) => t.status === "Active" || t.status === "Pending",
-  );
+  const activeTask = taskList.find((t) => t.status === "Active");
   const userName =
     user?.name || user?.full_name || user?.username || "Pengguna";
 

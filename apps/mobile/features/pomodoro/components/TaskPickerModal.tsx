@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useRef, useState } from "react";
 import {
   ActivityIndicator,
   ScrollView,
@@ -26,18 +26,32 @@ export default function TaskPickerModal({
   selectedTaskId,
 }: TaskPickerModalProps) {
   const [searchQuery, setSearchQuery] = useState("");
+  const selectedTaskRef = useRef<Task | null | undefined>(undefined);
   const tasksQuery = useGetTasks();
 
   const allTasks = tasksQuery.data || [];
-  const availableTasks = allTasks.filter(
-    (t) =>
-      t.status !== "Done" &&
-      t.title.toLowerCase().includes(searchQuery.toLowerCase().trim()),
-  );
+  const availableTasks = allTasks
+    .filter(
+      (t) =>
+        t.status !== "Done" &&
+        t.title.toLowerCase().includes(searchQuery.toLowerCase().trim()),
+    )
+    .sort((a, b) => {
+      if (a.status === "Active" && b.status !== "Active") return -1;
+      if (a.status !== "Active" && b.status === "Active") return 1;
+      return 0;
+    });
 
   const handleSelect = (task: Task | null) => {
-    onSelectTask(task);
+    selectedTaskRef.current = task;
     onClose();
+  };
+
+  const handleModalHide = () => {
+    if (selectedTaskRef.current !== undefined) {
+      onSelectTask(selectedTaskRef.current);
+      selectedTaskRef.current = undefined;
+    }
   };
 
   return (
@@ -45,16 +59,17 @@ export default function TaskPickerModal({
       isVisible={visible}
       onBackdropPress={onClose}
       onBackButtonPress={onClose}
+      onModalHide={handleModalHide}
       backdropOpacity={0.65}
       backdropColor="#000000"
       animationIn="slideInUp"
       animationOut="slideOutDown"
-      animationInTiming={300}
-      animationOutTiming={250}
-      backdropTransitionInTiming={300}
+      animationInTiming={250}
+      animationOutTiming={200}
+      backdropTransitionInTiming={250}
       backdropTransitionOutTiming={1}
       useNativeDriver={true}
-      hideModalContentWhileAnimating={true}
+      useNativeDriverForBackdrop={true}
       style={{ margin: 0, justifyContent: "flex-end" }}
     >
       <View className="w-full bg-surface rounded-t-3xl p-5 pb-8 border-t border-border shadow-2xl max-h-[80%]">

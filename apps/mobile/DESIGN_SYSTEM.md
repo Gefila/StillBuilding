@@ -108,3 +108,35 @@ import Button from "@/components/Button";
 Gunakan `@expo/vector-icons` (`Ionicons`) dengan pewarnaan semantik:
 
 - **Default Icon**: `color="#18181b"` untuk icon aktif/fungsional, `color="#71717a"` untuk icon sekunder, `color="#a1a1aa"` untuk icon dekoratif/timestamp.
+
+---
+
+## 6. Standar Komponen Modal (`react-native-modal`)
+
+Gunakan konfigurasi berikut pada setiap komponen Modal untuk mencegah _backdrop flickering_ dan _frame stutter_:
+
+- **Backdrop Exit Timing**: Wajib gunakan `backdropTransitionOutTiming={1}` (jangan gunakan nilai > 1 karena menyebabkan kedipan backdrop saat modal ditutup).
+- **Callback Eksekusi**: Gunakan callback `onModalHide` saat item di dalam modal dipilih untuk menjalankan perubahan state atau mutasi setelah modal tertutup sempurna.
+- **Native Driver**: Selalu aktifkan `useNativeDriver={true}` dan `useNativeDriverForBackdrop={true}`. Hindari `hideModalContentWhileAnimating={true}`.
+
+```tsx
+<Modal
+  isVisible={visible}
+  onBackdropPress={onClose}
+  onBackButtonPress={onClose}
+  onModalHide={handleModalHide}
+  backdropOpacity={0.65}
+  backdropColor="#000000"
+  animationIn="slideInUp"
+  animationOut="slideOutDown"
+  animationInTiming={250}
+  animationOutTiming={200}
+  backdropTransitionInTiming={250}
+  backdropTransitionOutTiming={1}
+  useNativeDriver={true}
+  useNativeDriverForBackdrop={true}
+  style={{ margin: 0, justifyContent: "flex-end" }}
+>
+  {/* Modal Content */}
+</Modal>
+```

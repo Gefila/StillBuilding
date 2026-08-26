@@ -5,6 +5,7 @@ import { Text, TouchableOpacity, View } from "react-native";
 
 interface QuickFocusBannerProps {
   activeTaskTitle?: string;
+  activeTaskId?: string;
 }
 
 export default function QuickFocusBanner({
@@ -12,10 +13,14 @@ export default function QuickFocusBanner({
 }: QuickFocusBannerProps) {
   const router = useRouter();
 
+  const handlePress = () => {
+    router.push("/(tabs)/focus");
+  };
+
   return (
     <TouchableOpacity
       activeOpacity={0.85}
-      onPress={() => router.push("/(tabs)/focus")}
+      onPress={handlePress}
       className="bg-primary rounded-2xl p-4 my-2 border border-primary shadow-sm"
     >
       <View className="flex-row items-center justify-between">

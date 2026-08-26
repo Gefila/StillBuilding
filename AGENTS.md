@@ -81,3 +81,10 @@
    - Formatting: `pnpm format` / Biome for backend (`pnpm --filter @stillbuilding/api format`).
    - Typechecking: `pnpm check-types`.
    - Frontend styling: Use NativeWind utility classes with consistent spacing and design tokens.
+5. **Modal & UI Animation Standards (`react-native-modal`)**:
+   - **Backdrop Flickering Prevention**: Always set `backdropTransitionOutTiming={1}` on modals to prevent backdrop flicker when closing.
+   - **Dismissal Actions**: When selecting an item from a modal that triggers parent state changes or mutations, use the `onModalHide` callback (or close first before triggering state updates) to prevent UI glitching during animation.
+   - Do NOT use `hideModalContentWhileAnimating={true}` as it causes frame flashing. Use `useNativeDriver={true}` and `useNativeDriverForBackdrop={true}`.
+6. **Focus & Pomodoro State**:
+   - `usePomodoroStore` is the single source of truth for the active focus task and timer.
+   - Avoid injecting/retaining temporary `id` query params into Expo Router URLs during internal modal interactions.
