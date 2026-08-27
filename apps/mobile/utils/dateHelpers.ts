@@ -19,3 +19,27 @@ export function formatTime(dateString: string): string {
   const menit = String(date.getMinutes()).padStart(2, "0");
   return `${jam}:${menit}`;
 }
+
+export function formatRelativeDate(dateString?: string): string {
+  if (!dateString) return "Hari Ini";
+  const date = new Date(dateString);
+  const now = new Date();
+
+  if (date.toDateString() === now.toDateString()) return "Hari Ini";
+
+  const yesterday = new Date(now);
+  yesterday.setDate(now.getDate() - 1);
+  if (date.toDateString() === yesterday.toDateString()) return "Kemarin";
+
+  return new Intl.DateTimeFormat("id-ID", {
+    day: "numeric",
+    month: "short",
+  }).format(date);
+}
+
+export function formatLastSessionTime(dateString?: string): string {
+  if (!dateString) return "";
+  const relativeDate = formatRelativeDate(dateString);
+  const time = formatTime(dateString);
+  return `${relativeDate}, ${time}`;
+}
