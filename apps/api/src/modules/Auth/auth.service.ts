@@ -1,10 +1,10 @@
-import { supabase } from "../../config/supabase";
+import { supabase, supabaseAuth } from "../../config/supabase";
 import { AppError } from "../../utils/AppError";
 import type { LoginDTO, RegisterDTO } from "./auth.types";
 
 export const authService = {
   async register(payload: RegisterDTO) {
-    const { data, error } = await supabase.auth.signUp({
+    const { data, error } = await supabaseAuth.auth.signUp({
       email: payload.email,
       password: payload.password,
       options: {
@@ -22,7 +22,7 @@ export const authService = {
     return data;
   },
   async login(payload: LoginDTO) {
-    const { data, error } = await supabase.auth.signInWithPassword({
+    const { data, error } = await supabaseAuth.auth.signInWithPassword({
       email: payload.email,
       password: payload.password,
     });
@@ -63,13 +63,13 @@ export const authService = {
     };
   },
   async logout() {
-    const { error } = await supabase.auth.signOut();
+    const { error } = await supabaseAuth.auth.signOut();
     if (error) {
       throw new AppError(`Failed to logout user: ${error.message}`, 500);
     }
   },
   async refreshToken(refreshToken: string) {
-    const { data, error } = await supabase.auth.refreshSession({
+    const { data, error } = await supabaseAuth.auth.refreshSession({
       refresh_token: refreshToken,
     });
     if (error) {

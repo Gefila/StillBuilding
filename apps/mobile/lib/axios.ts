@@ -1,41 +1,140 @@
 import { useAuthStore } from "@/features/auth/store/useAuthStore";
-import axios, { isAxiosError } from "axios";
+import type { ApiResponse } from "@/features/auth/types/auth.types";
+import axios, {
+  type AxiosError,
+  type InternalAxiosRequestConfig,
+  create,
+  isAxiosError,
+} from "axios";
 import { Toast } from "toastify-react-native";
 
-const api = axios.create({
-  baseURL: process.env.EXPO_PUBLIC_API_URL,
+interface CustomAxiosRequestConfig extends InternalAxiosRequestConfig {
+  _retry?: boolean;
+}
+
+const baseURL = process.env.EXPO_PUBLIC_API_URL || "http://localhost:3000";
+
+const api = create({
+  baseURL,
   timeout: 10000,
   headers: {
     Accept: "application/json",
   },
 });
 
+let refreshTokenPromise: Promise<string> | null = null;
+
+const requestNewAccessToken = async (): Promise<string> => {
+  const currentRefreshToken = useAuthStore.getState().refreshToken;
+
+  if (!currentRefreshToken) {
+    throw new Error("No refresh token available");
+  }
+
+  const refreshUrl = `${baseURL.replace(/\/$/, "")}/auth/refresh-token`;
+  const response = await axios.post<
+    ApiResponse<{
+      accessToken: string;
+      refreshToken: string;
+      expiresIn: number;
+    }>
+  >(
+    refreshUrl,
+    {
+      refresh_token: currentRefreshToken,
+    },
+    {
+      headers: {
+        Accept: "application/json",
+        "Content-Type": "application/json",
+      },
+    },
+  );
+
+  const tokens = response.data.data;
+  if (!tokens?.accessToken || !tokens?.refreshToken) {
+    throw new Error(response.data.message || "Gagal memperbarui token sesi");
+  }
+
+  // Simpan access token & refresh token baru ke SecureStore dan Zustand store
+  await useAuthStore.getState().setAuth({
+    accessToken: tokens.accessToken,
+    refreshToken: tokens.refreshToken,
+  });
+
+  return tokens.accessToken;
+};
+
+api.interceptors.request.use(async (config) => {
+  const token = useAuthStore.getState().token;
+  if (token) {
+    config.headers.Authorization = `Bearer ${token}`;
+  }
+  return config;
+});
+
 api.interceptors.response.use(
   (response) => {
     return response;
   },
-
-  async (error) => {
+  async (error: AxiosError | Error) => {
     if (isAxiosError(error)) {
+      const originalRequest = error.config as
+        | CustomAxiosRequestConfig
+        | undefined;
+
       if (error.response) {
-        const { status, data } = error.response;
+        const { status, data } = error.response as {
+          status: number;
+          data: any;
+        };
+
+        if (status === 401) {
+          const requestUrl = originalRequest?.url || "";
+          const isAuthEndpoint =
+            requestUrl.includes("auth/login") ||
+            requestUrl.includes("auth/register") ||
+            requestUrl.includes("auth/refresh-token");
+
+          // Jika error 401 berasal dari auth endpoint atau request sudah pernah di-retry
+          if (isAuthEndpoint || originalRequest?._retry) {
+            if (isAuthEndpoint && !requestUrl.includes("auth/refresh-token")) {
+              return Promise.reject(data);
+            }
+            await useAuthStore.getState().logout();
+            Toast.error("Sesi Anda telah berakhir. Silakan masuk kembali.");
+            return Promise.reject(data);
+          }
+
+          if (originalRequest) {
+            originalRequest._retry = true;
+          }
+
+          try {
+            // Gunakan singleton promise agar hanya 1 request refresh token yang berjalan
+            if (!refreshTokenPromise) {
+              refreshTokenPromise = requestNewAccessToken().finally(() => {
+                refreshTokenPromise = null;
+              });
+            }
+
+            const newAccessToken = await refreshTokenPromise;
+
+            if (originalRequest) {
+              originalRequest.headers.Authorization = `Bearer ${newAccessToken}`;
+              return api(originalRequest);
+            }
+          } catch (refreshError) {
+            await useAuthStore.getState().logout();
+            Toast.error("Sesi Anda telah berakhir. Silakan masuk kembali.");
+            return Promise.reject(refreshError);
+          }
+        }
+
         switch (status) {
           case 400:
-            return Promise.reject(data);
-          case 401:
-            await useAuthStore.getState().logout();
-            if (
-              data?.message &&
-              !data.message.toLowerCase().includes("credentials") &&
-              !data.message.toLowerCase().includes("login")
-            ) {
-              Toast.error("Sesi Anda telah berakhir. Silakan masuk kembali.");
-            }
-            return Promise.reject(data);
           case 403:
-            return Promise.reject(data);
           case 404:
-            return Promise.reject(data);
           case 500:
             return Promise.reject(data);
           default:
@@ -53,13 +152,5 @@ api.interceptors.response.use(
     return Promise.reject(new Error("Terjadi kesalahan yang tidak terduga."));
   },
 );
-
-api.interceptors.request.use(async (config) => {
-  const token = useAuthStore.getState().token;
-  if (token) {
-    config.headers.Authorization = `Bearer ${token}`;
-  }
-  return config;
-});
 
 export default api;
