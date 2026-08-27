@@ -3,7 +3,11 @@ import { Alert, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
-import { useGetTasks, useUpdateTask } from "@/features/task/hooks/useTask";
+import {
+  useGetTasks,
+  useSetActiveTask,
+  useUpdateTask,
+} from "@/features/task/hooks/useTask";
 import { ScreenHeader } from "@/components/ScreenHeader";
 import { Button } from "@/components/Button";
 import PomodoroTimer from "@/features/pomodoro/components/PomodoroTimer";
@@ -18,6 +22,7 @@ export default function FocusTab() {
 
   const { activeTask, setActiveTask, isActive, isPaused, pauseTimer } =
     usePomodoroStore();
+  const setActiveTaskMutation = useSetActiveTask();
   const updateTaskMutation = useUpdateTask();
   const { data: allTasks } = useGetTasks();
 
@@ -53,39 +58,34 @@ export default function FocusTab() {
     hasInitializedFromDb.current = true;
     const prevTaskId = activeTask?.id;
 
-    if (task) {
-      // Revert previous active task back to Pending if selecting a different task
-      if (prevTaskId && prevTaskId !== task.id) {
-        updateTaskMutation.mutate({
-          id: prevTaskId,
-          data: { status: "Pending" },
-        });
-      }
+    setActiveTask(
+      task
+        ? {
+            id: task.id,
+            title: task.title,
+            project_id: task.project_id || task.project?.id,
+            projectName: task.project?.name,
+          }
+        : null,
+    );
 
-      setActiveTask({
-        id: task.id,
-        title: task.title,
-        project_id: task.project_id || task.project?.id,
-        projectName: task.project?.name,
+    const prevTaskInDb = allTasks?.find((t) => t.id === prevTaskId);
+    const newTaskInDb = task
+      ? allTasks?.find((t) => t.id === task.id) || task
+      : null;
+
+    const shouldRevertPrev = !!(
+      prevTaskId &&
+      prevTaskId !== task?.id &&
+      prevTaskInDb?.status === "Active"
+    );
+    const shouldActivateNew = !!(task && newTaskInDb?.status !== "Active");
+
+    if (shouldRevertPrev || shouldActivateNew) {
+      setActiveTaskMutation.mutate({
+        prevTaskId: shouldRevertPrev ? prevTaskId : null,
+        newTaskId: shouldActivateNew && task ? task.id : null,
       });
-
-      // Mark the selected task as Active
-      if (task.status !== "Active") {
-        updateTaskMutation.mutate({
-          id: task.id,
-          data: { status: "Active" },
-        });
-      }
-    } else {
-      // User chose Standalone Focus (Quick Focus) without specific task
-      setActiveTask(null);
-
-      if (prevTaskId) {
-        updateTaskMutation.mutate({
-          id: prevTaskId,
-          data: { status: "Pending" },
-        });
-      }
     }
   };
 

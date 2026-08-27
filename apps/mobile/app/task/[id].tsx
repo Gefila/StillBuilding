@@ -13,6 +13,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import {
   useDeleteTask,
   useGetTaskById,
+  useSetActiveTask,
   useUpdateTask,
 } from "@/features/task/hooks/useTask";
 import { ScreenHeader } from "@/components/ScreenHeader";
@@ -37,6 +38,7 @@ export default function TaskDetail() {
 
   const updateTaskMutation = useUpdateTask();
   const deleteTaskMutation = useDeleteTask();
+  const setActiveTaskMutation = useSetActiveTask();
 
   const task = taskQuery.data;
 
@@ -94,6 +96,8 @@ export default function TaskDetail() {
   };
 
   const handleStartFocus = () => {
+    const prevTask = usePomodoroStore.getState().activeTask;
+
     usePomodoroStore.getState().setActiveTask({
       id: task.id,
       title: task.title,
@@ -101,10 +105,10 @@ export default function TaskDetail() {
       projectName: task.project?.name,
     });
 
-    if (task.status !== "Active") {
-      updateTaskMutation.mutate({
-        id: task.id,
-        data: { status: "Active" },
+    if (task.status !== "Active" || (prevTask && prevTask.id !== task.id)) {
+      setActiveTaskMutation.mutate({
+        prevTaskId: prevTask && prevTask.id !== task.id ? prevTask.id : null,
+        newTaskId: task.status !== "Active" ? task.id : null,
       });
     }
 

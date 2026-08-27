@@ -6,7 +6,7 @@ import type { Project } from "../types/project.types";
 import type { Task } from "@/features/task/types/task.types";
 import { formatLastSessionTime } from "@/utils/dateHelpers";
 import { usePomodoroStore } from "@/features/pomodoro/store/usePomodoroStore";
-import { useUpdateTask } from "@/features/task/hooks/useTask";
+import { useSetActiveTask } from "@/features/task/hooks/useTask";
 import ProjectSessionRow, {
   type ProjectSessionItem,
   getSessionDurationMinutes,
@@ -82,10 +82,12 @@ export default function ProjectPomodoro({ project }: ProjectPomodoroProps) {
     : sortedSessions.slice(0, 4);
   const hasMoreSessions = sortedSessions.length > 4;
 
-  const updateTaskMutation = useUpdateTask();
+  const setActiveTaskMutation = useSetActiveTask();
 
   const handleStartFocus = (task?: Task) => {
     if (task) {
+      const prevTask = usePomodoroStore.getState().activeTask;
+
       usePomodoroStore.getState().setActiveTask({
         id: task.id,
         title: task.title,
@@ -93,10 +95,10 @@ export default function ProjectPomodoro({ project }: ProjectPomodoroProps) {
         projectName: project.name,
       });
 
-      if (task.status !== "Active") {
-        updateTaskMutation.mutate({
-          id: task.id,
-          data: { status: "Active" },
+      if (task.status !== "Active" || (prevTask && prevTask.id !== task.id)) {
+        setActiveTaskMutation.mutate({
+          prevTaskId: prevTask && prevTask.id !== task.id ? prevTask.id : null,
+          newTaskId: task.status !== "Active" ? task.id : null,
         });
       }
     }
@@ -140,7 +142,7 @@ export default function ProjectPomodoro({ project }: ProjectPomodoroProps) {
             </Text>
           </View>
 
-          <View className="w-[1px] h-3.5 bg-border" />
+          <View className="w-px h-3.5 bg-border" />
 
           <View className="flex-row items-center gap-1.5">
             <Ionicons

@@ -1,7 +1,7 @@
 import { queryOptions, useMutation, useQuery } from "@tanstack/react-query";
 import { MutationConfig, queryClient, QueryConfig } from "@/lib/reactQuery";
 import { taskService } from "../service/taskService";
-import { CreateTaskDTO, UpdateTaskDTO } from "../types/task.types";
+import { CreateTaskDTO, Task, UpdateTaskDTO } from "../types/task.types";
 import {
   getProjectByIdQueryKey,
   getProjectQueryKey,
@@ -62,6 +62,57 @@ export const useGetTaskById = ({
   });
 };
 
+export const useSetActiveTask = () => {
+  return useMutation({
+    mutationFn: async ({
+      newTaskId,
+      prevTaskId,
+    }: {
+      newTaskId?: string | null;
+      prevTaskId?: string | null;
+    }) => {
+      // Backend automatically demotes all other active tasks to "Pending" when a task is updated to "Active".
+      // Hence, if newTaskId is provided, only 1 PUT request is needed!
+      if (newTaskId) {
+        return taskService.update({
+          id: newTaskId,
+          data: { status: "Active" },
+        });
+      }
+      // If user chose Standalone Focus (no target task), demote previous task to "Pending"
+      if (prevTaskId) {
+        return taskService.update({
+          id: prevTaskId,
+          data: { status: "Pending" },
+        });
+      }
+      return null;
+    },
+    onSuccess: (_data, variables) => {
+      queryClient.setQueryData<Task[]>(getTaskQueryKey(), (old) => {
+        if (!old) return old;
+        return old.map((t) => {
+          if (variables.newTaskId) {
+            if (t.id === variables.newTaskId) return { ...t, status: "Active" };
+            if (t.status === "Active") return { ...t, status: "Pending" };
+          } else if (variables.prevTaskId && t.id === variables.prevTaskId) {
+            return { ...t, status: "Pending" };
+          }
+          return t;
+        });
+      });
+      queryClient.invalidateQueries({
+        queryKey: getTaskQueryKey(),
+        exact: true,
+      });
+      queryClient.invalidateQueries({
+        queryKey: getProjectQueryKey(),
+        exact: true,
+      });
+    },
+  });
+};
+
 export const useUpdateTask = ({
   mutationConfig = {},
 }: UseUpdateTaskOptions = {}) => {
@@ -70,11 +121,21 @@ export const useUpdateTask = ({
       taskService.update({ id, data }),
     ...mutationConfig,
     onSuccess: (data, variables, onMutateResult, context) => {
+      queryClient.setQueryData<Task[]>(getTaskQueryKey(), (old) => {
+        if (!old) return old;
+        return old.map((t) => (t.id === variables.id ? { ...t, ...data } : t));
+      });
       queryClient.invalidateQueries({
         queryKey: getTaskByIdQueryKey(variables.id),
       });
-      queryClient.invalidateQueries({ queryKey: getTaskQueryKey() });
-      queryClient.invalidateQueries({ queryKey: getProjectQueryKey() });
+      queryClient.invalidateQueries({
+        queryKey: getTaskQueryKey(),
+        exact: true,
+      });
+      queryClient.invalidateQueries({
+        queryKey: getProjectQueryKey(),
+        exact: true,
+      });
       mutationConfig.onSuccess?.(data, variables, onMutateResult, context);
     },
   });
