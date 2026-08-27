@@ -1,71 +1,29 @@
 import React, { useEffect, useRef, useState } from "react";
 import { Alert, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
-import { useLocalSearchParams, useRouter } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
-import {
-  useGetTaskById,
-  useGetTasks,
-  useUpdateTask,
-} from "@/features/task/hooks/useTask";
+import { useGetTasks, useUpdateTask } from "@/features/task/hooks/useTask";
 import { ScreenHeader } from "@/components/ScreenHeader";
 import { Button } from "@/components/Button";
 import PomodoroTimer from "@/features/pomodoro/components/PomodoroTimer";
 import TaskPickerModal from "@/features/pomodoro/components/TaskPickerModal";
 import { usePomodoroStore } from "@/features/pomodoro/store/usePomodoroStore";
-import { Task } from "@/features/task/types/task.types";
+import type { Task } from "@/features/task/types/task.types";
 
 export default function FocusTab() {
-  const router = useRouter();
   const insets = useSafeAreaInsets();
-  const { id } = useLocalSearchParams<{ id?: string }>();
   const [taskPickerVisible, setTaskPickerVisible] = useState(false);
   const hasInitializedFromDb = useRef(false);
-  const lastProcessedIdRef = useRef<string | null>(null);
 
   const { activeTask, setActiveTask, isActive, isPaused, pauseTimer } =
     usePomodoroStore();
   const updateTaskMutation = useUpdateTask();
   const { data: allTasks } = useGetTasks();
 
-  const taskQuery = useGetTaskById({
-    id: (id as string) || "",
-    queryConfig: {
-      enabled: !!id && id !== "",
-      staleTime: 0,
-    },
-  });
-
-  // Sync task param and mark active when opened via route param ?id=... (from external navigation)
+  // Default target focus to task with status "Active" once on initial load (if none is active in store)
   useEffect(() => {
-    if (id && id !== lastProcessedIdRef.current && taskQuery.data) {
-      lastProcessedIdRef.current = id;
-      hasInitializedFromDb.current = true;
-      if (taskQuery.data.status === "Done") {
-        setActiveTask(null);
-      } else {
-        setActiveTask({
-          id: taskQuery.data.id,
-          title: taskQuery.data.title,
-          project_id: taskQuery.data.project_id || taskQuery.data.project?.id,
-          projectName: taskQuery.data.project?.name,
-        });
-
-        // Ensure task status is marked Active in database
-        if (taskQuery.data.status !== "Active") {
-          updateTaskMutation.mutate({
-            id: taskQuery.data.id,
-            data: { status: "Active" },
-          });
-        }
-      }
-    }
-  }, [id, taskQuery.data]);
-
-  // Default target focus to task with status "Active" once on initial load
-  useEffect(() => {
-    if (!id && allTasks && !hasInitializedFromDb.current) {
+    if (allTasks && !hasInitializedFromDb.current) {
       hasInitializedFromDb.current = true;
       if (!activeTask) {
         const activeDbTask = allTasks.find((t) => t.status === "Active");
@@ -79,7 +37,7 @@ export default function FocusTab() {
         }
       }
     }
-  }, [id, allTasks, activeTask, setActiveTask]);
+  }, [allTasks, activeTask, setActiveTask]);
 
   // Sync if current activeTask in store was marked Done in DB
   useEffect(() => {
@@ -96,8 +54,6 @@ export default function FocusTab() {
     const prevTaskId = activeTask?.id;
 
     if (task) {
-      lastProcessedIdRef.current = task.id;
-
       // Revert previous active task back to Pending if selecting a different task
       if (prevTaskId && prevTaskId !== task.id) {
         updateTaskMutation.mutate({
@@ -122,7 +78,6 @@ export default function FocusTab() {
       }
     } else {
       // User chose Standalone Focus (Quick Focus) without specific task
-      lastProcessedIdRef.current = null;
       setActiveTask(null);
 
       if (prevTaskId) {

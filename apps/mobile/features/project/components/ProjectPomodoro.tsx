@@ -3,7 +3,10 @@ import { Text, TouchableOpacity, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import type { Project } from "../types/project.types";
+import type { Task } from "@/features/task/types/task.types";
 import { formatLastSessionTime } from "@/utils/dateHelpers";
+import { usePomodoroStore } from "@/features/pomodoro/store/usePomodoroStore";
+import { useUpdateTask } from "@/features/task/hooks/useTask";
 import ProjectSessionRow, {
   type ProjectSessionItem,
   getSessionDurationMinutes,
@@ -79,15 +82,25 @@ export default function ProjectPomodoro({ project }: ProjectPomodoroProps) {
     : sortedSessions.slice(0, 4);
   const hasMoreSessions = sortedSessions.length > 4;
 
-  const handleStartFocus = (taskId?: string) => {
-    if (taskId) {
-      router.push({
-        pathname: "/(tabs)/focus",
-        params: { id: taskId },
+  const updateTaskMutation = useUpdateTask();
+
+  const handleStartFocus = (task?: Task) => {
+    if (task) {
+      usePomodoroStore.getState().setActiveTask({
+        id: task.id,
+        title: task.title,
+        project_id: task.project_id || project.id,
+        projectName: project.name,
       });
-    } else {
-      router.push("/(tabs)/focus");
+
+      if (task.status !== "Active") {
+        updateTaskMutation.mutate({
+          id: task.id,
+          data: { status: "Active" },
+        });
+      }
     }
+    router.push("/(tabs)/focus");
   };
 
   return (
@@ -145,7 +158,7 @@ export default function ProjectPomodoro({ project }: ProjectPomodoroProps) {
 
       {/* 3. Quick Focus CTA Banner */}
       <TouchableOpacity
-        onPress={() => handleStartFocus(topActiveTask?.id)}
+        onPress={() => handleStartFocus(topActiveTask)}
         activeOpacity={0.85}
         className="bg-primary rounded-xl p-3 mb-3.5 border border-primary flex-row items-center justify-between shadow-2xs"
       >
@@ -203,7 +216,7 @@ export default function ProjectPomodoro({ project }: ProjectPomodoroProps) {
                 </View>
 
                 <TouchableOpacity
-                  onPress={() => handleStartFocus(task.id)}
+                  onPress={() => handleStartFocus(task)}
                   activeOpacity={0.8}
                   className="bg-surface border border-border px-2.5 py-1 rounded-lg flex-row items-center"
                 >
@@ -274,7 +287,7 @@ export default function ProjectPomodoro({ project }: ProjectPomodoroProps) {
             tercatat di sini.
           </Text>
           <TouchableOpacity
-            onPress={() => handleStartFocus(topActiveTask?.id)}
+            onPress={() => handleStartFocus(topActiveTask)}
             activeOpacity={0.8}
             className="flex-row items-center bg-primary px-3 py-1.5 rounded-lg"
           >

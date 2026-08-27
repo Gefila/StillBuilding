@@ -20,6 +20,7 @@ import { Button } from "@/components/Button";
 import { Card } from "@/components/Card";
 import TaskHeaderHero from "@/features/task/components/TaskHeaderHero";
 import TaskFocusStats from "@/features/task/components/TaskFocusStats";
+import { usePomodoroStore } from "@/features/pomodoro/store/usePomodoroStore";
 
 export default function TaskDetail() {
   const router = useRouter();
@@ -93,16 +94,21 @@ export default function TaskDetail() {
   };
 
   const handleStartFocus = () => {
+    usePomodoroStore.getState().setActiveTask({
+      id: task.id,
+      title: task.title,
+      project_id: task.project_id || task.project?.id,
+      projectName: task.project?.name,
+    });
+
     if (task.status !== "Active") {
       updateTaskMutation.mutate({
         id: task.id,
         data: { status: "Active" },
       });
     }
-    router.push({
-      pathname: "/(tabs)/focus",
-      params: { id: task.id },
-    });
+
+    router.push("/(tabs)/focus");
   };
 
   const noteContent = task.note || (task as any).notes;
