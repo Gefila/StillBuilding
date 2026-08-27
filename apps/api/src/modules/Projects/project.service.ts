@@ -41,7 +41,7 @@ export const projectService = {
   async getById(id: string, userId: string): Promise<Project> {
     const { data, error } = await supabase
       .from(TABLE)
-      .select("*, tasks(*), blocker_logs(*)")
+      .select("*, tasks(*, pomodoro_sessions(*)), blocker_logs(*)")
       .eq("id", id)
       .eq("user_id", userId)
       .order("created_at", { ascending: false, referencedTable: "tasks" })
