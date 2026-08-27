@@ -30,17 +30,11 @@ export default function TaskPickerModal({
   const tasksQuery = useGetTasks();
 
   const allTasks = tasksQuery.data || [];
-  const availableTasks = allTasks
-    .filter(
-      (t) =>
-        t.status !== "Done" &&
-        t.title.toLowerCase().includes(searchQuery.toLowerCase().trim()),
-    )
-    .sort((a, b) => {
-      if (a.status === "Active" && b.status !== "Active") return -1;
-      if (a.status !== "Active" && b.status === "Active") return 1;
-      return 0;
-    });
+  const availableTasks = allTasks.filter(
+    (t) =>
+      t.status !== "Done" &&
+      t.title.toLowerCase().includes(searchQuery.toLowerCase().trim()),
+  );
 
   const handleSelect = (task: Task | null) => {
     selectedTaskRef.current = task;

@@ -23,13 +23,6 @@ export default function Projects() {
     },
   });
 
-  const pomodorosQuery = useGetPomodoros({
-    queryConfig: {
-      subscribed: isFocused,
-      staleTime: 1000,
-    },
-  });
-
   return (
     <View
       className="flex-1 bg-background"
@@ -56,10 +49,7 @@ export default function Projects() {
 
         {/* 2. Projects Summary Stats */}
         <View className="my-2.5">
-          <ProjectsStats
-            projects={projectsQuery.data || []}
-            pomodoros={pomodorosQuery.data || []}
-          />
+          <ProjectsStats projects={projectsQuery.data || []} />
         </View>
 
         {/* 3. Projects List */}

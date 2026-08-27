@@ -1,5 +1,7 @@
 import { supabase } from "../../config/supabase";
 import { AppError } from "../../utils/AppError";
+import { sortTasks } from "../../utils/taskSorter";
+import type { Task } from "../Tasks/task.types";
 import type {
   CreateProjectDTO,
   Project,
@@ -42,6 +44,11 @@ export const projectService = {
       .select("*, tasks(*), blocker_logs(*)")
       .eq("id", id)
       .eq("user_id", userId)
+      .order("created_at", { ascending: false, referencedTable: "tasks" })
+      .order("created_at", {
+        ascending: false,
+        referencedTable: "blocker_logs",
+      })
       .single();
 
     if (error) {
@@ -56,12 +63,14 @@ export const projectService = {
     if (!data) {
       throw new AppError(`Project with id ${id} not found`, 404);
     }
-    const tasks = (data.tasks || []) as Array<{ status?: string }>;
+    const rawTasks = (data.tasks || []) as Task[];
+    const tasks = sortTasks(rawTasks);
     const total_tasks = tasks.length;
     const done_tasks = tasks.filter((t) => t.status === "Done").length;
 
     return {
       ...data,
+      tasks,
       total_tasks,
       done_tasks,
     } as Project;

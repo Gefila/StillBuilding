@@ -3,7 +3,7 @@ import { Text, TouchableOpacity, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { TaskItem } from "./TaskItem";
-import { Task } from "@/features/task/types/task.types";
+import type { Task } from "@/features/task/types/task.types";
 
 type FilterType = "all" | "pending" | "done";
 

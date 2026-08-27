@@ -1,5 +1,6 @@
 import { supabase } from "../../config/supabase";
 import { AppError } from "../../utils/AppError";
+import { sortTasks } from "../../utils/taskSorter";
 import type { CreateTaskDTO, Task, UpdateTaskDTO } from "./task.types";
 
 const TABLE = "tasks";
@@ -22,7 +23,7 @@ export const taskService = {
       throw new AppError(`Failed to fetch tasks: ${error.message}`, 500);
     }
 
-    return (data || []) as Task[];
+    return sortTasks((data || []) as Task[]);
   },
 
   async getById(id: string, userId: string): Promise<Task> {
