@@ -85,6 +85,10 @@ export const useCreatePomodoro = ({
   return useMutation({
     mutationFn: (pomodoroData: CreatePomodoroSessionDTO) =>
       pomodoroService.create(pomodoroData),
+    meta: {
+      skipGlobalErrorToast: true,
+      ...mutationConfig.meta,
+    },
     ...mutationConfig,
   });
 };

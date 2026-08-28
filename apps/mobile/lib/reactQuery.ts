@@ -1,8 +1,24 @@
 import {
-  UseMutationOptions,
   DefaultOptions,
+  MutationCache,
   QueryClient,
+  UseMutationOptions,
 } from "@tanstack/react-query";
+import { Toast } from "toastify-react-native";
+
+const getErrorMessage = (error: unknown): string => {
+  if (!error) return "Terjadi kesalahan yang tidak terduga.";
+  if (typeof error === "string") return error;
+  if (typeof error === "object") {
+    if ("message" in error && typeof (error as any).message === "string") {
+      return (error as any).message;
+    }
+    if ("error" in error && typeof (error as any).error === "string") {
+      return (error as any).error;
+    }
+  }
+  return "Terjadi kesalahan pada server.";
+};
 
 export const queryConfig = {
   queries: {
@@ -11,15 +27,20 @@ export const queryConfig = {
     staleTime: 1000 * 60 * 5,
     gcTime: 1000 * 60 * 10,
   },
-  mutations: {
-    onError: (error: Error) => {
-      console.log("Mutation error:", error.message);
-    },
-  },
 } satisfies DefaultOptions;
 
 export const queryClient = new QueryClient({
   defaultOptions: queryConfig,
+  mutationCache: new MutationCache({
+    onError: (error, _variables, _context, mutation) => {
+      const meta = mutation.meta as { skipGlobalErrorToast?: boolean } | undefined;
+      if (meta?.skipGlobalErrorToast) return;
+
+      const message = getErrorMessage(error);
+      console.log("Mutation error:", message);
+      Toast.error(message);
+    },
+  }),
 });
 
 export type ApiFnReturnType<FnType extends (...args: any) => Promise<any>> =
@@ -37,3 +58,4 @@ export type MutationConfig<
   Error,
   Parameters<MutationFnType>[0]
 >;
+

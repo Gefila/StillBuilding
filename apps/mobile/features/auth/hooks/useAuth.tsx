@@ -17,6 +17,7 @@ export const useLogin = () => {
 
   return useMutation({
     mutationFn: (payload: LoginDTO) => authService.login(payload),
+    meta: { skipGlobalErrorToast: true },
     onSuccess: async (data) => {
       await setAuth({
         accessToken: data.accessToken,
@@ -42,6 +43,7 @@ export const useRegister = () => {
 
   return useMutation({
     mutationFn: (payload: RegisterDTO) => authService.register(payload),
+    meta: { skipGlobalErrorToast: true },
     onSuccess: () => {
       Toast.success("Pendaftaran berhasil! Silakan masuk ke akun Anda.");
       router.replace("/(auth)/login");

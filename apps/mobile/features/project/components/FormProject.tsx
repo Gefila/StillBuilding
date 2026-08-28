@@ -128,9 +128,6 @@ export default function FormProject({
             Toast.success("Proyek berhasil diperbarui");
             router.back();
           },
-          onError: () => {
-            Toast.error("Gagal memperbarui proyek");
-          },
         },
       );
     } else {
@@ -139,9 +136,6 @@ export default function FormProject({
           Toast.success("Proyek berhasil dibuat");
           reset();
           router.back();
-        },
-        onError: () => {
-          Toast.error("Gagal membuat proyek");
         },
       });
     }
@@ -336,9 +330,6 @@ export default function FormProject({
                           onSuccess: () => {
                             Toast.success("Proyek berhasil dihapus");
                             router.replace("/projects");
-                          },
-                          onError: () => {
-                            Toast.error("Gagal menghapus proyek");
                           },
                         }),
                     },
