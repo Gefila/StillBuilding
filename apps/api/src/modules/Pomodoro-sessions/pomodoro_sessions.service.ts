@@ -162,15 +162,12 @@ export const pomodoroSessionService = {
 
     if (error) {
       if (error.code === "PGRST116") {
-        throw new AppError(`Pomodoro session with id ${id} not found`, 404);
+        throw new AppError("Sesi Pomodoro tidak ditemukan", 404);
       }
-      throw new AppError(
-        `Failed to delete Pomodoro session with id ${id}: ${error.message}`,
-        500,
-      );
+      throw error;
     }
     if (!data) {
-      throw new AppError(`Pomodoro session with id ${id} not found`, 404);
+      throw new AppError("Sesi Pomodoro tidak ditemukan", 404);
     }
     return data as PomodoroSession;
   },

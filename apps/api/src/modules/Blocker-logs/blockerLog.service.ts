@@ -158,15 +158,12 @@ export const blockerLogService = {
 
     if (error) {
       if (error.code === "PGRST116") {
-        throw new AppError(`Blocker log with id ${id} not found`, 404);
+        throw new AppError("Catatan kendala tidak ditemukan", 404);
       }
-      throw new AppError(
-        `Failed to delete blocker log with id ${id}: ${error.message}`,
-        500,
-      );
+      throw error;
     }
     if (!data) {
-      throw new AppError(`Blocker log with id ${id} not found`, 404);
+      throw new AppError("Catatan kendala tidak ditemukan", 404);
     }
     return data as BlockerLog;
   },

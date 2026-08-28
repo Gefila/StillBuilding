@@ -184,15 +184,12 @@ export const taskService = {
 
     if (error) {
       if (error.code === "PGRST116") {
-        throw new AppError(`Task with id ${id} not found`, 404);
+        throw new AppError("Tugas tidak ditemukan", 404);
       }
-      throw new AppError(
-        `Failed to delete task with id ${id}: ${error.message}`,
-        500,
-      );
+      throw error;
     }
     if (!data) {
-      throw new AppError(`Task with id ${id} not found`, 404);
+      throw new AppError("Tugas tidak ditemukan", 404);
     }
     return data as Task;
   },

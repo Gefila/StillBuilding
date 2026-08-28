@@ -128,15 +128,12 @@ export const projectService = {
 
     if (error) {
       if (error.code === "PGRST116") {
-        throw new AppError(`Project with id ${id} not found`, 404);
+        throw new AppError("Proyek tidak ditemukan", 404);
       }
-      throw new AppError(
-        `Failed to delete project with id ${id}: ${error.message}`,
-        500,
-      );
+      throw error;
     }
     if (!data) {
-      throw new AppError(`Project with id ${id} not found`, 404);
+      throw new AppError("Proyek tidak ditemukan", 404);
     }
 
     return data as Project;
