@@ -18,7 +18,12 @@ export default function ProjectTabsContent({ activeTab, project }: Props) {
       content = <ProjectTasks tasks={project.tasks || []} project={project} />;
       break;
     case "blockers":
-      content = <ProjectBlockers />;
+      content = (
+        <ProjectBlockers
+          projectId={project.id}
+          blockers={project.blocker_logs || []}
+        />
+      );
       break;
     case "pomodoro":
       content = <ProjectPomodoro project={project} />;

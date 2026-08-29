@@ -228,6 +228,14 @@ export default function PomodoroTimer({
     );
   };
 
+  const handleOpenBlocker = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    if (isActive && !isPaused) {
+      pauseTimer();
+    }
+    setBlockerModalVisible(true);
+  };
+
   const progress = total > 0 ? ((total - time) / total) * 100 : 0;
   const strokeDashoffset = CIRCUMFERENCE - (CIRCUMFERENCE * progress) / 100;
 
@@ -386,7 +394,7 @@ export default function PomodoroTimer({
       {isActive && (
         <TouchableOpacity
           activeOpacity={0.7}
-          onPress={() => setBlockerModalVisible(true)}
+          onPress={handleOpenBlocker}
           className="flex-row items-center mt-3.5 px-3 py-1.5 rounded-full bg-red-50 border border-red-200"
         >
           <Ionicons name="alert-circle-outline" size={13} color="#dc2626" />

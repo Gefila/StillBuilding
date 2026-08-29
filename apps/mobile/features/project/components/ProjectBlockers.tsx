@@ -5,105 +5,103 @@ import {
   TouchableOpacity,
   ScrollView,
   Platform,
+  Alert,
 } from "react-native";
 import Modal from "@/components/Modal";
 import { Ionicons } from "@expo/vector-icons";
 import { FormField } from "@/components/FormField";
 import { Button } from "@/components/Button";
+import {
+  useCreateBlocker,
+  useUpdateBlocker,
+  useDeleteBlocker,
+} from "@/features/blocker/hooks/useBlocker";
+import { BlockerLog } from "@/features/blocker/types/blocker.types";
+import { formatLastSessionTime } from "@/utils/dateHelpers";
 
-interface BlockerItem {
-  id: string;
-  title: string;
-  description: string;
-  status: "Active" | "Resolved";
-  createdAt: string;
-  resolvedAt?: string;
+interface ProjectBlockersProps {
+  projectId: string;
+  blockers?: BlockerLog[];
 }
-
-const INITIAL_BLOCKERS: BlockerItem[] = [
-  {
-    id: "1",
-    title: "Database Connection Timeout",
-    description:
-      "Terjadi kendala timeout saat query filter relasi data kompleks. Perlu optimasi indexing pada Supabase.",
-    status: "Active",
-    createdAt: "2 jam yang lalu",
-  },
-  {
-    id: "2",
-    title: "CORS Header API Issue",
-    description:
-      "Header CORS missing saat deploy backend di staging. Selesai diperbaiki di Express middleware.",
-    status: "Resolved",
-    createdAt: "Kemarin",
-    resolvedAt: "Kemarin, 16:30",
-  },
-];
 
 type FilterType = "all" | "active" | "resolved";
 
-export default function ProjectBlockers() {
-  const [blockers, setBlockers] = useState<BlockerItem[]>(INITIAL_BLOCKERS);
+export default function ProjectBlockers({
+  projectId,
+  blockers = [],
+}: ProjectBlockersProps) {
   const [filter, setFilter] = useState<FilterType>("all");
   const [modalVisible, setModalVisible] = useState(false);
 
-  // New Blocker Form State
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
+  // Form State
+  const [reason, setReason] = useState("");
+  const [solution, setSolution] = useState("");
   const [formError, setFormError] = useState("");
 
-  const activeCount = blockers.filter((b) => b.status === "Active").length;
-  const resolvedCount = blockers.filter((b) => b.status === "Resolved").length;
+  const createBlockerMutation = useCreateBlocker();
+  const updateBlockerMutation = useUpdateBlocker();
+  const deleteBlockerMutation = useDeleteBlocker();
 
-  const filteredBlockers = blockers.filter((item) => {
-    if (filter === "active") return item.status === "Active";
-    if (filter === "resolved") return item.status === "Resolved";
+  const blockerList = Array.isArray(blockers) ? blockers : [];
+  const activeCount = blockerList.filter((b) => !b.is_resolved).length;
+  const resolvedCount = blockerList.filter((b) => b.is_resolved).length;
+
+  const filteredBlockers = blockerList.filter((item) => {
+    if (filter === "active") return !item.is_resolved;
+    if (filter === "resolved") return item.is_resolved;
     return true;
   });
 
-  const handleToggleResolved = (id: string) => {
-    setBlockers((prev) =>
-      prev.map((item) => {
-        if (item.id === id) {
-          const nextStatus = item.status === "Active" ? "Resolved" : "Active";
-          return {
-            ...item,
-            status: nextStatus,
-            resolvedAt: nextStatus === "Resolved" ? "Baru saja" : undefined,
-          };
-        }
-        return item;
-      }),
-    );
+  const handleToggleResolved = (item: BlockerLog) => {
+    updateBlockerMutation.mutate({
+      id: item.id,
+      data: {
+        is_resolved: !item.is_resolved,
+      },
+    });
   };
 
   const handleDeleteBlocker = (id: string) => {
-    setBlockers((prev) => prev.filter((item) => item.id !== id));
+    Alert.alert(
+      "Hapus Blocker",
+      "Apakah Anda yakin ingin menghapus catatan kendala ini secara permanen?",
+      [
+        { text: "Batal", style: "cancel" },
+        {
+          text: "Hapus",
+          style: "destructive",
+          onPress: () => deleteBlockerMutation.mutate(id),
+        },
+      ],
+    );
   };
 
   const handleCreateBlocker = () => {
-    if (!title.trim()) {
-      setFormError("Judul kendala wajib diisi");
+    if (!reason.trim()) {
+      setFormError("Deskripsi kendala / alasan wajib diisi");
       return;
     }
 
-    const newBlocker: BlockerItem = {
-      id: Date.now().toString(),
-      title: title.trim(),
-      description: description.trim() || "Tidak ada detail tambahan",
-      status: "Active",
-      createdAt: "Baru saja",
-    };
-
-    setBlockers((prev) => [newBlocker, ...prev]);
-    setTitle("");
-    setDescription("");
-    setFormError("");
-    setModalVisible(false);
+    createBlockerMutation.mutate(
+      {
+        project_id: projectId,
+        reason: reason.trim(),
+        solution: solution.trim() || undefined,
+        is_resolved: false,
+      },
+      {
+        onSuccess: () => {
+          setReason("");
+          setSolution("");
+          setFormError("");
+          setModalVisible(false);
+        },
+      },
+    );
   };
 
   const filters: { key: FilterType; label: string; count: number }[] = [
-    { key: "all", label: "Semua", count: blockers.length },
+    { key: "all", label: "Semua", count: blockerList.length },
     { key: "active", label: "Aktif", count: activeCount },
     { key: "resolved", label: "Tuntas", count: resolvedCount },
   ];
@@ -144,14 +142,14 @@ export default function ProjectBlockers() {
               key={f.key}
               onPress={() => setFilter(f.key)}
               activeOpacity={0.8}
-              className={`will-change-variable flex-1 flex-row items-center justify-center py-1.5 rounded-lg border ${
+              className={`flex-1 flex-row items-center justify-center py-1.5 rounded-lg border ${
                 isActive
                   ? "bg-surface shadow-xs border-border/80"
                   : "bg-transparent border-transparent"
               }`}
             >
               <Text
-                className={`will-change-variable text-xs font-semibold ${
+                className={`text-xs font-semibold ${
                   isActive ? "text-foreground font-bold" : "text-muted"
                 }`}
               >
@@ -175,7 +173,7 @@ export default function ProjectBlockers() {
       {filteredBlockers.length > 0 ? (
         <View className="gap-2.5">
           {filteredBlockers.map((item) => {
-            const isResolved = item.status === "Resolved";
+            const isResolved = item.is_resolved;
             return (
               <View
                 key={item.id}
@@ -183,7 +181,7 @@ export default function ProjectBlockers() {
                   isResolved ? "border-border opacity-75" : "border-red-200"
                 } shadow-xs`}
               >
-                {/* Header: Title + Status Pill */}
+                {/* Header: Status & Actions */}
                 <View className="flex-row items-start justify-between gap-2 mb-1.5">
                   <View className="flex-row items-center gap-1.5 flex-1">
                     <Ionicons
@@ -197,9 +195,9 @@ export default function ProjectBlockers() {
                           ? "text-muted line-through"
                           : "text-foreground"
                       }`}
-                      numberOfLines={1}
+                      numberOfLines={2}
                     >
-                      {item.title}
+                      {item.reason}
                     </Text>
                   </View>
 
@@ -220,22 +218,34 @@ export default function ProjectBlockers() {
                   </View>
                 </View>
 
-                {/* Description */}
-                <Text className="text-xs text-muted leading-relaxed mb-3">
-                  {item.description}
-                </Text>
+                {/* Solution note if available */}
+                {item.solution ? (
+                  <View className="bg-emerald-50/60 border border-emerald-100 rounded-xl p-2.5 mb-2 mt-1">
+                    <View className="flex-row items-center gap-1 mb-0.5">
+                      <Ionicons
+                        name="bulb-outline"
+                        size={12}
+                        color="#16a34a"
+                      />
+                      <Text className="text-[11px] font-bold text-emerald-800">
+                        Solusi / Pemecahan:
+                      </Text>
+                    </View>
+                    <Text className="text-xs text-emerald-950 leading-relaxed">
+                      {item.solution}
+                    </Text>
+                  </View>
+                ) : null}
 
                 {/* Footer: Timestamp & Action */}
                 <View className="flex-row items-center justify-between pt-2.5 border-t border-divider">
                   <Text className="text-[11px] text-muted">
-                    {isResolved && item.resolvedAt
-                      ? `Tuntas: ${item.resolvedAt}`
-                      : `Dicatat: ${item.createdAt}`}
+                    {formatLastSessionTime(item.created_at)}
                   </Text>
 
                   <View className="flex-row items-center gap-2">
                     <TouchableOpacity
-                      onPress={() => handleToggleResolved(item.id)}
+                      onPress={() => handleToggleResolved(item)}
                       activeOpacity={0.8}
                       className={`px-2.5 py-1 rounded-lg border ${
                         isResolved
@@ -351,25 +361,25 @@ export default function ProjectBlockers() {
           {/* Form Fields */}
           <ScrollView showsVerticalScrollIndicator={false}>
             <FormField
-              label="Judul Kendala"
-              placeholder="Contoh: API Rate Limit Exceeded"
+              label="Alasan / Deskripsi Kendala"
+              placeholder="Contoh: Database connection timeout pada query kompleks"
               labelIconName="alert-circle-outline"
-              value={title}
+              value={reason}
               onChangeText={(val) => {
-                setTitle(val);
+                setReason(val);
                 if (val.trim()) setFormError("");
               }}
               error={formError}
             />
 
             <FormField
-              label="Deskripsi / Penyebab (Opsional)"
-              placeholder="Jelaskan detail kendala teknis atau kebutuhan bantuan..."
-              labelIconName="document-text-outline"
+              label="Catatan Solusi / Rencana (Opsional)"
+              placeholder="Jelaskan solusi atau langkah yang diambil jika ada..."
+              labelIconName="bulb-outline"
               multiline
               numberOfLines={3}
-              value={description}
-              onChangeText={setDescription}
+              value={solution}
+              onChangeText={setSolution}
             />
 
             {/* Action Buttons */}
@@ -377,6 +387,7 @@ export default function ProjectBlockers() {
               <Button
                 label="Simpan Blocker"
                 variant="primary"
+                isLoading={createBlockerMutation.isPending}
                 onPress={handleCreateBlocker}
               />
               <Button
