@@ -169,13 +169,13 @@ Mencatat kendala, hambatan, atau distraksi yang dialami selama mengerjakan proye
 
 ## 3. Ringkasan Relasi & Foreign Key
 
-| Tabel Sumber               | Kolom FK     | Tabel Referensi   | Kolom Referensi | Hubungan  |
-| :------------------------- | :----------- | :---------------- | :-------------- | :-------- |
-| `public.profiles`          | `id`         | `auth.users`      | `id`            | 1-to-1    |
-| `public.projects`          | `user_id`    | `public.profiles` | `id`            | Many-to-1 |
-| `public.tasks`             | `project_id` | `public.projects` | `id`            | Many-to-1 |
-| `public.pomodoro_sessions` | `task_id`    | `public.tasks`    | `id`            | Many-to-1 |
-| `public.blocker_logs`      | `project_id` | `public.projects` | `id`            | Many-to-1 |
+| Tabel Sumber               | Kolom FK     | Tabel Referensi   | Kolom Referensi | Hubungan  | On Delete Action |
+| :------------------------- | :----------- | :---------------- | :-------------- | :-------- | :--------------- |
+| `public.profiles`          | `id`         | `auth.users`      | `id`            | 1-to-1    | `CASCADE`        |
+| `public.projects`          | `user_id`    | `public.profiles` | `id`            | Many-to-1 | `CASCADE`        |
+| `public.tasks`             | `project_id` | `public.projects` | `id`            | Many-to-1 | `CASCADE`        |
+| `public.pomodoro_sessions` | `task_id`    | `public.tasks`    | `id`            | Many-to-1 | `CASCADE`        |
+| `public.blocker_logs`      | `project_id` | `public.projects` | `id`            | Many-to-1 | `CASCADE`        |
 
 ---
 
@@ -193,7 +193,7 @@ CREATE TABLE public.profiles (
   last_streak_date date,
   created_at timestamp with time zone NOT NULL DEFAULT now(),
   CONSTRAINT profiles_pkey PRIMARY KEY (id),
-  CONSTRAINT profiles_id_fkey FOREIGN KEY (id) REFERENCES auth.users(id)
+  CONSTRAINT profiles_id_fkey FOREIGN KEY (id) REFERENCES auth.users(id) ON DELETE CASCADE
 );
 
 -- Projects
@@ -208,7 +208,7 @@ CREATE TABLE public.projects (
   last_activity timestamp without time zone,
   created_at timestamp with time zone NOT NULL DEFAULT now(),
   CONSTRAINT projects_pkey PRIMARY KEY (id),
-  CONSTRAINT projects_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.profiles(id)
+  CONSTRAINT projects_user_id_fkey FOREIGN KEY (user_id) REFERENCES public.profiles(id) ON DELETE CASCADE
 );
 
 -- Tasks
@@ -222,7 +222,7 @@ CREATE TABLE public.tasks (
   completed_at timestamp without time zone,
   created_at timestamp with time zone NOT NULL DEFAULT now(),
   CONSTRAINT tasks_pkey PRIMARY KEY (id),
-  CONSTRAINT tasks_project_id_fkey FOREIGN KEY (project_id) REFERENCES public.projects(id)
+  CONSTRAINT tasks_project_id_fkey FOREIGN KEY (project_id) REFERENCES public.projects(id) ON DELETE CASCADE
 );
 
 -- Pomodoro Sessions
@@ -239,7 +239,7 @@ CREATE TABLE public.pomodoro_sessions (
   ended_at timestamp with time zone,
   created_at timestamp with time zone NOT NULL DEFAULT now(),
   CONSTRAINT pomodoro_sessions_pkey PRIMARY KEY (id),
-  CONSTRAINT pomodoro_sessions_task_id_fkey FOREIGN KEY (task_id) REFERENCES public.tasks(id)
+  CONSTRAINT pomodoro_sessions_task_id_fkey FOREIGN KEY (task_id) REFERENCES public.tasks(id) ON DELETE CASCADE
 );
 
 -- Blocker Logs
@@ -251,6 +251,6 @@ CREATE TABLE public.blocker_logs (
   is_resolved boolean,
   created_at timestamp with time zone NOT NULL DEFAULT now(),
   CONSTRAINT blocker_logs_pkey PRIMARY KEY (id),
-  CONSTRAINT blocker_logs_project_id_fkey FOREIGN KEY (project_id) REFERENCES public.projects(id)
+  CONSTRAINT blocker_logs_project_id_fkey FOREIGN KEY (project_id) REFERENCES public.projects(id) ON DELETE CASCADE
 );
 ```

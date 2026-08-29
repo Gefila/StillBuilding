@@ -334,7 +334,7 @@ CREATE TABLE public.pomodoro_sessions (
   ended_at    timestamptz,             -- waktu selesai sesi
   created_at  timestamptz NOT NULL DEFAULT now(),
   CONSTRAINT pomodoro_sessions_pkey PRIMARY KEY (id),
-  CONSTRAINT pomodoro_sessions_task_id_fkey FOREIGN KEY (task_id) REFERENCES public.tasks(id)
+  CONSTRAINT pomodoro_sessions_task_id_fkey FOREIGN KEY (task_id) REFERENCES public.tasks(id) ON DELETE CASCADE
 );
 ```
 
