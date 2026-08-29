@@ -6,6 +6,7 @@ import {
   getProjectByIdQueryKey,
   getProjectQueryKey,
 } from "@/features/project/hooks/useProject";
+import type { Project } from "@/features/project/types/project.types";
 
 export const getTaskQueryKey = () => ["task"];
 export const getTaskByIdQueryKey = (id: string) => ["task", id];
@@ -88,7 +89,7 @@ export const useSetActiveTask = () => {
       }
       return null;
     },
-    onSuccess: (_data, variables) => {
+    onSuccess: (data, variables) => {
       queryClient.setQueryData<Task[]>(getTaskQueryKey(), (old) => {
         if (!old) return old;
         return old.map((t) => {
@@ -101,13 +102,45 @@ export const useSetActiveTask = () => {
           return t;
         });
       });
+      if (data?.project_id) {
+        queryClient.setQueryData<Project>(
+          getProjectByIdQueryKey(data.project_id),
+          (oldProject) => {
+            if (!oldProject || !oldProject.tasks) return oldProject;
+            const updatedTasks = oldProject.tasks.map((t) => {
+              if (variables.newTaskId) {
+                if (t.id === variables.newTaskId)
+                  return { ...t, status: "Active" };
+                if (t.status === "Active") return { ...t, status: "Pending" };
+              } else if (
+                variables.prevTaskId &&
+                t.id === variables.prevTaskId
+              ) {
+                return { ...t, status: "Pending" };
+              }
+              return t;
+            });
+            return {
+              ...oldProject,
+              tasks: updatedTasks,
+            };
+          },
+        );
+        queryClient.invalidateQueries({
+          queryKey: getProjectByIdQueryKey(data.project_id),
+          exact: true,
+          refetchType: "none",
+        });
+      }
       queryClient.invalidateQueries({
         queryKey: getTaskQueryKey(),
         exact: true,
+        refetchType: "none",
       });
       queryClient.invalidateQueries({
         queryKey: getProjectQueryKey(),
         exact: true,
+        refetchType: "none",
       });
     },
   });
@@ -121,20 +154,64 @@ export const useUpdateTask = ({
       taskService.update({ id, data }),
     ...mutationConfig,
     onSuccess: (data, variables, onMutateResult, context) => {
+      // 1. Update cache task list
       queryClient.setQueryData<Task[]>(getTaskQueryKey(), (old) => {
         if (!old) return old;
         return old.map((t) => (t.id === variables.id ? { ...t, ...data } : t));
       });
+
+      // 2. Update cache detail task (jika ada)
+      queryClient.setQueryData<Task>(
+        getTaskByIdQueryKey(variables.id),
+        (old) => {
+          if (!old) return old;
+          return { ...old, ...data };
+        },
+      );
+
+      // 3. Update cache detail project (jika task punya project_id)
+      if (data?.project_id) {
+        queryClient.setQueryData<Project>(
+          getProjectByIdQueryKey(data.project_id),
+          (oldProject) => {
+            if (!oldProject || !oldProject.tasks) return oldProject;
+            const updatedTasks = oldProject.tasks.map((t) =>
+              t.id === variables.id ? { ...t, ...data } : t,
+            );
+            const total_tasks = updatedTasks.length;
+            const done_tasks = updatedTasks.filter(
+              (t) => t.status === "Done",
+            ).length;
+            return {
+              ...oldProject,
+              tasks: updatedTasks,
+              total_tasks,
+              done_tasks,
+            };
+          },
+        );
+        queryClient.invalidateQueries({
+          queryKey: getProjectByIdQueryKey(data.project_id),
+          exact: true,
+          refetchType: "none",
+        });
+      }
+
+      // 4. Invalidate specific queries tanpa menduplikasi request ke active screens
       queryClient.invalidateQueries({
         queryKey: getTaskByIdQueryKey(variables.id),
+        exact: true,
+        refetchType: "none",
       });
       queryClient.invalidateQueries({
         queryKey: getTaskQueryKey(),
         exact: true,
+        refetchType: "none",
       });
       queryClient.invalidateQueries({
         queryKey: getProjectQueryKey(),
         exact: true,
+        refetchType: "none",
       });
       mutationConfig.onSuccess?.(data, variables, onMutateResult, context);
     },
@@ -148,13 +225,39 @@ export const useCreateTask = ({
     mutationFn: (taskData: CreateTaskDTO) => taskService.create(taskData),
     ...mutationConfig,
     onSuccess: (data, variables, onMutateResult, context) => {
-      if (variables.project_id) {
+      const projectId = data?.project_id || variables.project_id;
+      if (projectId) {
+        queryClient.setQueryData<Project>(
+          getProjectByIdQueryKey(projectId),
+          (oldProject) => {
+            if (!oldProject) return oldProject;
+            const tasks = [...(oldProject.tasks || []), data];
+            const total_tasks = tasks.length;
+            const done_tasks = tasks.filter((t) => t.status === "Done").length;
+            return {
+              ...oldProject,
+              tasks,
+              total_tasks,
+              done_tasks,
+            };
+          },
+        );
         queryClient.invalidateQueries({
-          queryKey: getProjectByIdQueryKey(variables.project_id),
+          queryKey: getProjectByIdQueryKey(projectId),
+          exact: true,
+          refetchType: "none",
         });
       }
-      queryClient.invalidateQueries({ queryKey: getTaskQueryKey() });
-      queryClient.invalidateQueries({ queryKey: getProjectQueryKey() });
+      queryClient.invalidateQueries({
+        queryKey: getTaskQueryKey(),
+        exact: true,
+        refetchType: "none",
+      });
+      queryClient.invalidateQueries({
+        queryKey: getProjectQueryKey(),
+        exact: true,
+        refetchType: "none",
+      });
       mutationConfig.onSuccess?.(data, variables, onMutateResult, context);
     },
   });
@@ -167,11 +270,49 @@ export const useDeleteTask = ({
     mutationFn: (id: string) => taskService.delete(id),
     ...mutationConfig,
     onSuccess: (data, variables, onMutateResult, context) => {
+      queryClient.setQueryData<Task[]>(getTaskQueryKey(), (old) => {
+        if (!old) return old;
+        return old.filter((t) => t.id !== variables);
+      });
+      if (data?.project_id) {
+        queryClient.setQueryData<Project>(
+          getProjectByIdQueryKey(data.project_id),
+          (oldProject) => {
+            if (!oldProject) return oldProject;
+            const tasks = (oldProject.tasks || []).filter(
+              (t) => t.id !== variables,
+            );
+            const total_tasks = tasks.length;
+            const done_tasks = tasks.filter((t) => t.status === "Done").length;
+            return {
+              ...oldProject,
+              tasks,
+              total_tasks,
+              done_tasks,
+            };
+          },
+        );
+        queryClient.invalidateQueries({
+          queryKey: getProjectByIdQueryKey(data.project_id),
+          exact: true,
+          refetchType: "none",
+        });
+      }
       queryClient.invalidateQueries({
         queryKey: getTaskByIdQueryKey(variables),
+        exact: true,
+        refetchType: "none",
       });
-      queryClient.invalidateQueries({ queryKey: getTaskQueryKey() });
-      queryClient.invalidateQueries({ queryKey: getProjectQueryKey() });
+      queryClient.invalidateQueries({
+        queryKey: getTaskQueryKey(),
+        exact: true,
+        refetchType: "none",
+      });
+      queryClient.invalidateQueries({
+        queryKey: getProjectQueryKey(),
+        exact: true,
+        refetchType: "none",
+      });
       mutationConfig.onSuccess?.(data, variables, onMutateResult, context);
     },
   });

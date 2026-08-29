@@ -1,7 +1,7 @@
 import { queryOptions, useMutation, useQuery } from "@tanstack/react-query";
 import { projectService } from "../services/projectService";
 import { MutationConfig, queryClient, QueryConfig } from "@/lib/reactQuery";
-import { CreateProjectDTO } from "../types/project.types";
+import { CreateProjectDTO, Project } from "../types/project.types";
 
 export const getProjectQueryKey = () => ["project"];
 export const getProjectByIdQueryKey = (id: string) => ["project", id];
@@ -73,10 +73,32 @@ export const useUpdateProject = ({
     }) => projectService.update({ id, data }),
     ...mutationConfig,
     onSuccess: (data, variables, onMutateResult, context) => {
+      // 1. Update cache detail project
+      queryClient.setQueryData<Project>(
+        getProjectByIdQueryKey(variables.id),
+        (old) => {
+          if (!old) return old;
+          return { ...old, ...data };
+        },
+      );
+
+      // 2. Update cache list projects
+      queryClient.setQueryData<Project[]>(getProjectQueryKey(), (old) => {
+        if (!old) return old;
+        return old.map((p) => (p.id === variables.id ? { ...p, ...data } : p));
+      });
+
+      // 3. Invalidate dengan exact: true dan refetchType: "none"
       queryClient.invalidateQueries({
         queryKey: getProjectByIdQueryKey(variables.id),
+        exact: true,
+        refetchType: "none",
       });
-      queryClient.invalidateQueries({ queryKey: getProjectQueryKey() });
+      queryClient.invalidateQueries({
+        queryKey: getProjectQueryKey(),
+        exact: true,
+        refetchType: "none",
+      });
 
       mutationConfig.onSuccess?.(data, variables, onMutateResult, context);
     },
@@ -91,7 +113,16 @@ export const useCreateProject = ({
       projectService.create(projectData),
     ...mutationConfig,
     onSuccess: (data, variables, onMutateResult, context) => {
-      queryClient.invalidateQueries({ queryKey: getProjectQueryKey() });
+      queryClient.setQueryData<Project[]>(getProjectQueryKey(), (old) => {
+        if (!old) return old;
+        return [data, ...old];
+      });
+
+      queryClient.invalidateQueries({
+        queryKey: getProjectQueryKey(),
+        exact: true,
+        refetchType: "none",
+      });
       mutationConfig.onSuccess?.(data, variables, onMutateResult, context);
     },
   });
@@ -104,10 +135,21 @@ export const useDeleteProject = ({
     mutationFn: (id: string) => projectService.delete(id),
     ...mutationConfig,
     onSuccess: (data, variables, onMutateResult, context) => {
+      queryClient.setQueryData<Project[]>(getProjectQueryKey(), (old) => {
+        if (!old) return old;
+        return old.filter((p) => p.id !== variables);
+      });
+
       queryClient.invalidateQueries({
         queryKey: getProjectByIdQueryKey(variables),
+        exact: true,
+        refetchType: "none",
       });
-      queryClient.invalidateQueries({ queryKey: getProjectQueryKey() });
+      queryClient.invalidateQueries({
+        queryKey: getProjectQueryKey(),
+        exact: true,
+        refetchType: "none",
+      });
       mutationConfig.onSuccess?.(data, variables, onMutateResult, context);
     },
   });

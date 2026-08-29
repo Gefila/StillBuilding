@@ -11,7 +11,6 @@ import Modal from "@/components/Modal";
 import Svg, { Circle } from "react-native-svg";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
-import { useQueryClient } from "@tanstack/react-query";
 import {
   COLORS,
   CYCLE,
@@ -20,12 +19,8 @@ import {
   PomodoroMode,
   usePomodoroStore,
 } from "../store/usePomodoroStore";
-import { getPomodoroQueryKey, useCreatePomodoro } from "../hooks/usePomodoro";
-import {
-  getTaskByIdQueryKey,
-  getTaskQueryKey,
-  useUpdateTask,
-} from "@/features/task/hooks/useTask";
+import { useCreatePomodoro } from "../hooks/usePomodoro";
+import { useUpdateTask } from "@/features/task/hooks/useTask";
 import QuickBlockerModal from "./QuickBlockerModal";
 
 const TABS: { key: PomodoroMode; label: string }[] = [
@@ -43,7 +38,6 @@ type PomodoroTimerProps = {
 export default function PomodoroTimer({
   onRequestOpenTaskPicker,
 }: PomodoroTimerProps = {}) {
-  const queryClient = useQueryClient();
   const createPomodoroMutation = useCreatePomodoro();
   const updateTaskMutation = useUpdateTask();
 
@@ -102,17 +96,6 @@ export default function PomodoroTimer({
                 ended_at: new Date().toISOString(),
                 completed: true,
               });
-
-              // Invalidate queries so task stats and pomodoro history update immediately
-              queryClient.invalidateQueries({
-                queryKey: getTaskByIdQueryKey(activeTask.id),
-              });
-              queryClient.invalidateQueries({
-                queryKey: getTaskQueryKey(),
-              });
-              queryClient.invalidateQueries({
-                queryKey: getPomodoroQueryKey(),
-              });
             } catch (err) {
               console.error("Failed to save pomodoro session:", err);
             }
@@ -132,7 +115,6 @@ export default function PomodoroTimer({
     activeTask,
     startedAt,
     createPomodoroMutation,
-    queryClient,
   ]);
 
   // AppState Listener: Resync accurate time when app comes back to foreground
@@ -161,16 +143,6 @@ export default function PomodoroTimer({
                   ended_at: new Date().toISOString(),
                   completed: true,
                 });
-
-                queryClient.invalidateQueries({
-                  queryKey: getTaskByIdQueryKey(activeTask.id),
-                });
-                queryClient.invalidateQueries({
-                  queryKey: getTaskQueryKey(),
-                });
-                queryClient.invalidateQueries({
-                  queryKey: getPomodoroQueryKey(),
-                });
               } catch (err) {
                 console.error("Failed to save pomodoro session:", err);
               }
@@ -191,7 +163,6 @@ export default function PomodoroTimer({
     activeTask,
     startedAt,
     createPomodoroMutation,
-    queryClient,
   ]);
 
   const handleStart = () => {

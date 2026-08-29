@@ -3,6 +3,11 @@ import { MutationConfig, queryClient, QueryConfig } from "@/lib/reactQuery";
 import { pomodoroService } from "../services/pomodoroService";
 import { CreatePomodoroSessionDTO } from "../types/pomodoro.types";
 
+import {
+  getTaskByIdQueryKey,
+  getTaskQueryKey,
+} from "@/features/task/hooks/useTask";
+
 export const getPomodoroQueryKey = () => ["pomodoro"];
 export const getPomodoroByIdQueryKey = (id: string) => ["pomodoro", id];
 
@@ -71,8 +76,13 @@ export const useUpdatePomodoro = ({
     onSuccess: (data, variables, onMutateResult, context) => {
       queryClient.invalidateQueries({
         queryKey: getPomodoroByIdQueryKey(variables.id),
+        exact: true,
       });
-      queryClient.invalidateQueries({ queryKey: getPomodoroQueryKey() });
+      queryClient.invalidateQueries({
+        queryKey: getPomodoroQueryKey(),
+        exact: true,
+        refetchType: "none",
+      });
 
       mutationConfig.onSuccess?.(data, variables, onMutateResult, context);
     },
@@ -90,5 +100,25 @@ export const useCreatePomodoro = ({
       ...mutationConfig.meta,
     },
     ...mutationConfig,
+    onSuccess: (data, variables, onMutateResult, context) => {
+      if (variables.task_id) {
+        queryClient.invalidateQueries({
+          queryKey: getTaskByIdQueryKey(variables.task_id),
+          exact: true,
+        });
+      }
+      queryClient.invalidateQueries({
+        queryKey: getTaskQueryKey(),
+        exact: true,
+        refetchType: "none",
+      });
+      queryClient.invalidateQueries({
+        queryKey: getPomodoroQueryKey(),
+        exact: true,
+        refetchType: "none",
+      });
+
+      mutationConfig.onSuccess?.(data, variables, onMutateResult, context);
+    },
   });
 };

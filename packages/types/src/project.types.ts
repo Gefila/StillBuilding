@@ -1,5 +1,6 @@
 import { z } from "zod";
 import type { Task } from "./task.types";
+import type { BlockerLog } from "./blocker.types";
 
 export type ProjectStatus = "Active" | "On Hold" | "Completed";
 
@@ -43,4 +44,5 @@ export interface Project {
   created_at: string;
   updated_at?: string;
   tasks?: Task[];
+  blocker_logs?: BlockerLog[];
 }

@@ -71,47 +71,42 @@ export const useTaskDetail = (id: string) => {
 
 ### D. Implementasi Mutasi & Invalidasi Cache (`useMutation`)
 
-Setiap kali melakukan operasi create, update, atau delete, lakukan invalidasi query cache agar data pada list otomatis ter-update:
+Setiap kali melakukan operasi mutasi (create, update, delete), ikuti 3 standar berikut:
+
+1. **Direct Cache Sync (`setQueryData`)**: Perbarui cache memori lokal secara sinkron di dalam `onSuccess` agar UI langsung merespons seketika (0 ms latency) tanpa menunggu network roundtrip.
+2. **Isolasi Prefix (`exact: true`)**: Selalu gunakan `exact: true` saat melakukan invalidasi query key agar tidak terjadi duplikasi request yang tidak disengaja ke query turunan (misalnya `["task"]` vs `["task", id]`).
+3. **Cegah Request Latar Belakang (`refetchType: "none"`)**: Karena tab navigator dan stack screen React Native tetap tersimpan di memori (mounted), selalu tambahkan `refetchType: "none"` pada query list atau relasi agar hanya ditandai _stale_ dan tidak menembak GET otomatis saat layarnya sedang tidak dibuka.
+4. **Pusatkan di Hook Mutasi**: Jangan pernah melakukan invalidasi manual `queryClient.invalidateQueries` di dalam komponen/UI; pusatkan semua logika invalidasi di dalam callback `onSuccess` mutasi terkait.
 
 ```typescript
-// features/task/hooks/useTaskMutations.ts
-import { useMutation, useQueryClient } from "@tanstack/react-query";
-import { createTask, updateTask, deleteTask } from "../services/taskService";
-import { taskKeys } from "./taskKeys";
-import { projectKeys } from "@/features/project/hooks/projectKeys";
-
-export const useCreateTask = () => {
-  const queryClient = useQueryClient();
-
-  return useMutation({
-    mutationFn: createTask,
-    onSuccess: (newTask) => {
-      // Invalidate semua daftar task
-      queryClient.invalidateQueries({ queryKey: taskKeys.lists() });
-
-      // Jika task terikat ke project tertentu, invalidate detail project tersebut
-      if (newTask.project_id) {
-        queryClient.invalidateQueries({
-          queryKey: projectKeys.detail(newTask.project_id),
-        });
-      }
-    },
-  });
-};
-
+// features/task/hooks/useTask.tsx
 export const useUpdateTask = () => {
-  const queryClient = useQueryClient();
-
   return useMutation({
     mutationFn: ({ id, data }: { id: string; data: UpdateTaskDTO }) =>
-      updateTask(id, data),
-    onSuccess: (updatedTask, variables) => {
-      // Invalidate detail task yang diupdate
-      queryClient.invalidateQueries({
-        queryKey: taskKeys.detail(variables.id),
+      taskService.update({ id, data }),
+    onSuccess: (data, variables) => {
+      // 1. Update cache lokal secara instan
+      queryClient.setQueryData<Task[]>(getTaskQueryKey(), (old) => {
+        if (!old) return old;
+        return old.map((t) => (t.id === variables.id ? { ...t, ...data } : t));
       });
-      // Invalidate list task
-      queryClient.invalidateQueries({ queryKey: taskKeys.lists() });
+
+      // 2. Invalidate dengan exact: true dan refetchType: "none"
+      queryClient.invalidateQueries({
+        queryKey: getTaskByIdQueryKey(variables.id),
+        exact: true,
+        refetchType: "none",
+      });
+      queryClient.invalidateQueries({
+        queryKey: getTaskQueryKey(),
+        exact: true,
+        refetchType: "none",
+      });
+      queryClient.invalidateQueries({
+        queryKey: getProjectQueryKey(),
+        exact: true,
+        refetchType: "none",
+      });
     },
   });
 };
