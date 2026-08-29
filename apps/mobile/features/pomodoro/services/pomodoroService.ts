@@ -11,7 +11,7 @@ export const pomodoroService = {
   },
   create: async (data: CreatePomodoroSessionDTO): Promise<PomodoroSession> => {
     const response = await api.post("pomodoro-sessions", data);
-    return response.data;
+    return response.data.data;
   },
   getById: async (id: string): Promise<PomodoroSession> => {
     const response = await api.get(`pomodoro-sessions/${id}`);

@@ -8,7 +8,7 @@ export const projectService = {
   },
   create: async (data: CreateProjectDTO): Promise<Project> => {
     const response = await api.post("projects", data);
-    return response.data;
+    return response.data.data;
   },
   getById: async (id: string): Promise<Project> => {
     const response = await api.get(`projects/${id}`);
@@ -26,6 +26,6 @@ export const projectService = {
   },
   delete: async (id: string): Promise<Project> => {
     const response = await api.delete(`projects/${id}`);
-    return response.data;
+    return response.data.data;
   },
 };

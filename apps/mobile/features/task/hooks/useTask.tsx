@@ -225,8 +225,17 @@ export const useCreateTask = ({
     mutationFn: (taskData: CreateTaskDTO) => taskService.create(taskData),
     ...mutationConfig,
     onSuccess: (data, variables, onMutateResult, context) => {
+      // 1. Update cache task list
+      if (data) {
+        queryClient.setQueryData<Task[]>(getTaskQueryKey(), (old) => {
+          if (!old) return [data];
+          return [data, ...old];
+        });
+      }
+
+      // 2. Update cache detail project (jika task terikat project)
       const projectId = data?.project_id || variables.project_id;
-      if (projectId) {
+      if (projectId && data) {
         queryClient.setQueryData<Project>(
           getProjectByIdQueryKey(projectId),
           (oldProject) => {
@@ -248,6 +257,7 @@ export const useCreateTask = ({
           refetchType: "none",
         });
       }
+
       queryClient.invalidateQueries({
         queryKey: getTaskQueryKey(),
         exact: true,

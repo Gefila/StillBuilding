@@ -1,5 +1,7 @@
-export function formatDateID(dateString: string): string {
+export function formatDateID(dateString?: string): string {
+  if (!dateString) return "";
   const date = new Date(dateString);
+  if (isNaN(date.getTime())) return "";
 
   const tanggal = new Intl.DateTimeFormat("id-ID", {
     day: "2-digit",
@@ -13,8 +15,10 @@ export function formatDateID(dateString: string): string {
   return `${tanggal}, ${jam}:${menit}`;
 }
 
-export function formatTime(dateString: string): string {
+export function formatTime(dateString?: string): string {
+  if (!dateString) return "";
   const date = new Date(dateString);
+  if (isNaN(date.getTime())) return "";
   const jam = String(date.getHours()).padStart(2, "0");
   const menit = String(date.getMinutes()).padStart(2, "0");
   return `${jam}:${menit}`;
@@ -23,6 +27,7 @@ export function formatTime(dateString: string): string {
 export function formatRelativeDate(dateString?: string): string {
   if (!dateString) return "Hari Ini";
   const date = new Date(dateString);
+  if (isNaN(date.getTime())) return "Hari Ini";
   const now = new Date();
 
   if (date.toDateString() === now.toDateString()) return "Hari Ini";
@@ -41,5 +46,6 @@ export function formatLastSessionTime(dateString?: string): string {
   if (!dateString) return "";
   const relativeDate = formatRelativeDate(dateString);
   const time = formatTime(dateString);
+  if (!time) return relativeDate;
   return `${relativeDate}, ${time}`;
 }

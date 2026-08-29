@@ -8,7 +8,7 @@ export const taskService = {
   },
   create: async (data: CreateTaskDTO): Promise<Task> => {
     const response = await api.post("tasks", data);
-    return response.data;
+    return response.data.data;
   },
   getById: async (id: string): Promise<Task> => {
     const response = await api.get(`tasks/${id}`);
@@ -26,6 +26,6 @@ export const taskService = {
   },
   delete: async (id: string): Promise<Task> => {
     const response = await api.delete(`tasks/${id}`);
-    return response.data;
+    return response.data.data;
   },
 };
