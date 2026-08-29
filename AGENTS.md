@@ -1,90 +1,35 @@
-# Project StillBuilding - AI Agent Guidelines
+# StillBuilding
 
-## 1. Project Overview & Workflow
+Personal productivity & deep-work companion app (task management, pomodoro timer, blocker logging).
 
-**StillBuilding** is a personal productivity and deep-work companion application consisting of:
+## Monorepo
 
-- **Personal Task & Project Manager**: Organizing individual goals, projects, and actionable tasks.
-- **Pomodoro Tracker**: Focused work interval timer linked to active tasks and projects.
-- **Blocker Logger**: Tracking friction points, interruptions, and blockers encountered during deep work sessions.
+- **Package manager**: pnpm (workspaces + Turborepo)
+- **Workspaces**: `apps/api` (Express.js), `apps/mobile` (React Native Expo), `packages/types` (shared Zod schemas & TS types)
 
----
+## Commands
 
-## 2. Monorepo & Git Repository Structure
+| Action | Command |
+|---|---|
+| Dev (all) | `pnpm dev` |
+| Dev (API only) | `pnpm --filter @stillbuilding/api dev` |
+| Dev (mobile only) | `pnpm --filter @stillbuilding/mobile start` |
+| Type check | `pnpm check-types` |
+| Lint | `pnpm lint` |
+| Format | `pnpm format` |
+| Build | `pnpm build` |
+| Add dependency | `pnpm --filter <pkg-name> add <dep>` |
 
-- **Monorepo Structure**: The repository uses **pnpm workspaces** and **Turborepo**:
-  - `apps/api/` - Express.js API backend (`@stillbuilding/api`).
-  - `apps/mobile/` - React Native Expo application (`@stillbuilding/mobile`).
-  - `packages/types/` - Shared TypeScript types, domain models, and Zod validation schemas (`@stillbuilding/types`).
-- **Terminal & Development Commands**:
-  - Run all apps concurrently: `pnpm dev` (runs both API and mobile dev servers via Turborepo with TUI).
-  - Run API only: `pnpm --filter @stillbuilding/api dev`.
-  - Run mobile only: `pnpm --filter @stillbuilding/mobile start` (or `dev`).
-  - Run type checks across all workspaces: `pnpm check-types`.
-  - Run linters across workspaces: `pnpm lint`.
-  - Format code: `pnpm format` (Prettier for root/mobile/types, Biome for `@stillbuilding/api`).
-  - Build all packages: `pnpm build`.
-  - Install dependency to a specific workspace: `pnpm --filter <pkg-name> add <dependency>`.
+## Formatting
 
----
+- **API** (`apps/api`): Biome (`pnpm --filter @stillbuilding/api format`)
+- **Mobile & Types**: Prettier (`pnpm format`)
 
-## 3. Tech Stack & Architecture
+## Rules
 
-### Backend API (`apps/api`)
+Detailed conventions are in [`.agents/rules/`](.agents/rules/):
 
-- **Runtime & Language**: Node.js, TypeScript (`tsx` for dev watcher, `tsc` for build)
-- **Framework**: Express.js (v5) with Helmet, CORS, and Morgan
-- **Database & Auth**: Supabase (`@supabase/supabase-js`)
-  - Auth: Supabase Auth (JWT token sent via `Authorization: Bearer <token>`, validated via `authMiddleware`).
-- **Validation**: Zod (using schemas from `@stillbuilding/types` and module-specific schemas).
-- **Linter & Formatter**: Biome (`pnpm --filter @stillbuilding/api lint` / `format` / `check`).
-- **Architecture**: Modular structure (`src/modules/<ModuleName>/`):
-  - Modules: `Auth`, `Projects`, `Tasks`, `Pomodoro-sessions`, `Blocker-logs`.
-  - Module files:
-    - `<module>.routes.ts` - Express routes with middleware bindings.
-    - `<module>.controller.ts` - Request extraction & response dispatching.
-    - `<module>.service.ts` - Business logic & Supabase database queries.
-  - Middlewares (`src/middlewares/`): `auth.middleware.ts`, `error.middleware.ts`.
-
-### Mobile App (`apps/mobile`)
-
-- **Framework**: React Native with Expo (SDK 54) & Expo Router v6 (`app/` file-based routing).
-- **Bundler & Styling**: Metro configured for monorepo workspace resolution (`metro.config.js`), NativeWind v5 / Tailwind CSS v4.
-- **State Management**:
-  - **Server State / Caching**: TanStack Query (`@tanstack/react-query`) for fetching, caching, and mutations (`lib/reactQuery.ts`).
-  - **Client State**: Zustand for local/client state (timer, active session, UI filters).
-- **Forms & Validation**: React Hook Form with `@hookform/resolvers` + Zod schemas.
-- **API Client**: Axios (`lib/axios.ts`) configured with base URL and Supabase JWT interceptor.
-- **Architecture**:
-  - `app/` - Screen routes (`(auth)`, `(tabs)`, `project`, `task`, `pomodoro`).
-  - `features/` - Domain logic organized by feature (`auth`, `blocker`, `pomodoro`, `project`, `task`) containing hooks, components, and API callers.
-  - `components/` - Shared and atomic reusable UI components.
-  - `lib/` - Client configurations, React Query client, and Axios instance.
-  - `utils/` - Shared utility functions.
-
-### Shared Types Package (`packages/types`)
-
-- Contains domain models, TypeScript interfaces, and Zod validation schemas (`@stillbuilding/types`):
-  - `auth.types.ts`, `blocker.types.ts`, `pomodoro.types.ts`, `project.types.ts`, `task.types.ts`.
-
----
-
-## 4. Coding Guidelines & Standards
-
-1. **Strict Typing**: No `any`. Use strongly typed interfaces and schemas from `@stillbuilding/types`.
-2. **Server State Management**:
-   - Use TanStack Query hooks (`useQuery`, `useMutation`) inside `features/<feature>/hooks/` with proper cache invalidation on mutations.
-3. **Backend Security & Error Handling**:
-   - All protected routes must use `authMiddleware` to verify the Supabase JWT.
-   - Handlers should forward unexpected errors to `next(err)` to trigger the global error handler (`error.middleware.ts`).
-4. **Code Quality**:
-   - Formatting: `pnpm format` / Biome for backend (`pnpm --filter @stillbuilding/api format`).
-   - Typechecking: `pnpm check-types`.
-   - Frontend styling: Use NativeWind utility classes with consistent spacing and design tokens.
-5. **Modal & UI Animation Standards (`react-native-modal`)**:
-   - **Backdrop Flickering Prevention**: Always set `backdropTransitionOutTiming={1}` on modals to prevent backdrop flicker when closing.
-   - **Dismissal Actions**: When selecting an item from a modal that triggers parent state changes or mutations, use the `onModalHide` callback (or close first before triggering state updates) to prevent UI glitching during animation.
-   - Do NOT use `hideModalContentWhileAnimating={true}` as it causes frame flashing. Use `useNativeDriver={true}` and `useNativeDriverForBackdrop={true}`.
-6. **Focus & Pomodoro State**:
-   - `usePomodoroStore` is the single source of truth for the active focus task and timer.
-   - Avoid injecting/retaining temporary `id` query params into Expo Router URLs during internal modal interactions.
+- [API Architecture](.agents/rules/api-architecture.md) — module structure, auth middleware, error handling
+- [Mobile Architecture](.agents/rules/mobile-architecture.md) — directory layout, styling conventions
+- [Mobile UI Patterns](.agents/rules/mobile-ui-patterns.md) — `react-native-modal` quirks, animation gotchas
+- [State Management](.agents/rules/state-management.md) — TanStack Query hooks, Zustand stores, Pomodoro state
