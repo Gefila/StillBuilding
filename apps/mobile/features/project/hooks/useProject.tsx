@@ -2,6 +2,9 @@ import { queryOptions, useMutation, useQuery } from "@tanstack/react-query";
 import { projectService } from "../services/projectService";
 import { MutationConfig, queryClient, QueryConfig } from "@/lib/reactQuery";
 import { CreateProjectDTO, Project } from "../types/project.types";
+import { getTaskQueryKey } from "@/features/task/hooks/useTask";
+import { getBlockersQueryKey } from "@/features/blocker/hooks/useBlocker";
+import type { Task } from "@/features/task/types/task.types";
 
 export const getProjectQueryKey = () => ["project"];
 export const getProjectByIdQueryKey = (id: string) => ["project", id];
@@ -88,7 +91,24 @@ export const useUpdateProject = ({
         return old.map((p) => (p.id === variables.id ? { ...p, ...data } : p));
       });
 
-      // 3. Invalidate queries
+      // 3. Update nested project data in cached task list
+      queryClient.setQueryData<Task[]>(getTaskQueryKey(), (old) => {
+        if (!old) return old;
+        return old.map((t) => {
+          if (t.project_id === variables.id || t.project?.id === variables.id) {
+            return {
+              ...t,
+              project: {
+                ...(t.project || { id: variables.id, name: "" }),
+                ...data,
+              },
+            };
+          }
+          return t;
+        });
+      });
+
+      // 4. Invalidate queries
       queryClient.invalidateQueries({
         queryKey: getProjectByIdQueryKey(variables.id),
         exact: true,
@@ -96,6 +116,11 @@ export const useUpdateProject = ({
       queryClient.invalidateQueries({
         queryKey: getProjectQueryKey(),
         exact: true,
+      });
+      queryClient.invalidateQueries({
+        queryKey: getTaskQueryKey(),
+        exact: true,
+        refetchType: "none",
       });
 
       mutationConfig.onSuccess?.(data, variables, onMutateResult, context);
@@ -145,6 +170,16 @@ export const useDeleteProject = ({
       queryClient.invalidateQueries({
         queryKey: getProjectQueryKey(),
         exact: true,
+      });
+      queryClient.invalidateQueries({
+        queryKey: getTaskQueryKey(),
+        exact: true,
+        refetchType: "none",
+      });
+      queryClient.invalidateQueries({
+        queryKey: getBlockersQueryKey(),
+        exact: true,
+        refetchType: "none",
       });
       mutationConfig.onSuccess?.(data, variables, onMutateResult, context);
     },

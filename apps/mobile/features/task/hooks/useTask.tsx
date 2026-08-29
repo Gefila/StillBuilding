@@ -163,7 +163,29 @@ export const useSetActiveTask = () => {
         });
       }
 
-      // 3. Invalidate list queries
+      // 3. Update task detail caches if present
+      if (variables.newTaskId) {
+        queryClient.setQueryData<Task>(
+          getTaskByIdQueryKey(variables.newTaskId),
+          (old) => (old ? { ...old, status: "Active" } : old),
+        );
+        queryClient.invalidateQueries({
+          queryKey: getTaskByIdQueryKey(variables.newTaskId),
+          exact: true,
+        });
+      }
+      if (variables.prevTaskId) {
+        queryClient.setQueryData<Task>(
+          getTaskByIdQueryKey(variables.prevTaskId),
+          (old) => (old ? { ...old, status: "Pending" } : old),
+        );
+        queryClient.invalidateQueries({
+          queryKey: getTaskByIdQueryKey(variables.prevTaskId),
+          exact: true,
+        });
+      }
+
+      // 4. Invalidate list queries
       queryClient.invalidateQueries({
         queryKey: getTaskQueryKey(),
         exact: true,
