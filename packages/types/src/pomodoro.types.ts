@@ -40,3 +40,9 @@ export interface PomodoroSession {
   elapsed?: number;
   task?: Task;
 }
+
+export interface TodayPomodoroStats {
+  focus_minutes: number;
+  completed_sessions: number;
+  total_sessions: number;
+}

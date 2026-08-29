@@ -9,6 +9,7 @@ import {
 const router = Router();
 
 router.get("/", pomodoroSessionController.getAll);
+router.get("/today-stats", pomodoroSessionController.getTodayStats);
 router.get("/:id", pomodoroSessionController.getById);
 router.post(
   "/",

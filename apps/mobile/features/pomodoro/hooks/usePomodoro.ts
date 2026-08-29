@@ -10,6 +10,11 @@ import {
 
 export const getPomodoroQueryKey = () => ["pomodoro"];
 export const getPomodoroByIdQueryKey = (id: string) => ["pomodoro", id];
+export const getTodayPomodoroStatsQueryKey = (date?: string) => [
+  "pomodoro",
+  "today-stats",
+  ...(date ? [date] : []),
+];
 
 export const getPomodorosQueryOptions = () => {
   return queryOptions({
@@ -25,6 +30,13 @@ export const getPomodoroByIdQueryOptions = (id: string) => {
   });
 };
 
+export const getTodayPomodoroStatsQueryOptions = (date?: string) => {
+  return queryOptions({
+    queryKey: getTodayPomodoroStatsQueryKey(date),
+    queryFn: () => pomodoroService.getTodayStats(date),
+  });
+};
+
 type UseGetPomodorosOptions = {
   queryConfig?: QueryConfig<typeof getPomodorosQueryOptions>;
 };
@@ -32,6 +44,11 @@ type UseGetPomodorosOptions = {
 type UseGetPomodoroByIdOptions = {
   id: string;
   queryConfig?: QueryConfig<typeof getPomodoroByIdQueryOptions>;
+};
+
+type UseGetTodayPomodoroStatsOptions = {
+  date?: string;
+  queryConfig?: QueryConfig<typeof getTodayPomodoroStatsQueryOptions>;
 };
 
 type UseCreatePomodoroOptions = {
@@ -61,6 +78,16 @@ export const useGetPomodoroById = ({
   });
 };
 
+export const useGetTodayPomodoroStats = ({
+  date,
+  queryConfig = {},
+}: UseGetTodayPomodoroStatsOptions = {}) => {
+  return useQuery({
+    ...getTodayPomodoroStatsQueryOptions(date),
+    ...queryConfig,
+  });
+};
+
 export const useUpdatePomodoro = ({
   mutationConfig = {},
 }: UseUpdatePomodoroOptions = {}) => {
@@ -81,6 +108,9 @@ export const useUpdatePomodoro = ({
       queryClient.invalidateQueries({
         queryKey: getPomodoroQueryKey(),
         exact: true,
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["pomodoro", "today-stats"],
       });
 
       mutationConfig.onSuccess?.(data, variables, onMutateResult, context);
@@ -114,6 +144,9 @@ export const useCreatePomodoro = ({
       queryClient.invalidateQueries({
         queryKey: getPomodoroQueryKey(),
         exact: true,
+      });
+      queryClient.invalidateQueries({
+        queryKey: ["pomodoro", "today-stats"],
       });
 
       mutationConfig.onSuccess?.(data, variables, onMutateResult, context);

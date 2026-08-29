@@ -4,12 +4,73 @@ import { taskService } from "../Tasks/task.service";
 import type {
   CreatePomodoroSessionDTO,
   PomodoroSession,
+  TodayPomodoroStats,
   UpdatePomodoroSessionDTO,
 } from "./pomodoro_sessions.types";
 
 const TABLE = "pomodoro_sessions";
 
 export const pomodoroSessionService = {
+  async getTodayStats(
+    userId: string,
+    targetDate?: string,
+  ): Promise<TodayPomodoroStats> {
+    const baseDate = targetDate ? new Date(targetDate) : new Date();
+    const startOfDay = new Date(baseDate);
+    startOfDay.setHours(0, 0, 0, 0);
+    const endOfDay = new Date(baseDate);
+    endOfDay.setHours(23, 59, 59, 999);
+
+    const { data, error } = await supabase
+      .from(TABLE)
+      .select(
+        `
+        id,
+        duration,
+        elapsed,
+        mode,
+        completed,
+        started_at,
+        task:tasks!inner (
+          project:projects!inner (
+            user_id
+          )
+        )
+      `,
+      )
+      .eq("task.project.user_id", userId)
+      .gte("started_at", startOfDay.toISOString())
+      .lte("started_at", endOfDay.toISOString());
+
+    if (error) {
+      throw new AppError(
+        `Failed to fetch today's Pomodoro stats: ${error.message}`,
+        500,
+      );
+    }
+
+    const sessions = data || [];
+    let focusMinutes = 0;
+    let completedSessions = 0;
+
+    for (const session of sessions) {
+      if (session.completed) {
+        completedSessions += 1;
+      }
+      if (session.mode === "pomodoro" || !session.mode) {
+        const rawDuration = session.duration || 0;
+        const mins =
+          rawDuration > 60 ? Math.round(rawDuration / 60) : rawDuration;
+        focusMinutes += mins;
+      }
+    }
+
+    return {
+      focus_minutes: focusMinutes,
+      completed_sessions: completedSessions,
+      total_sessions: sessions.length,
+    };
+  },
   async getAll(userId: string): Promise<PomodoroSession[]> {
     const { data, error } = await supabase
       .from(TABLE)

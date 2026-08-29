@@ -3,6 +3,12 @@ import { catchAsync } from "../../utils/catchAsync";
 import { pomodoroSessionService } from "./pomodoro_sessions.service";
 
 export const pomodoroSessionController = {
+  getTodayStats: catchAsync(async (req: Request, res: Response) => {
+    const userId = req.user?.id as string;
+    const date = req.query.date as string | undefined;
+    const stats = await pomodoroSessionService.getTodayStats(userId, date);
+    res.json({ status: "success", data: stats });
+  }),
   getAll: catchAsync(async (req: Request, res: Response) => {
     const userId = req.user?.id as string;
     const pomodoroSessions = await pomodoroSessionService.getAll(userId);

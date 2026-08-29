@@ -2,9 +2,16 @@ import api from "@/lib/axios";
 import {
   CreatePomodoroSessionDTO,
   PomodoroSession,
+  TodayPomodoroStats,
 } from "../types/pomodoro.types";
 
 export const pomodoroService = {
+  getTodayStats: async (date?: string): Promise<TodayPomodoroStats> => {
+    const response = await api.get("pomodoro-sessions/today-stats", {
+      params: date ? { date } : undefined,
+    });
+    return response.data.data;
+  },
   getAll: async (): Promise<PomodoroSession[]> => {
     const response = await api.get("pomodoro-sessions");
     return response.data.data;

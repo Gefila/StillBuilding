@@ -12,6 +12,7 @@ import { useRouter } from "expo-router";
 import { useIsFocused } from "@react-navigation/native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useGetTasks } from "@/features/task/hooks/useTask";
+import { useGetTodayPomodoroStats } from "@/features/pomodoro/hooks/usePomodoro";
 import HomeHeader from "@/components/home/HomeHeader";
 import DailySummaryCards from "@/components/home/DailySummaryCards";
 import QuickFocusBanner from "@/components/home/QuickFocusBanner";
@@ -28,22 +29,30 @@ export default function Home() {
   const {
     data: tasks,
     isLoading,
-    refetch,
+    refetch: refetchTasks,
   } = useGetTasks({
     queryConfig: {
       subscribed: isFocused,
     },
   });
+
+  const { data: pomodoroStats, refetch: refetchPomodoroStats } =
+    useGetTodayPomodoroStats({
+      queryConfig: {
+        subscribed: isFocused,
+      },
+    });
+
   const taskList = Array.isArray(tasks) ? tasks : [];
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     try {
-      await refetch();
+      await Promise.all([refetchTasks(), refetchPomodoroStats()]);
     } finally {
       setRefreshing(false);
     }
-  }, [refetch]);
+  }, [refetchTasks, refetchPomodoroStats]);
 
   const completedCount = taskList.filter((t) => t.status === "Done").length;
   const activeTask = taskList.find((t) => t.status === "Active");
@@ -74,7 +83,7 @@ export default function Home() {
         <DailySummaryCards
           totalTasks={taskList.length}
           completedTasks={completedCount}
-          focusMinutes={50}
+          focusMinutes={pomodoroStats?.focus_minutes ?? 0}
         />
 
         {/* 3. Quick Focus / Active Pomodoro Banner */}
