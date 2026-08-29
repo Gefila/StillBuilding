@@ -19,7 +19,6 @@ export default function ProjectTabs({
     { id: "tasks", label: "Tugas", icon: "checkbox-outline" },
     { id: "blockers", label: "Blocker", icon: "warning-outline" },
     { id: "pomodoro", label: "Fokus", icon: "timer-outline" },
-    { id: "notes", label: "Catatan", icon: "document-text-outline" },
   ];
 
   return (

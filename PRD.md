@@ -22,7 +22,7 @@ Penyebab utama kegagalan menyelesaikan proyek meliputi:
 
 ### 1.2. Solusi: StillBuilding
 
-**StillBuilding** adalah aplikasi manajemen proyek dan fokus kerja personal yang didesain dengan pendekatan psikologi rendah friksi (_low-friction productivity_). Melalui konsep **"Langkah Semut" (Mikro-Tasking)**, **Fokus Proyek Tunggal**, **Pelacak Hambatan (Blocker Log)**, dan **Dasbor Statistik Berbasis Data**, StillBuilding membantu pengguna mempertahankan momentum hingga proyek benar-benar selesai.
+**StillBuilding** adalah aplikasi manajemen proyek dan fokus kerja personal yang didesain dengan pendekatan psikologi rendah friksi (_low-friction productivity_). Melalui konsep **"Langkah Semut" (Mikro-Tasking)**, **Fokus Proyek Tunggal**, **Pelacak Hambatan (Blocker Log)**, **Dasbor Statistik Berbasis Data**, dan **Heatmap Aktivitas (GitHub-Style Contribution Graph)**, StillBuilding membantu pengguna mempertahankan momentum hingga proyek benar-benar selesai.
 
 ---
 
@@ -30,7 +30,7 @@ Penyebab utama kegagalan menyelesaikan proyek meliputi:
 
 1. **Rendah Hambatan Mental**: Tugas harus kecil (maksimal 20–30 menit) sehingga terasa mudah untuk langsung dieksekusi.
 2. **Satu Fokus dalam Satu Waktu**: Hindari ilusi _multitasking_. Hanya ada 1 proyek yang aktif dalam satu sesi.
-3. **Data-Driven & Bebas Distraksi**: Menghilangkan elemen gamifikasi kekanak-kanakan (avatar virtual/hewan peliharaan virtual), menggantikannya dengan dasbor metrik profesional dan elegan.
+3. **Data-Driven & Bebas Distraksi**: Menghilangkan elemen gamifikasi kekanak-kanakan (avatar virtual/hewan peliharaan virtual), menggantikannya dengan dasbor metrik profesional dan visual ritme kerja yang elegan.
 4. **Kejujuran Progres**: Pencatatan blocker diakui sebagai aktivitas valid pemeliharaan proyek, namun streak harian murni diperoleh dari aksi nyata (menyelesaikan tugas).
 
 ---
@@ -40,11 +40,12 @@ Penyebab utama kegagalan menyelesaikan proyek meliputi:
 ```mermaid
 graph TD
     User([Pengguna]) --> Login[Autentikasi Supabase]
-    Login --> Dashboard[Dasbor Statistik]
+    Login --> Dashboard[Dasbor Statistik & Ringkasan Harian]
+    Dashboard --> Heatmap[Heatmap Aktivitas: GitHub-Style Grid]
     Dashboard --> FocusMode[Fokus Tunggal: Proyek Aktif]
     FocusMode --> MicroTasks[Sistem Mikro-Tasking: 20-30 Menit]
     MicroTasks --> Pomodoro[Pomodoro Timer: 25 Menit]
-    Pomodoro -->|Selesai & Task Done| Streak[Sistem Streak +1]
+    Pomodoro -->|Selesai & Task Done| Streak[Sistem Streak +1 & Heatmap Level Up]
     FocusMode --> Blocker[Jurnal Hambatan: Blocker Log]
     Blocker -->|Log Hambatan| SafeStatus[Status Aman: Perbarui Last Activity]
 ```
@@ -75,10 +76,11 @@ _Membantu pengguna memecah proyek menjadi tugas-tugas terfokus tanpa beban estim
   - Tugas berfokus pada aksi konkret (_actionable unit of work_).
   - Tidak ada validasi batasan waktu yang memaksa/kaku pada input tugas. Pelacakan waktu riil dieksekusi secara dinamis melalui integrasi **Pomodoro Sessions**.
   - Setiap tugas terikat pada 1 `project_id`.
-  - Atribut tugas: `title`, `note`, `priority` (`low`, `medium`, `high`, `urgent`), `status` (`todo`, `in_progress`, `completed`), `completed_at`.
+  - Atribut tugas: `title`, `note`, `priority` (`low`, `medium`, `high`, `urgent`), `status` (`Pending`, `Active`, `Done`), `completed_at`.
+  - **Single Active Task:** Hanya boleh ada 1 tugas berstatus `Active` pada satu waktu. Mengaktifkan tugas baru otomatis mengembalikan tugas aktif sebelumnya ke `Pending`.
 - **Kriteria Penerimaan:**
   - Pengguna dapat membuat, mengedit, mengubah status, dan menghapus tugas.
-  - Saat tugas ditandai `completed`, sistem mencatat timestamp `completed_at` dan memicu evaluasi streak harian.
+  - Saat tugas ditandai `Done`, sistem mencatat timestamp `completed_at` dan memicu evaluasi streak harian serta heatmap aktivitas.
 
 ---
 
@@ -88,15 +90,16 @@ _Mendukung eksekusi fokus dengan interval standar 25 menit._
 
 - **User Story:** Sebagai pengguna, saya ingin menjalankan sesi fokus 25 menit untuk tugas tertentu tanpa memperlambat perangkat atau server.
 - **Aturan Bisnis:**
-  - Durasi standar: **25 menit** (fokus), dengan opsi istirahat (_short break_ 5 menit / _long break_ 15 menit).
-  - **Arsitektur Eksekusi:** Timer berjalan sepenuhnya di _frontend memory_ (menggunakan state lokal/Zustand di React Native) agar ringan dan tidak membebani server/kuota request.
-  - **Interaksi Selesai:** Ketika sesi Pomodoro (25 menit) selesai:
-    1. Alarm/notifikasi berbunyi.
-    2. Muncul prompt/modal interaktif: _"Sesi fokus selesai! Apakah tugas ini sudah rampung?"_ dengan aksi cepat _"Tandai Selesai"_ atau _"Lanjut Istirahat / Sesi Berikutnya"_.
-    3. Frontend mengirim payload ke endpoint backend `POST /pomodoro-sessions` untuk disimpan ke database.
+  - Durasi standar: **25 menit** (Deep Work), dengan opsi istirahat (**5 menit** _short break_ / **15 menit** _long break_) dalam siklus 4 sesi.
+  - **Arsitektur Eksekusi:** Timer berjalan sepenuhnya di _frontend memory_ (menggunakan state Zustand di React Native) dengan sinkronisasi akurat saat aplikasi masuk ke background/foreground.
+  - **Interaksi Selesai:** Ketika sesi Pomodoro selesai:
+    1. Haptic feedback & alarm visual berbunyi.
+    2. Muncul modal transisi interaktif: opsi _"Mulai Istirahat"_, _"Tandai Tugas Selesai & Ganti Tugas"_, atau lanjut sesi berikutnya.
+    3. Payload dikirim ke endpoint backend `POST /pomodoro-sessions` untuk disimpan ke database Supabase.
+  - **Auto-Pause on Distraction:** Menekan tombol pencatatan distraksi otomatis menjeda timer Pomodoro.
 - **Kriteria Penerimaan:**
-  - Timer dapat dimulai, dijeda (_pause_), dan direset.
-  - Data sesi Pomodoro tersimpan dengan referensi `task_id`.
+  - Timer dapat dimulai, dijeda (_pause_), direset, dan dilewati (_skip_).
+  - Data sesi Pomodoro tersimpan dengan referensi `task_id` dan diagregasikan ke endpoint statistik harian (`GET /pomodoro-sessions/today-stats`).
 
 ---
 
@@ -106,16 +109,13 @@ _Mendokumentasikan alasan spesifik mengapa proyek terhenti dan mencatat solusiny
 
 - **User Story:** Sebagai pengguna, saya ingin mencatat kendala saat stuck dan mencatat solusinya ketika berhasil dipecahkan agar menjadi referensi masa depan dan pengingat bahwa hambatan dapat diatasi.
 - **Aturan Bisnis:**
-  - Pengguna dapat membuat entri blocker dengan kolom `reason` dan `project_id`.
+  - Pengguna dapat membuat entri blocker dengan kolom `reason`, `solution`, dan `project_id`.
   - **"Status Aman"**: Menambahkan Blocker Log otomatis memperbarui `last_activity` pada proyek terkait.
   - **Penyelesaian Blocker**: Saat menandai `is_resolved = true`, pengguna dapat memasukkan catatan solusi (_how it was solved_). Ini kembali memperbarui `last_activity` proyek.
-  - **Deteksi Proyek Terabaikan (_Neglect Alert_)**:
-    - **Aman (0–3 hari)**: Aktivitas normal (ada task selesai / blocker dicatat).
-    - **Perlu Perhatian (3–7 hari tanpa aktivitas)**: Proyek diberi label/highlight visual kuning/merah _"Perlu Perhatian / Berisiko Terbengkalai"_ di dasbor untuk memicu aksi pengguna.
   - **Catatan Penting:** Pengisian Blocker Log **TIDAK** menambah poin streak harian (streak hanya bertambah dari penyelesaian tugas).
 - **Kriteria Penerimaan:**
-  - Form pencatatan blocker cepat dan modal penyelesaian blocker dengan input solusi.
-  - Indikator visual status keaktifan proyek berdasarkan selisih hari dari `last_activity`.
+  - Modal pencatatan blocker cepat (`QuickBlockerModal`) saat sesi fokus.
+  - Tab manajemen blocker riil di halaman detail proyek (tambah kendala, tandai tuntas dengan solusi, dan hapus).
 
 ---
 
@@ -125,7 +125,7 @@ _Membangun kebiasaan konsisten setiap hari berbasis aksi nyata._
 
 - **User Story:** Sebagai pengguna, saya ingin melihat jumlah hari berturut-turut saya produktif berdasarkan waktu lokal saya sendiri.
 - **Aturan Bisnis:**
-  - **Pemicu Streak:** Minimal **1 tugas** (`tasks`) diselesaikan (`status = completed`) pada hari kalender berjalan.
+  - **Pemicu Streak:** Minimal **1 tugas** (`tasks`) diselesaikan (`status = Done`) pada hari kalender berjalan.
   - **Timezone Awareness:** Frontend mengirim timezone lokal perangkat (contoh: `Asia/Jakarta`) di request header/payload saat menyelesaikan tugas, sehingga pergantian hari dihitung tepat pada pukul 00:00 waktu lokal pengguna.
   - **Logika Perhitungan:**
     - Jika tugas diselesaikan pada hari berikutnya secara berurutan: `current_strike = current_strike + 1`.
@@ -133,8 +133,8 @@ _Membangun kebiasaan konsisten setiap hari berbasis aksi nyata._
     - Jika terlewat > 1 hari kalender tanpa menyelesaikan tugas apa pun: `current_strike` direset menjadi 1 pada penyelesaian tugas berikutnya.
     - Jika menyelesaikan > 1 tugas di hari yang sama: `current_strike` tidak bertambah lagi untuk hari tersebut.
 - **Kriteria Penerimaan:**
-  - Angka streak tampil jelas di header/dasbor utama.
-  - Logika kalkulasi streak divalidasi secara konsisten di backend dengan menghitung hari kalender berbasis timezone pengguna.
+  - Angka streak tampil jelas di header/dasbor utama (`🔥 X Hari Streak`).
+  - Logika kalkulasi streak divalidasi secara otomatis di backend pada kolom `current_strike`, `longest_streak`, dan `last_streak_date` di tabel `profiles`.
 
 ---
 
@@ -144,17 +144,41 @@ _Pusat informasi performa yang bersih, profesional, dan bebas elemen distraksi._
 
 - **User Story:** Sebagai pengguna, saya ingin melihat ringkasan statistik performa kerja saya secara numerik dan terukur.
 - **Komponen Metrik Utama:**
-  1. **Active Streak & Record**: Menampilkan `current_strike` aktif dan rekor `longest_streak`.
-  2. **Tasks Completed**: Rasio tugas selesai hari ini serta total tugas selesai vs total tugas keseluruhan proyek.
-  3. **Pomodoro Focus & Total Time**: Akumulasi jumlah sesi Pomodoro yang selesai dan total waktu fokus (dalam jam/menit).
-  4. **Blockers Resolved**: Jumlah total blocker yang berhasil diselesaikan (`is_resolved = true`) sebagai bukti empiris pemecahan masalah teknis.
+  1. **Daily Productivity Summary Cards**:
+     - **Waktu Fokus**: Akumulasi durasi fokus hari ini (menit/jam) dari API sesi Pomodoro.
+     - **Tugas Selesai**: Rasio tugas selesai vs total tugas aktif.
+     - **Tugas Tersisa**: Jumlah tugas yang masih berstatus pending/aktif.
+  2. **Quick Focus Banner**: Shortcut cepat ke tugas yang sedang aktif untuk langsung masuk ke timer Pomodoro.
 - **Kriteria Penerimaan:**
-  - Desain antarmuka modern (Dark/Light mode elegan, typography bersih).
-  - Bebas dari avatar virtual kartun atau fitur non-esensial yang memicu distraksi.
+  - Tampilan modern, bersih, dan mendukung pull-to-refresh (`RefreshControl`).
 
 ---
 
-### 3.7. Catatan Konteks (Notes Hierarchy)
+### 3.7. Heatmap Aktivitas & Ritme Kerja (GitHub-Style Contribution Graph)
+
+_Visualisasi matriks konsistensi harian berbasis kotak hijau ala GitHub untuk memberikan kepuasan visual dan memacu momentum._
+
+- **User Story:** Sebagai pengguna, saya ingin melihat grafik kontribusi berupa grid kotak-kotak hijau seperti di profil GitHub agar saya dapat mengevaluasi ritme dan konsistensi produktivitas saya selama beberapa bulan terakhir.
+- **Aturan Bisnis:**
+  - **Struktur Grid:**
+    - 7 baris vertikal mewakili hari dalam seminggu (Senin s.d. Minggu).
+    - Kolom horizontal mewakili rentang minggu (default: **12–16 minggu terakhir / 3 bulan terakhir**) dengan scroll horizontal yang mulus.
+  - **Tingkat Intensitas Warna (Activity Level):**
+    - ⬜ **Level 0 (Empty/Abu-abu)**: `0` aktivitas.
+    - 🟩 **Level 1 (Hijau Muda `#86efac`)**: `1` aktivitas (1 task selesai atau 1 sesi fokus).
+    - 🟩 **Level 2 (Hijau Sedang `#4ade80`)**: `2–3` aktivitas.
+    - 🟩 **Level 3 (Hijau Solid `#22c55e`)**: `4–5` aktivitas.
+    - 🟩 **Level 4 (Hijau Tua/Pekat `#15803d`)**: `6+` aktivitas (_High Productivity_).
+  - **Interaktivitas:**
+    - Menekan kotak tanggal tertentu memunculkan popover/tooltip informasi rincian aktivitas pada tanggal tersebut (contoh: _"29 Agustus 2026: 3 tugas selesai · 2 sesi fokus (50m)"_).
+  - **Ringkasan Metrik:**
+    - Menampilkan total kontribusi/aktivitas dalam periode yang dipilih dan hari paling produktif.
+- **Kriteria Penerimaan:**
+  - Grid tampil rapi, responsif di mobile, dan memiliki legenda level warna (Kurang ⬜ 🟩 🟩 🟩 🟩 Banyak).
+
+---
+
+### 3.8. Catatan Konteks (Notes Hierarchy)
 
 _Menyimpan dokumentasi dan detail kontekstual._
 
@@ -165,13 +189,13 @@ _Menyimpan dokumentasi dan detail kontekstual._
 
 ## 4. Matriks Aturan Bisnis & Validasi
 
-| Fitur                  | Aksi Pengguna                | Dampak Database                                                   |                Dampak Streak?                 |
-| :--------------------- | :--------------------------- | :---------------------------------------------------------------- | :-------------------------------------------: |
-| **Pilih Proyek Aktif** | Toggle aktifkan Proyek X     | Set Proyek X `is_active = true`, proyek lainnya `false`           |                   ❌ Tidak                    |
-| **Selesaikan Tugas**   | Checklist tugas selesai      | `status = 'completed'`, `completed_at = now()`                    |         ✅ **Ya (+1 jika hari baru)**         |
-| **Pomodoro Selesai**   | Timer 25m tuntas             | Insert ke `pomodoro_sessions`                                     | ❌ Tidak (Kecuali tugasnya dicentang selesai) |
-| **Catat Blocker**      | Submit log kendala baru      | Insert ke `blocker_logs`, update `projects.last_activity = now()` |                   ❌ Tidak                    |
-| **Selesaikan Blocker** | Tandai blocker terselesaikan | Update `blocker_logs.is_resolved = true`                          |                   ❌ Tidak                    |
+| Fitur                  | Aksi Pengguna                | Dampak Database                                                   |                Dampak Streak?                 | Dampak Heatmap? |
+| :--------------------- | :--------------------------- | :---------------------------------------------------------------- | :-------------------------------------------: | :-------------: |
+| **Pilih Proyek Aktif** | Toggle aktifkan Proyek X     | Set Proyek X `is_active = true`, proyek lainnya `false`           |                   ❌ Tidak                    |    ❌ Tidak     |
+| **Selesaikan Tugas**   | Checklist tugas selesai      | `status = 'Done'`, `completed_at = now()`                         |         ✅ **Ya (+1 jika hari baru)**         | ✅ **Ya (+1)**  |
+| **Pomodoro Selesai**   | Timer 25m tuntas             | Insert ke `pomodoro_sessions`                                     | ❌ Tidak (Kecuali tugasnya dicentang selesai) | ✅ **Ya (+1)**  |
+| **Catat Blocker**      | Submit log kendala baru      | Insert ke `blocker_logs`, update `projects.last_activity = now()` |                   ❌ Tidak                    |    ❌ Tidak     |
+| **Selesaikan Blocker** | Tandai blocker terselesaikan | Update `blocker_logs.is_resolved = true`                          |                   ❌ Tidak                    |    ❌ Tidak     |
 
 ---
 
@@ -179,13 +203,13 @@ _Menyimpan dokumentasi dan detail kontekstual._
 
 1. **Performa & Latensi**:
    - Respon API backend < 200ms untuk operasi CRUD standar.
-   - Timer Pomodoro berjalan secara lokal tanpa lag atau _frame drop_.
+   - Timer Pomodoro dan rendering Heatmap grid berjalan lancar di 60fps tanpa frame drop.
 2. **Keamanan & Autentikasi**:
    - Semua request terlindungi menggunakan JWT Supabase melalui header `Authorization: Bearer <token>`.
    - Isolasi data pengguna: Pengguna hanya dapat membaca dan mengubah data miliknya sendiri (`user_id`).
 3. **UI/UX & Estetika**:
    - Visual profesional, modern, dan minimalis.
-   - Menggunakan NativeWind (Tailwind CSS) dengan palet warna bernuansa fokus (Slate, Indigo/Emerald accents, Dark Mode first).
+   - Menggunakan NativeWind (Tailwind CSS) dengan palet warna bernuansa fokus (Slate, Emerald accents, Dark Mode first).
 4. **Offline Capability (Fase Lanjut)**:
    - State timer lokal tetap berjalan meskipun koneksi internet terputus sementara.
 
@@ -196,15 +220,16 @@ _Menyimpan dokumentasi dan detail kontekstual._
 ### Versi 1.0 (MVP Aktif)
 
 - [x] Skema Database PostgreSQL (Supabase).
-- [ ] Manajemen Proyek (CRUD + Single Active Project logic).
-- [ ] Manajemen Tugas Mikro-Tasking (CRUD + Priority).
-- [ ] Pomodoro Timer 25 Menit (Client-side state + Session logger).
-- [ ] Jurnal Blocker (CRUD + Resolve status).
-- [ ] Sistem Streak Harian.
-- [ ] Dasbor Statistik Utama.
+- [x] Manajemen Proyek (CRUD + Single Active Project logic).
+- [x] Manajemen Tugas Mikro-Tasking (CRUD + Priority + Single Active Task).
+- [x] Pomodoro Timer 25 Menit (Client-side state + Session logger + Auto-pause distraction).
+- [x] Jurnal Blocker (CRUD + Resolve status & solution note).
+- [x] Dasbor Ringkasan Produktivitas Harian (`DailySummaryCards`).
+- [ ] Sistem Streak Harian Otomatis (`🔥` Streak Badge & Timezone-aware Calculation).
+- [ ] Heatmap Aktivitas & Ritme Produktivitas (GitHub-Style Contribution Graph).
 
 ### Versi 1.1 (Next Iteration)
 
 - Integrasi Git Commit Hook (opsional untuk auto-complete micro-task).
 - Audio ambient focus (White noise / Rain sound) saat Pomodoro aktif.
-- Export catatan proyek ke Markdown.
+- Tab Catatan Proyek Khusus (Tabel `project_notes` mandiri + Export Markdown).

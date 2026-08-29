@@ -3,9 +3,9 @@ import { create } from "zustand";
 export type PomodoroMode = "pomodoro" | "shortBreak" | "longBreak";
 
 export const DURATIONS: Record<PomodoroMode, number> = {
-  pomodoro: 5,
-  shortBreak: 3,
-  longBreak: 5,
+  pomodoro: 25 * 60,
+  shortBreak: 5 * 60,
+  longBreak: 15 * 60,
 };
 
 export const COLORS: Record<PomodoroMode, string> = {

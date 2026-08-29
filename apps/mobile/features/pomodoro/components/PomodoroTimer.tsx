@@ -242,6 +242,9 @@ export default function PomodoroTimer({
   const formatTime = (s: number) =>
     `${String(Math.floor(s / 60)).padStart(2, "0")}:${String(s % 60).padStart(2, "0")}`;
 
+  const remainingLabel =
+    time < 60 ? `${time}d tersisa` : `${Math.floor(time / 60)}m tersisa`;
+
   const modeColor =
     mode === "pomodoro"
       ? "#18181b"
@@ -328,7 +331,7 @@ export default function PomodoroTimer({
             {formatTime(time)}
           </Text>
           <Text className="text-[11px] font-mono text-muted">
-            {Math.round(progress)}% · {Math.ceil(time / 60)}m tersisa
+            {Math.round(progress)}% · {remainingLabel}
           </Text>
 
           {/* 4-Session Dots Indicator */}
