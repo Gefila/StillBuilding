@@ -33,7 +33,9 @@ export const queryClient = new QueryClient({
   defaultOptions: queryConfig,
   mutationCache: new MutationCache({
     onError: (error, _variables, _context, mutation) => {
-      const meta = mutation.meta as { skipGlobalErrorToast?: boolean } | undefined;
+      const meta = mutation.meta as
+        | { skipGlobalErrorToast?: boolean }
+        | undefined;
       if (meta?.skipGlobalErrorToast) return;
 
       const message = getErrorMessage(error);
@@ -58,4 +60,3 @@ export type MutationConfig<
   Error,
   Parameters<MutationFnType>[0]
 >;
-

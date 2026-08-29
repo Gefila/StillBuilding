@@ -1,7 +1,8 @@
 import React from "react";
-import { View, Text } from "react-native";
+import { View, Text, TouchableOpacity } from "react-native";
 import { Dropdown } from "react-native-element-dropdown";
 import { Ionicons } from "@expo/vector-icons";
+import { useRouter } from "expo-router";
 import { useGetProjects } from "@/features/project/hooks/useProject";
 import { Project } from "@/features/project/types/project.types";
 
@@ -20,11 +21,16 @@ export const ProjectSelector = ({
   error,
   pomodoro = false,
 }: ProjectSelectorProps) => {
+  const router = useRouter();
   const projectsQuery = useGetProjects({
     queryConfig: {
       staleTime: 1000 * 60,
     },
   });
+
+  const hasNoProjects =
+    !projectsQuery.isLoading &&
+    (!projectsQuery.data || projectsQuery.data.length === 0);
 
   const selectedItem = React.useMemo(() => {
     return projectsQuery.data?.find((item) => item.id === value);
@@ -62,62 +68,129 @@ export const ProjectSelector = ({
   return (
     <View className="mb-4">
       {!pomodoro && (
-        <View className="flex-row items-center mb-1.5 ml-0.5">
-          <Ionicons name="folder-outline" size={13} color="#71717a" />
-          <Text className="text-xs font-semibold text-muted ml-1.5 uppercase tracking-wider">
-            Pilih Proyek
-          </Text>
+        <View className="flex-row items-center justify-between mb-1.5 ml-0.5">
+          <View className="flex-row items-center">
+            <Ionicons
+              name="folder-outline"
+              size={13}
+              color={error ? "#dc2626" : "#71717a"}
+            />
+            <Text
+              className={`text-xs font-semibold ml-1.5 uppercase tracking-wider ${
+                error ? "text-error" : "text-muted"
+              }`}
+            >
+              Pilih Proyek
+            </Text>
+          </View>
+          {!hasNoProjects && !projectsQuery.isLoading && (
+            <TouchableOpacity
+              onPress={() => router.push("/project/create")}
+              activeOpacity={0.7}
+              className="flex-row items-center"
+            >
+              <Ionicons name="add" size={14} color="#18181b" />
+              <Text className="text-xs font-semibold text-foreground ml-0.5">
+                Proyek Baru
+              </Text>
+            </TouchableOpacity>
+          )}
         </View>
       )}
 
-      <Dropdown
-        data={projectsQuery.data || []}
-        labelField="name"
-        valueField="id"
-        placeholder={
-          projectsQuery.isLoading ? "Memuat proyek..." : "Pilih Proyek Terkait"
-        }
-        placeholderStyle={{ color: "#a1a1aa", fontSize: 14 }}
-        selectedTextStyle={{
-          fontSize: 14,
-          fontWeight: "600",
-          color: "#09090b",
-        }}
-        value={value}
-        onBlur={onBlur}
-        onChange={(item) => onChange(item.id)}
-        renderItem={renderItem}
-        style={{
-          backgroundColor: "#ffffff",
-          paddingHorizontal: 14,
-          paddingVertical: 10,
-          borderRadius: 12,
-          borderWidth: 1,
-          borderColor: error ? "#dc2626" : "#e4e4e7",
-          minHeight: 48,
-        }}
-        renderLeftIcon={() => (
-          <View className="w-7 h-7 bg-surface-subtle border border-border rounded-lg items-center justify-center mr-2.5">
-            <Ionicons
-              name={(selectedItem?.icon as any) || "folder-outline"}
-              size={15}
-              color="#18181b"
-            />
+      {hasNoProjects ? (
+        <View
+          className={`p-3.5 rounded-xl border ${
+            error ? "border-error bg-red-50/10" : "border-border bg-surface"
+          } flex-row items-center justify-between`}
+        >
+          <View className="flex-row items-center flex-1 mr-3">
+            <View className="w-8 h-8 rounded-lg bg-surface-subtle border border-border items-center justify-center mr-2.5">
+              <Ionicons name="folder-open-outline" size={16} color="#71717a" />
+            </View>
+            <View className="flex-1">
+              <Text className="text-xs font-semibold text-foreground">
+                Belum ada proyek
+              </Text>
+              <Text className="text-[11px] text-muted mt-0.5">
+                Buat proyek terlebih dahulu untuk membuat tugas.
+              </Text>
+            </View>
           </View>
-        )}
-        renderRightIcon={() => (
-          <Ionicons name="chevron-down" size={16} color="#71717a" />
-        )}
-        containerStyle={{
-          borderRadius: 14,
-          marginTop: 4,
-          overflow: "hidden",
-          borderWidth: 1,
-          borderColor: "#e4e4e7",
-          backgroundColor: "#ffffff",
-        }}
-      />
-      {error && <Text className="text-error text-xs mt-1 ml-0.5">{error}</Text>}
+          <TouchableOpacity
+            activeOpacity={0.7}
+            onPress={() => router.push("/project/create")}
+            className="bg-foreground px-3 py-2 rounded-lg flex-row items-center shadow-xs"
+          >
+            <Ionicons name="add" size={14} color="#ffffff" />
+            <Text className="text-xs font-bold text-background ml-1">
+              Buat Proyek
+            </Text>
+          </TouchableOpacity>
+        </View>
+      ) : (
+        <Dropdown
+          data={projectsQuery.data || []}
+          labelField="name"
+          valueField="id"
+          placeholder={
+            projectsQuery.isLoading
+              ? "Memuat proyek..."
+              : "Pilih Proyek Terkait"
+          }
+          placeholderStyle={{ color: "#a1a1aa", fontSize: 14 }}
+          selectedTextStyle={{
+            fontSize: 14,
+            fontWeight: "600",
+            color: "#09090b",
+          }}
+          value={value}
+          onBlur={onBlur}
+          onChange={(item) => onChange(item.id)}
+          renderItem={renderItem}
+          style={{
+            backgroundColor: "#ffffff",
+            paddingHorizontal: 14,
+            paddingVertical: 10,
+            borderRadius: 12,
+            borderWidth: 1,
+            borderColor: error ? "#dc2626" : "#e4e4e7",
+            minHeight: 48,
+          }}
+          renderLeftIcon={() => (
+            <View className="w-7 h-7 bg-surface-subtle border border-border rounded-lg items-center justify-center mr-2.5">
+              <Ionicons
+                name={(selectedItem?.icon as any) || "folder-outline"}
+                size={15}
+                color="#18181b"
+              />
+            </View>
+          )}
+          renderRightIcon={() => (
+            <Ionicons name="chevron-down" size={16} color="#71717a" />
+          )}
+          containerStyle={{
+            borderRadius: 14,
+            marginTop: 4,
+            overflow: "hidden",
+            borderWidth: 1,
+            borderColor: "#e4e4e7",
+            backgroundColor: "#ffffff",
+          }}
+        />
+      )}
+
+      {error && (
+        <View className="flex-row items-center mt-1.5 ml-0.5">
+          <Ionicons
+            name="alert-circle"
+            size={13}
+            color="#dc2626"
+            style={{ marginRight: 4 }}
+          />
+          <Text className="text-error text-xs font-medium">{error}</Text>
+        </View>
+      )}
     </View>
   );
 };

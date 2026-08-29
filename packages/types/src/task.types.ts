@@ -3,8 +3,8 @@ import type { PomodoroSession } from "./pomodoro.types";
 import type { Project } from "./project.types";
 
 export const createTaskSchema = z.object({
-  project_id: z.string().optional(),
-  title: z.string().min(1, "Title is required"),
+  project_id: z.string().min(1, "Proyek wajib dipilih"),
+  title: z.string().min(1, "Judul tugas wajib diisi"),
   note: z.string().optional(),
   priority: z.string().optional().default("medium"),
   status: z.string().optional().default("Pending"),

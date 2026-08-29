@@ -55,18 +55,20 @@ export const taskService = {
   },
 
   async create(task: CreateTaskDTO, userId: string): Promise<Task> {
-    if (task.project_id) {
-      // Verifikasi bahwa project milik user yang bersangkutan
-      const { data: project, error: projError } = await supabase
-        .from("projects")
-        .select("id")
-        .eq("id", task.project_id)
-        .eq("user_id", userId)
-        .single();
+    if (!task.project_id) {
+      throw new AppError("Proyek wajib dipilih", 400);
+    }
 
-      if (projError || !project) {
-        throw new AppError("Project not found or unauthorized", 404);
-      }
+    // Verifikasi bahwa project milik user yang bersangkutan
+    const { data: project, error: projError } = await supabase
+      .from("projects")
+      .select("id")
+      .eq("id", task.project_id)
+      .eq("user_id", userId)
+      .single();
+
+    if (projError || !project) {
+      throw new AppError("Project not found or unauthorized", 404);
     }
 
     // Single Active Task Rule: jika task berstatus "Active", demote task aktif lainnya milik user menjadi "Pending"
