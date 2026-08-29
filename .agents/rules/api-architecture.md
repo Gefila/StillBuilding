@@ -3,6 +3,7 @@
 ## Module Structure
 
 All backend logic lives in `src/modules/<ModuleName>/`:
+
 - `<module>.routes.ts` — Express routes with middleware bindings
 - `<module>.controller.ts` — Request extraction & response dispatching
 - `<module>.service.ts` — Business logic & Supabase database queries

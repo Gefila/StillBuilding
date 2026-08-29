@@ -96,9 +96,25 @@ import Card from "@/components/Card";
 ```tsx
 import Button from "@/components/Button";
 
-<Button label="Simpan Perubahan" variant="primary" size="md" onPress={handleSave} />
-<Button label="Batal" variant="secondary" size="md" onPress={handleCancel} />
-<Button label="Hapus" variant="danger" size="md" onPress={handleDelete} />
+<Button
+  label="Simpan Perubahan"
+  variant="primary"
+  size="md"
+  onPress={handleSave}
+/>;
+```
+
+### D. Notifikasi Toast (`components/Toast.tsx`)
+
+Toast menggunakan tema Minimalist High-Contrast dengan kartu mengambang berpresisi tinggi (`bg-surface`, `rounded-2xl`, `border-border`), ikon semantik berwarna beraksen lembut, dan safe area offset otomatis.
+
+```tsx
+import { Toast } from "@/components/Toast"; // atau dari "toastify-react-native"
+
+Toast.success("Proyek berhasil dibuat");
+Toast.error("Gagal memuat data");
+Toast.info("Sesi Anda telah berakhir");
+Toast.warn("Tenggat waktu semakin dekat");
 ```
 
 ---

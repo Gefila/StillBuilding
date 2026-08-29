@@ -6,7 +6,7 @@ import { QueryClientProvider } from "@tanstack/react-query";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { SafeAreaProvider } from "react-native-safe-area-context";
-import ToastManager from "toastify-react-native";
+import { AppToast } from "@/components/Toast";
 import { useAuthStore } from "@/features/auth/store/useAuthStore";
 
 function RootNavigator() {
@@ -64,7 +64,7 @@ export default function RootLayout() {
       <StatusBar style="dark" />
       <QueryClientProvider client={queryClient}>
         <RootNavigator />
-        <ToastManager useModal={false} />
+        <AppToast />
       </QueryClientProvider>
     </SafeAreaProvider>
   );

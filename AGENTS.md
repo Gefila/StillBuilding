@@ -9,16 +9,16 @@ Personal productivity & deep-work companion app (task management, pomodoro timer
 
 ## Commands
 
-| Action | Command |
-|---|---|
-| Dev (all) | `pnpm dev` |
-| Dev (API only) | `pnpm --filter @stillbuilding/api dev` |
+| Action            | Command                                     |
+| ----------------- | ------------------------------------------- |
+| Dev (all)         | `pnpm dev`                                  |
+| Dev (API only)    | `pnpm --filter @stillbuilding/api dev`      |
 | Dev (mobile only) | `pnpm --filter @stillbuilding/mobile start` |
-| Type check | `pnpm check-types` |
-| Lint | `pnpm lint` |
-| Format | `pnpm format` |
-| Build | `pnpm build` |
-| Add dependency | `pnpm --filter <pkg-name> add <dep>` |
+| Type check        | `pnpm check-types`                          |
+| Lint              | `pnpm lint`                                 |
+| Format            | `pnpm format`                               |
+| Build             | `pnpm build`                                |
+| Add dependency    | `pnpm --filter <pkg-name> add <dep>`        |
 
 ## Formatting
 
