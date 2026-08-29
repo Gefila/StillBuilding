@@ -21,7 +21,6 @@ export default function Pomodoro() {
     id: id as string,
     queryConfig: {
       enabled: !!id,
-      staleTime: 0, // 1 menit
     },
   });
   return (

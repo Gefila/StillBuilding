@@ -167,7 +167,6 @@ export const useSetActiveTask = () => {
       queryClient.invalidateQueries({
         queryKey: getTaskQueryKey(),
         exact: true,
-        refetchType: "none",
       });
       queryClient.invalidateQueries({
         queryKey: getProjectQueryKey(),
@@ -264,16 +263,14 @@ export const useUpdateTask = ({
         });
       }
 
-      // 5. Invalidate specific queries tanpa menduplikasi request ke active screens
+      // 5. Invalidate specific queries
       queryClient.invalidateQueries({
         queryKey: getTaskByIdQueryKey(variables.id),
         exact: true,
-        refetchType: "none",
       });
       queryClient.invalidateQueries({
         queryKey: getTaskQueryKey(),
         exact: true,
-        refetchType: "none",
       });
       queryClient.invalidateQueries({
         queryKey: getProjectQueryKey(),
@@ -328,7 +325,6 @@ export const useCreateTask = ({
       queryClient.invalidateQueries({
         queryKey: getTaskQueryKey(),
         exact: true,
-        refetchType: "none",
       });
       queryClient.invalidateQueries({
         queryKey: getProjectQueryKey(),
@@ -383,7 +379,6 @@ export const useDeleteTask = ({
       queryClient.invalidateQueries({
         queryKey: getTaskQueryKey(),
         exact: true,
-        refetchType: "none",
       });
       queryClient.invalidateQueries({
         queryKey: getProjectQueryKey(),

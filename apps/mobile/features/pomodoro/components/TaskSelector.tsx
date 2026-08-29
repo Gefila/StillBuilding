@@ -20,11 +20,7 @@ const TaskSelector = ({
   error,
   pomodoro = false,
 }: TaskSelectorProps) => {
-  const projectsQuery = useGetProjects({
-    queryConfig: {
-      staleTime: 1000 * 60,
-    },
-  });
+  const projectsQuery = useGetProjects();
 
   const selectedItem = React.useMemo(() => {
     return projectsQuery.data?.find((item) => item.id === value);

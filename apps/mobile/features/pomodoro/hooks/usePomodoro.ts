@@ -81,7 +81,6 @@ export const useUpdatePomodoro = ({
       queryClient.invalidateQueries({
         queryKey: getPomodoroQueryKey(),
         exact: true,
-        refetchType: "none",
       });
 
       mutationConfig.onSuccess?.(data, variables, onMutateResult, context);
@@ -115,7 +114,6 @@ export const useCreatePomodoro = ({
       queryClient.invalidateQueries({
         queryKey: getPomodoroQueryKey(),
         exact: true,
-        refetchType: "none",
       });
 
       mutationConfig.onSuccess?.(data, variables, onMutateResult, context);

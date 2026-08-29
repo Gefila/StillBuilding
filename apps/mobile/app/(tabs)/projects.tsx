@@ -19,7 +19,6 @@ export default function Projects() {
   const projectsQuery = useGetProjects({
     queryConfig: {
       subscribed: isFocused,
-      staleTime: 1000,
     },
   });
 

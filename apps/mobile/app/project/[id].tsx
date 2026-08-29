@@ -20,7 +20,6 @@ export default function ProjectDetail() {
     id: id as string,
     queryConfig: {
       enabled: !!id,
-      staleTime: 3000,
     },
   });
 

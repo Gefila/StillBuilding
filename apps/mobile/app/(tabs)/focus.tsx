@@ -2,6 +2,7 @@ import React, { useEffect, useRef, useState } from "react";
 import { Alert, ScrollView, Text, TouchableOpacity, View } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
+import { useIsFocused } from "@react-navigation/native";
 import * as Haptics from "expo-haptics";
 import {
   useGetTasks,
@@ -16,6 +17,7 @@ import { usePomodoroStore } from "@/features/pomodoro/store/usePomodoroStore";
 import type { Task } from "@/features/task/types/task.types";
 
 export default function FocusTab() {
+  const isFocused = useIsFocused();
   const insets = useSafeAreaInsets();
   const [taskPickerVisible, setTaskPickerVisible] = useState(false);
   const hasInitializedFromDb = useRef(false);
@@ -24,7 +26,11 @@ export default function FocusTab() {
     usePomodoroStore();
   const setActiveTaskMutation = useSetActiveTask();
   const updateTaskMutation = useUpdateTask();
-  const { data: allTasks } = useGetTasks();
+  const { data: allTasks } = useGetTasks({
+    queryConfig: {
+      subscribed: isFocused,
+    },
+  });
 
   // Default target focus to task with status "Active" once on initial load (if none is active in store)
   useEffect(() => {

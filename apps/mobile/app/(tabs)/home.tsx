@@ -9,6 +9,7 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
+import { useIsFocused } from "@react-navigation/native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useGetTasks } from "@/features/task/hooks/useTask";
 import HomeHeader from "@/components/home/HomeHeader";
@@ -18,12 +19,21 @@ import Tasks from "@/components/tasks/Tasks";
 import { useAuthStore } from "@/features/auth/store/useAuthStore";
 
 export default function Home() {
+  const isFocused = useIsFocused();
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const [refreshing, setRefreshing] = useState(false);
   const user = useAuthStore((state) => state.user);
 
-  const { data: tasks, isLoading, refetch } = useGetTasks();
+  const {
+    data: tasks,
+    isLoading,
+    refetch,
+  } = useGetTasks({
+    queryConfig: {
+      subscribed: isFocused,
+    },
+  });
   const taskList = Array.isArray(tasks) ? tasks : [];
 
   const onRefresh = useCallback(async () => {

@@ -80,7 +80,6 @@ export const useCreateBlocker = ({
         queryClient.invalidateQueries({
           queryKey: getProjectByIdQueryKey(projectId),
           exact: true,
-          refetchType: "none",
         });
       }
 
@@ -134,14 +133,12 @@ export const useUpdateBlocker = ({
         queryClient.invalidateQueries({
           queryKey: getProjectByIdQueryKey(data.project_id),
           exact: true,
-          refetchType: "none",
         });
       }
 
       queryClient.invalidateQueries({
         queryKey: getBlockerByIdQueryKey(variables.id),
         exact: true,
-        refetchType: "none",
       });
       queryClient.invalidateQueries({
         queryKey: getBlockersQueryKey(),
@@ -183,7 +180,6 @@ export const useDeleteBlocker = ({
         queryClient.invalidateQueries({
           queryKey: getProjectByIdQueryKey(data.project_id),
           exact: true,
-          refetchType: "none",
         });
       }
 

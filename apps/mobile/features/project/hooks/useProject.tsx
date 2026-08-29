@@ -88,16 +88,14 @@ export const useUpdateProject = ({
         return old.map((p) => (p.id === variables.id ? { ...p, ...data } : p));
       });
 
-      // 3. Invalidate dengan exact: true dan refetchType: "none"
+      // 3. Invalidate queries
       queryClient.invalidateQueries({
         queryKey: getProjectByIdQueryKey(variables.id),
         exact: true,
-        refetchType: "none",
       });
       queryClient.invalidateQueries({
         queryKey: getProjectQueryKey(),
         exact: true,
-        refetchType: "none",
       });
 
       mutationConfig.onSuccess?.(data, variables, onMutateResult, context);
@@ -121,7 +119,6 @@ export const useCreateProject = ({
       queryClient.invalidateQueries({
         queryKey: getProjectQueryKey(),
         exact: true,
-        refetchType: "none",
       });
       mutationConfig.onSuccess?.(data, variables, onMutateResult, context);
     },
@@ -148,7 +145,6 @@ export const useDeleteProject = ({
       queryClient.invalidateQueries({
         queryKey: getProjectQueryKey(),
         exact: true,
-        refetchType: "none",
       });
       mutationConfig.onSuccess?.(data, variables, onMutateResult, context);
     },

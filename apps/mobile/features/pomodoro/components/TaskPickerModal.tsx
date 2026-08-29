@@ -27,7 +27,11 @@ export default function TaskPickerModal({
 }: TaskPickerModalProps) {
   const [searchQuery, setSearchQuery] = useState("");
   const selectedTaskRef = useRef<Task | null | undefined>(undefined);
-  const tasksQuery = useGetTasks();
+  const tasksQuery = useGetTasks({
+    queryConfig: {
+      enabled: visible,
+    },
+  });
 
   const allTasks = tasksQuery.data || [];
   const availableTasks = allTasks.filter(

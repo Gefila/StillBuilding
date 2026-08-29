@@ -22,11 +22,7 @@ export const ProjectSelector = ({
   pomodoro = false,
 }: ProjectSelectorProps) => {
   const router = useRouter();
-  const projectsQuery = useGetProjects({
-    queryConfig: {
-      staleTime: 1000 * 60,
-    },
-  });
+  const projectsQuery = useGetProjects();
 
   const hasNoProjects =
     !projectsQuery.isLoading &&

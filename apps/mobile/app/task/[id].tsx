@@ -32,7 +32,6 @@ export default function TaskDetail() {
     id: id as string,
     queryConfig: {
       enabled: !!id,
-      staleTime: 0,
     },
   });
 
