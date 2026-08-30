@@ -6,15 +6,14 @@ import { CreatePomodoroSessionDTO } from "../types/pomodoro.types";
 import {
   getTaskByIdQueryKey,
   getTaskQueryKey,
-} from "@/features/task/hooks/useTask";
+} from "@/features/task/hooks/taskKeys";
+import {
+  getPomodoroByIdQueryKey,
+  getPomodoroQueryKey,
+  getTodayPomodoroStatsQueryKey,
+} from "./pomodoroKeys";
 
-export const getPomodoroQueryKey = () => ["pomodoro"];
-export const getPomodoroByIdQueryKey = (id: string) => ["pomodoro", id];
-export const getTodayPomodoroStatsQueryKey = (date?: string) => [
-  "pomodoro",
-  "today-stats",
-  ...(date ? [date] : []),
-];
+export * from "./pomodoroKeys";
 
 export const getPomodorosQueryOptions = () => {
   return queryOptions({

@@ -6,11 +6,11 @@ import {
   BlockerLog,
   UpdateBlockerLogDTO,
 } from "../types/blocker.types";
-import { getProjectByIdQueryKey } from "@/features/project/hooks/useProject";
+import { getProjectByIdQueryKey } from "@/features/project/hooks/projectKeys";
+import { getBlockerByIdQueryKey, getBlockersQueryKey } from "./blockerKeys";
 import type { Project } from "@/features/project/types/project.types";
 
-export const getBlockersQueryKey = () => ["blockers"];
-export const getBlockerByIdQueryKey = (id: string) => ["blockers", id];
+export * from "./blockerKeys";
 
 export const getBlockersQueryOptions = () => {
   return queryOptions({

@@ -222,11 +222,7 @@ export default function ProjectBlockers({
                 {item.solution ? (
                   <View className="bg-emerald-50/60 border border-emerald-100 rounded-xl p-2.5 mb-2 mt-1">
                     <View className="flex-row items-center gap-1 mb-0.5">
-                      <Ionicons
-                        name="bulb-outline"
-                        size={12}
-                        color="#16a34a"
-                      />
+                      <Ionicons name="bulb-outline" size={12} color="#16a34a" />
                       <Text className="text-[11px] font-bold text-emerald-800">
                         Solusi / Pemecahan:
                       </Text>

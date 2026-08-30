@@ -2,12 +2,12 @@ import { queryOptions, useMutation, useQuery } from "@tanstack/react-query";
 import { projectService } from "../services/projectService";
 import { MutationConfig, queryClient, QueryConfig } from "@/lib/reactQuery";
 import { CreateProjectDTO, Project } from "../types/project.types";
-import { getTaskQueryKey } from "@/features/task/hooks/useTask";
-import { getBlockersQueryKey } from "@/features/blocker/hooks/useBlocker";
+import { getTaskQueryKey } from "@/features/task/hooks/taskKeys";
+import { getBlockersQueryKey } from "@/features/blocker/hooks/blockerKeys";
+import { getProjectByIdQueryKey, getProjectQueryKey } from "./projectKeys";
 import type { Task } from "@/features/task/types/task.types";
 
-export const getProjectQueryKey = () => ["project"];
-export const getProjectByIdQueryKey = (id: string) => ["project", id];
+export * from "./projectKeys";
 
 export const getProjectsQueryOptions = () => {
   return queryOptions({

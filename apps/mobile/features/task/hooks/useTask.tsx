@@ -5,11 +5,11 @@ import { CreateTaskDTO, Task, UpdateTaskDTO } from "../types/task.types";
 import {
   getProjectByIdQueryKey,
   getProjectQueryKey,
-} from "@/features/project/hooks/useProject";
+} from "@/features/project/hooks/projectKeys";
+import { getTaskByIdQueryKey, getTaskQueryKey } from "./taskKeys";
 import type { Project } from "@/features/project/types/project.types";
 
-export const getTaskQueryKey = () => ["task"];
-export const getTaskByIdQueryKey = (id: string) => ["task", id];
+export * from "./taskKeys";
 
 export const getTasksQueryOptions = () => {
   return queryOptions({
@@ -97,11 +97,8 @@ export const useSetActiveTask = () => {
       if (cachedTasks) {
         if (variables.newTaskId) {
           // New active task's project
-          const newTask = cachedTasks.find(
-            (t) => t.id === variables.newTaskId,
-          );
-          if (newTask?.project_id)
-            affectedProjectIds.add(newTask.project_id);
+          const newTask = cachedTasks.find((t) => t.id === variables.newTaskId);
+          if (newTask?.project_id) affectedProjectIds.add(newTask.project_id);
           // Previously active tasks that will be demoted (could be in different projects)
           cachedTasks
             .filter(
@@ -115,8 +112,7 @@ export const useSetActiveTask = () => {
           const prevTask = cachedTasks.find(
             (t) => t.id === variables.prevTaskId,
           );
-          if (prevTask?.project_id)
-            affectedProjectIds.add(prevTask.project_id);
+          if (prevTask?.project_id) affectedProjectIds.add(prevTask.project_id);
         }
       }
 
@@ -272,9 +268,7 @@ export const useUpdateTask = ({
               (t) => t.id !== variables.id,
             );
             const total_tasks = tasks.length;
-            const done_tasks = tasks.filter(
-              (t) => t.status === "Done",
-            ).length;
+            const done_tasks = tasks.filter((t) => t.status === "Done").length;
             return { ...oldProject, tasks, total_tasks, done_tasks };
           },
         );
