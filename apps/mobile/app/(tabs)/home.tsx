@@ -91,7 +91,7 @@ export default function Home() {
         <QuickFocusBanner activeTaskTitle={activeTask?.title} />
 
         {/* 4. GitHub-Style Activity & Productivity Heatmap */}
-        <ActivityHeatmapCard weeks={16} />
+        <ActivityHeatmapCard weeks={16} compact={true} />
 
         {/* 5. Filterable Tasks List */}
         {isLoading ? (

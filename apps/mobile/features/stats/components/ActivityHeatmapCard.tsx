@@ -50,12 +50,18 @@ function formatHeatmapDate(dateStr: string): string {
 
 export default function ActivityHeatmapCard({
   weeks = 16,
+  compact = false,
 }: {
   weeks?: number;
+  compact?: boolean;
 }) {
   const { data, isLoading, isError } = useActivityHeatmap({ weeks });
   const scrollViewRef = useRef<ScrollView>(null);
   const [selectedDate, setSelectedDate] = useState<string | null>(null);
+
+  const cellSize = compact ? 10 : 14;
+  const cellGap = compact ? 2 : 3;
+  const cellRadius = compact ? 2.5 : 3.5;
 
   // Group 112 days into 16 columns (weeks)
   const weekColumns = useMemo(() => {
@@ -118,25 +124,45 @@ export default function ActivityHeatmapCard({
   };
 
   return (
-    <View className="bg-surface rounded-3xl p-4 border border-border my-2 shadow-xs">
+    <View
+      className={`bg-surface rounded-3xl ${
+        compact ? "p-3.5" : "p-4"
+      } border border-border my-2 shadow-xs`}
+    >
       {/* Header Row: Title, Date Horizon, & Total Activities Badge */}
-      <View className="flex-row items-center justify-between mb-3">
+      <View className="flex-row items-center justify-between mb-2.5">
         <View className="flex-1">
           <View className="flex-row items-center gap-1.5">
-            <Ionicons name="grid-outline" size={15} color="#18181b" />
-            <Text className="text-sm font-bold text-foreground">
+            <Ionicons
+              name="grid-outline"
+              size={compact ? 14 : 15}
+              color="#18181b"
+            />
+            <Text
+              className={`${compact ? "text-xs" : "text-sm"} font-bold text-foreground`}
+            >
               Ritme Produktivitas
             </Text>
           </View>
-          <Text className="text-[11px] text-muted font-medium mt-0.5">
+          <Text
+            className={`${compact ? "text-[10px]" : "text-[11px]"} text-muted font-medium mt-0.5`}
+          >
             {weeks} minggu terakhir (Senin - Minggu)
           </Text>
         </View>
 
         {data?.summary && (
-          <View className="bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full flex-row items-center">
-            <Text className="text-xs mr-1">🟩</Text>
-            <Text className="text-[11px] font-bold text-emerald-800">
+          <View
+            className={`bg-emerald-50 border border-emerald-200 ${
+              compact ? "px-2 py-0.5" : "px-2.5 py-1"
+            } rounded-full flex-row items-center`}
+          >
+            <Text className={`${compact ? "text-[10px]" : "text-xs"} mr-1`}>
+              🟩
+            </Text>
+            <Text
+              className={`${compact ? "text-[10px]" : "text-[11px]"} font-bold text-emerald-800`}
+            >
               {data.summary.total_activities} Kontribusi
             </Text>
           </View>
@@ -145,7 +171,9 @@ export default function ActivityHeatmapCard({
 
       {/* Grid State Handling */}
       {isLoading ? (
-        <View className="py-10 items-center justify-center">
+        <View
+          className={`${compact ? "py-6" : "py-10"} items-center justify-center`}
+        >
           <ActivityIndicator size="small" color="#18181b" />
           <Text className="text-xs text-muted font-medium mt-2">
             Memuat grafik kontribusi...
@@ -162,14 +190,20 @@ export default function ActivityHeatmapCard({
           {/* Scrollable Heatmap Grid */}
           <View className="flex-row">
             {/* Left Column: Day Labels (Hari Ganjil: Sen, Rab, Jum, Min) */}
-            <View className="pt-[15px] pr-1.5 flex-col">
+            <View
+              className={`${compact ? "pt-[13px]" : "pt-[15px]"} pr-1.5 flex-col`}
+            >
               {["Sen", "", "Rab", "", "Jum", "", "Min"].map((label, idx) => (
                 <View
                   key={idx}
-                  style={{ height: 14, marginBottom: 3 }}
+                  style={{ height: cellSize, marginBottom: cellGap }}
                   className="justify-center"
                 >
-                  <Text className="text-[9px] font-semibold text-muted leading-none">
+                  <Text
+                    className={`${
+                      compact ? "text-[8px]" : "text-[9px]"
+                    } font-semibold text-muted leading-none`}
+                  >
                     {label}
                   </Text>
                 </View>
@@ -190,12 +224,18 @@ export default function ActivityHeatmapCard({
                   {weekColumns.map((_, colIdx) => (
                     <View
                       key={colIdx}
-                      style={{ width: 14, marginRight: 3, overflow: "visible" }}
+                      style={{
+                        width: cellSize,
+                        marginRight: cellGap,
+                        overflow: "visible",
+                      }}
                       className="items-start"
                     >
                       {columnMonthLabels[colIdx] ? (
                         <Text
-                          className="text-[9px] font-bold text-muted"
+                          className={`${
+                            compact ? "text-[8px]" : "text-[9px]"
+                          } font-bold text-muted`}
                           style={{ width: 34 }}
                         >
                           {columnMonthLabels[colIdx]}
@@ -208,7 +248,11 @@ export default function ActivityHeatmapCard({
                 {/* 7 Rows of Weeks */}
                 <View className="flex-row">
                   {weekColumns.map((col, colIdx) => (
-                    <View key={colIdx} className="flex-col mr-[3px]">
+                    <View
+                      key={colIdx}
+                      className="flex-col"
+                      style={{ marginRight: cellGap }}
+                    >
                       {col.map((day) => {
                         const isSelected = selectedDate === day.date;
                         const colors =
@@ -219,16 +263,24 @@ export default function ActivityHeatmapCard({
                             activeOpacity={0.7}
                             onPress={() => handleCellPress(day)}
                             style={{
-                              width: 14,
-                              height: 14,
-                              marginBottom: 3,
-                              borderRadius: 3.5,
+                              width: cellSize,
+                              height: cellSize,
+                              marginBottom: cellGap,
+                              borderRadius: cellRadius,
                               backgroundColor: colors.bg,
                               borderColor: isSelected
                                 ? "#18181b"
                                 : colors.border,
                               borderWidth: isSelected ? 1.5 : 1,
-                              transform: [{ scale: isSelected ? 1.15 : 1 }],
+                              transform: [
+                                {
+                                  scale: isSelected
+                                    ? compact
+                                      ? 1.2
+                                      : 1.15
+                                    : 1,
+                                },
+                              ],
                             }}
                           />
                         );
@@ -240,72 +292,139 @@ export default function ActivityHeatmapCard({
             </ScrollView>
           </View>
 
-          {/* Interactive Info Strip (Selected Date Details) */}
-          {selectedDayInfo && (
-            <View className="mt-3.5 pt-3 border-t border-border bg-surface-subtle/60 -mx-4 -mb-4 p-3.5 rounded-b-3xl">
-              <View className="flex-row items-center justify-between">
-                <Text className="text-xs font-bold text-foreground">
-                  {formatHeatmapDate(selectedDayInfo.date)}
-                </Text>
-                <View className="flex-row items-center bg-surface px-2 py-0.5 rounded-full border border-border">
-                  <Text className="text-[10px] font-bold text-foreground">
-                    {selectedDayInfo.total_activities} Aktivitas
+          {/* Footer Area: Compact Mode (Merged 1-line) vs Full Mode (Full Info Card) */}
+          {compact ? (
+            <View className="flex-row items-center justify-between mt-2 pt-2 border-t border-border/80">
+              {/* Left: Selected Day Short Info */}
+              {selectedDayInfo ? (
+                <View className="flex-1 flex-row items-center mr-2">
+                  <Text
+                    className="text-[10px] font-bold text-foreground mr-1"
+                    numberOfLines={1}
+                  >
+                    {formatHeatmapDate(selectedDayInfo.date)}:
                   </Text>
-                </View>
-              </View>
-
-              {selectedDayInfo.total_activities > 0 ? (
-                <View className="flex-row items-center gap-3 mt-1.5 flex-wrap">
-                  <View className="flex-row items-center">
-                    <Ionicons
-                      name="checkmark-circle-outline"
-                      size={12}
-                      color="#16a34a"
-                    />
-                    <Text className="text-[11px] font-medium text-muted ml-1">
-                      {selectedDayInfo.tasks_completed} tugas selesai
+                  {selectedDayInfo.total_activities > 0 ? (
+                    <Text
+                      className="text-[10px] text-muted font-medium"
+                      numberOfLines={1}
+                    >
+                      {selectedDayInfo.total_activities} aktif (
+                      {selectedDayInfo.tasks_completed} tugas,{" "}
+                      {selectedDayInfo.pomodoro_sessions} fokus)
                     </Text>
-                  </View>
-                  <View className="flex-row items-center">
-                    <Ionicons name="timer-outline" size={12} color="#2563eb" />
-                    <Text className="text-[11px] font-medium text-muted ml-1">
-                      {selectedDayInfo.pomodoro_sessions} sesi fokus (
-                      {selectedDayInfo.focus_minutes}m)
+                  ) : (
+                    <Text
+                      className="text-[10px] text-muted font-normal"
+                      numberOfLines={1}
+                    >
+                      0 aktivitas
                     </Text>
-                  </View>
+                  )}
                 </View>
               ) : (
-                <Text className="text-[11px] text-muted font-medium mt-1">
-                  Tidak ada aktivitas kerja yang dicatat pada hari ini.
-                </Text>
+                <View className="flex-1" />
               )}
-            </View>
-          )}
 
-          {/* Color Legend (Bottom Right) */}
-          <View className="flex-row items-center justify-end gap-1 mt-2.5">
-            <Text className="text-[9px] font-semibold text-muted mr-1">
-              Kurang
-            </Text>
-            {[0, 1, 2, 3, 4].map((lvl) => (
-              <View
-                key={lvl}
-                style={{
-                  width: 9,
-                  height: 9,
-                  borderRadius: 2,
-                  backgroundColor:
-                    LEVEL_COLORS[lvl as keyof typeof LEVEL_COLORS].bg,
-                  borderColor:
-                    LEVEL_COLORS[lvl as keyof typeof LEVEL_COLORS].border,
-                  borderWidth: 0.5,
-                }}
-              />
-            ))}
-            <Text className="text-[9px] font-semibold text-muted ml-1">
-              Banyak
-            </Text>
-          </View>
+              {/* Right: Compact Color Legend */}
+              <View className="flex-row items-center gap-0.5">
+                <Text className="text-[8px] font-semibold text-muted mr-0.5">
+                  Kurang
+                </Text>
+                {[0, 1, 2, 3, 4].map((lvl) => (
+                  <View
+                    key={lvl}
+                    style={{
+                      width: 7,
+                      height: 7,
+                      borderRadius: 1.5,
+                      backgroundColor:
+                        LEVEL_COLORS[lvl as keyof typeof LEVEL_COLORS].bg,
+                      borderColor:
+                        LEVEL_COLORS[lvl as keyof typeof LEVEL_COLORS].border,
+                      borderWidth: 0.5,
+                    }}
+                  />
+                ))}
+                <Text className="text-[8px] font-semibold text-muted ml-0.5">
+                  Banyak
+                </Text>
+              </View>
+            </View>
+          ) : (
+            <>
+              {/* Interactive Info Strip (Selected Date Details) */}
+              {selectedDayInfo && (
+                <View className="mt-3.5 pt-3 border-t border-border bg-surface-subtle/60 -mx-4 -mb-4 p-3.5 rounded-b-3xl">
+                  <View className="flex-row items-center justify-between">
+                    <Text className="text-xs font-bold text-foreground">
+                      {formatHeatmapDate(selectedDayInfo.date)}
+                    </Text>
+                    <View className="flex-row items-center bg-surface px-2 py-0.5 rounded-full border border-border">
+                      <Text className="text-[10px] font-bold text-foreground">
+                        {selectedDayInfo.total_activities} Aktivitas
+                      </Text>
+                    </View>
+                  </View>
+
+                  {selectedDayInfo.total_activities > 0 ? (
+                    <View className="flex-row items-center gap-3 mt-1.5 flex-wrap">
+                      <View className="flex-row items-center">
+                        <Ionicons
+                          name="checkmark-circle-outline"
+                          size={12}
+                          color="#16a34a"
+                        />
+                        <Text className="text-[11px] font-medium text-muted ml-1">
+                          {selectedDayInfo.tasks_completed} tugas selesai
+                        </Text>
+                      </View>
+                      <View className="flex-row items-center">
+                        <Ionicons
+                          name="timer-outline"
+                          size={12}
+                          color="#2563eb"
+                        />
+                        <Text className="text-[11px] font-medium text-muted ml-1">
+                          {selectedDayInfo.pomodoro_sessions} sesi fokus (
+                          {selectedDayInfo.focus_minutes}m)
+                        </Text>
+                      </View>
+                    </View>
+                  ) : (
+                    <Text className="text-[11px] text-muted font-medium mt-1">
+                      Tidak ada aktivitas kerja yang dicatat pada hari ini.
+                    </Text>
+                  )}
+                </View>
+              )}
+
+              {/* Color Legend (Bottom Right) */}
+              <View className="flex-row items-center justify-end gap-1 mt-2.5">
+                <Text className="text-[9px] font-semibold text-muted mr-1">
+                  Kurang
+                </Text>
+                {[0, 1, 2, 3, 4].map((lvl) => (
+                  <View
+                    key={lvl}
+                    style={{
+                      width: 9,
+                      height: 9,
+                      borderRadius: 2,
+                      backgroundColor:
+                        LEVEL_COLORS[lvl as keyof typeof LEVEL_COLORS].bg,
+                      borderColor:
+                        LEVEL_COLORS[lvl as keyof typeof LEVEL_COLORS].border,
+                      borderWidth: 0.5,
+                    }}
+                  />
+                ))}
+                <Text className="text-[9px] font-semibold text-muted ml-1">
+                  Banyak
+                </Text>
+              </View>
+            </>
+          )}
         </>
       )}
     </View>
