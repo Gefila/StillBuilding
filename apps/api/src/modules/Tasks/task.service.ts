@@ -1,9 +1,63 @@
 import { supabase } from "../../config/supabase";
 import { AppError } from "../../utils/AppError";
+import {
+  getLocalDateString,
+  getYesterdayLocalDateString,
+} from "../../utils/date.utils";
 import { sortTasks } from "../../utils/taskSorter";
 import type { CreateTaskDTO, Task, UpdateTaskDTO } from "./task.types";
 
 const TABLE = "tasks";
+
+async function evaluateUserStreak(
+  userId: string,
+  timeZone = "Asia/Jakarta",
+): Promise<void> {
+  try {
+    const todayStr = getLocalDateString(timeZone, new Date());
+    const yesterdayStr = getYesterdayLocalDateString(timeZone, new Date());
+
+    const { data: profile, error: profileError } = await supabase
+      .from("profiles")
+      .select("current_strike, longest_streak, last_streak_date")
+      .eq("id", userId)
+      .single();
+
+    if (profileError || !profile) {
+      return;
+    }
+
+    const lastStreakDate = profile.last_streak_date as string | null;
+    let currentStreak = profile.current_strike || 0;
+    let longestStreak = profile.longest_streak || 0;
+
+    // Case 1: Already recorded today -> no-op
+    if (lastStreakDate === todayStr) {
+      return;
+    }
+
+    // Case 2: Consecutive streak from yesterday
+    if (lastStreakDate === yesterdayStr) {
+      currentStreak += 1;
+    } else {
+      // Case 3: Broken streak or first time completion
+      currentStreak = 1;
+    }
+
+    longestStreak = Math.max(longestStreak, currentStreak);
+
+    await supabase
+      .from("profiles")
+      .update({
+        current_strike: currentStreak,
+        longest_streak: longestStreak,
+        last_streak_date: todayStr,
+      })
+      .eq("id", userId);
+  } catch (err) {
+    console.error("Failed to evaluate user streak:", err);
+  }
+}
 
 export const taskService = {
   async getAll(userId: string): Promise<Task[]> {
@@ -54,7 +108,11 @@ export const taskService = {
     return data as Task;
   },
 
-  async create(task: CreateTaskDTO, userId: string): Promise<Task> {
+  async create(
+    task: CreateTaskDTO,
+    userId: string,
+    timeZone = "Asia/Jakarta",
+  ): Promise<Task> {
     if (!task.project_id) {
       throw new AppError("Proyek wajib dipilih", 400);
     }
@@ -103,10 +161,20 @@ export const taskService = {
     if (error) {
       throw new AppError(`Failed to create task: ${error.message}`, 500);
     }
+
+    if (task.status === "Done") {
+      await evaluateUserStreak(userId, timeZone);
+    }
+
     return data as Task;
   },
 
-  async update(id: string, userId: string, task: UpdateTaskDTO): Promise<Task> {
+  async update(
+    id: string,
+    userId: string,
+    task: UpdateTaskDTO,
+    timeZone = "Asia/Jakarta",
+  ): Promise<Task> {
     // 1. Verifikasi kepemilikan task sebelum update
     await taskService.getById(id, userId);
 
@@ -164,6 +232,12 @@ export const taskService = {
     if (!data) {
       throw new AppError(`Task with id ${id} not found`, 404);
     }
+
+    // 4. Evaluasi streak harian jika status diubah menjadi "Done"
+    if (task.status === "Done") {
+      await evaluateUserStreak(userId, timeZone);
+    }
+
     return data as Task;
   },
 

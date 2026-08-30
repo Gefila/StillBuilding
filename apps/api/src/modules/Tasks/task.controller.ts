@@ -16,18 +16,21 @@ export const taskController = {
   }),
   create: catchAsync(async (req: Request, res: Response) => {
     const userId = req.user?.id as string;
+    const timeZone = (req.headers["x-timezone"] as string) || "Asia/Jakarta";
     const task = await taskService.create(
       {
         ...req.body,
       },
       userId,
+      timeZone,
     );
     res.status(201).json({ status: "success", data: task });
   }),
   update: catchAsync(async (req: Request, res: Response) => {
     const { id } = req.params as { id: string };
     const userId = req.user?.id as string;
-    const task = await taskService.update(id, userId, req.body);
+    const timeZone = (req.headers["x-timezone"] as string) || "Asia/Jakarta";
+    const task = await taskService.update(id, userId, req.body, timeZone);
     res.json({ status: "success", data: task });
   }),
   delete: catchAsync(async (req: Request, res: Response) => {

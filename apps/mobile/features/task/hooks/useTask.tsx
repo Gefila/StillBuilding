@@ -6,6 +6,7 @@ import {
   getProjectByIdQueryKey,
   getProjectQueryKey,
 } from "@/features/project/hooks/projectKeys";
+import { authKeys } from "@/features/auth/hooks/useAuth";
 import { getTaskByIdQueryKey, getTaskQueryKey } from "./taskKeys";
 import type { Project } from "@/features/project/types/project.types";
 
@@ -293,6 +294,15 @@ export const useUpdateTask = ({
         exact: true,
         refetchType: "none",
       });
+
+      // 6. Invalidate profile query to resync streak data if task was marked Done
+      if (variables.data?.status === "Done" || data?.status === "Done") {
+        queryClient.invalidateQueries({
+          queryKey: authKeys.me(),
+          exact: true,
+        });
+      }
+
       mutationConfig.onSuccess?.(data, variables, onMutateResult, context);
     },
   });
@@ -347,6 +357,15 @@ export const useCreateTask = ({
         exact: true,
         refetchType: "none",
       });
+
+      // Invalidate profile query to resync streak if created as Done
+      if (variables.status === "Done" || data?.status === "Done") {
+        queryClient.invalidateQueries({
+          queryKey: authKeys.me(),
+          exact: true,
+        });
+      }
+
       mutationConfig.onSuccess?.(data, variables, onMutateResult, context);
     },
   });

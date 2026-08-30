@@ -225,7 +225,7 @@ _Menyimpan dokumentasi dan detail kontekstual._
 - [x] Pomodoro Timer 25 Menit (Client-side state + Session logger + Auto-pause distraction).
 - [x] Jurnal Blocker (CRUD + Resolve status & solution note).
 - [x] Dasbor Ringkasan Produktivitas Harian (`DailySummaryCards`).
-- [ ] Sistem Streak Harian Otomatis (`🔥` Streak Badge & Timezone-aware Calculation).
+- [x] Sistem Streak Harian Otomatis (`🔥` Streak Badge & Timezone-aware Calculation).
 - [ ] Heatmap Aktivitas & Ritme Produktivitas (GitHub-Style Contribution Graph).
 
 ### Versi 1.1 (Next Iteration)

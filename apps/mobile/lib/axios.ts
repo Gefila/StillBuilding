@@ -70,6 +70,12 @@ api.interceptors.request.use(async (config) => {
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
+  try {
+    config.headers["x-timezone"] =
+      Intl.DateTimeFormat().resolvedOptions().timeZone || "Asia/Jakarta";
+  } catch (_e) {
+    config.headers["x-timezone"] = "Asia/Jakarta";
+  }
   return config;
 });
 

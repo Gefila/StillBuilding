@@ -1,6 +1,9 @@
 import { Ionicons } from "@expo/vector-icons";
 import React from "react";
 import { Text, View } from "react-native";
+import { useAuthStore } from "@/features/auth/store/useAuthStore";
+import { useCurrentUser } from "@/features/auth/hooks/useAuth";
+import { getStreakInfo } from "@/utils/streakHelpers";
 
 interface DailySummaryCardsProps {
   totalTasks: number;
@@ -13,7 +16,16 @@ export default function DailySummaryCards({
   completedTasks = 0,
   focusMinutes = 50,
 }: DailySummaryCardsProps) {
-  const pendingTasks = Math.max(0, totalTasks - completedTasks);
+  const storedUser = useAuthStore((state) => state.user);
+  const { data: currentUser } = useCurrentUser();
+  const user = currentUser || storedUser;
+
+  const streakInfo = getStreakInfo(
+    user?.current_strike,
+    user?.longest_streak,
+    user?.last_streak_date,
+  );
+
   const completionRate =
     totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
 
@@ -56,21 +68,52 @@ export default function DailySummaryCards({
         </Text>
       </View>
 
-      {/* Card 3: Pending */}
+      {/* Card 3: Status Streak */}
       <View className="flex-1 bg-surface p-3.5 rounded-2xl border border-border shadow-sm">
         <View className="flex-row items-center justify-between mb-2">
-          <View className="w-7 h-7 rounded-lg bg-surface-subtle items-center justify-center border border-border">
-            <Ionicons name="hourglass-outline" size={16} color="#d97706" />
+          <View
+            className={`w-7 h-7 rounded-lg items-center justify-center border ${
+              streakInfo.isStreakDoneToday
+                ? "bg-amber-50 border-amber-200"
+                : streakInfo.isStreakAlivePendingToday
+                  ? "bg-orange-50 border-orange-200"
+                  : "bg-surface-subtle border-border"
+            }`}
+          >
+            <Ionicons
+              name={streakInfo.isStreakDoneToday ? "flame" : "flame-outline"}
+              size={16}
+              color={
+                streakInfo.isStreakDoneToday
+                  ? "#d97706"
+                  : streakInfo.isStreakAlivePendingToday
+                    ? "#ea580c"
+                    : "#a1a1aa"
+              }
+            />
           </View>
-          <Text className="text-[10px] font-bold text-amber-800 bg-amber-50 px-1.5 py-0.5 rounded border border-amber-100">
-            Aktif
+          <Text
+            className={`text-[10px] font-bold px-1.5 py-0.5 rounded border ${
+              streakInfo.isStreakDoneToday
+                ? "text-amber-800 bg-amber-50 border-amber-200"
+                : streakInfo.isStreakAlivePendingToday
+                  ? "text-orange-800 bg-orange-50 border-orange-200"
+                  : "text-muted bg-surface-subtle border-border"
+            }`}
+          >
+            {streakInfo.isStreakDoneToday
+              ? "Tuntas"
+              : streakInfo.isStreakAlivePendingToday
+                ? "Pending"
+                : "0 Hari"}
           </Text>
         </View>
         <Text className="text-xl font-bold text-foreground tracking-tight">
-          {pendingTasks}
+          {streakInfo.displayStreak}{" "}
+          <Text className="text-xs font-normal text-muted">Hari</Text>
         </Text>
         <Text className="text-[11px] text-muted font-medium mt-0.5">
-          Tersisa
+          Status Streak
         </Text>
       </View>
     </View>

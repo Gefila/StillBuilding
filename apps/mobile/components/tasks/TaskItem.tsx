@@ -1,6 +1,7 @@
 import React from "react";
 import { ActivityIndicator, Text, TouchableOpacity, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import * as Haptics from "expo-haptics";
 import { useRouter } from "expo-router";
 import { Task } from "@/features/task/types/task.types";
 import { formatDateID } from "@/utils/dateHelpers";
@@ -51,6 +52,11 @@ export function TaskItem({
   const handleToggleStatus = (e: any) => {
     e.stopPropagation?.();
     const nextStatus = isDone ? "Pending" : "Done";
+    if (nextStatus === "Done") {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+    } else {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    }
     updateTaskMutation.mutate({
       id: task.id,
       data: {
