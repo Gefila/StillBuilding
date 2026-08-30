@@ -226,7 +226,7 @@ _Menyimpan dokumentasi dan detail kontekstual._
 - [x] Jurnal Blocker (CRUD + Resolve status & solution note).
 - [x] Dasbor Ringkasan Produktivitas Harian (`DailySummaryCards`).
 - [x] Sistem Streak Harian Otomatis (`🔥` Streak Badge & Timezone-aware Calculation).
-- [ ] Heatmap Aktivitas & Ritme Produktivitas (GitHub-Style Contribution Graph).
+- [x] Heatmap Aktivitas & Ritme Produktivitas (GitHub-Style Contribution Graph).
 
 ### Versi 1.1 (Next Iteration)
 

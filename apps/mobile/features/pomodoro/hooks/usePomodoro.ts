@@ -2,6 +2,7 @@ import { queryOptions, useMutation, useQuery } from "@tanstack/react-query";
 import { MutationConfig, queryClient, QueryConfig } from "@/lib/reactQuery";
 import { pomodoroService } from "../services/pomodoroService";
 import { CreatePomodoroSessionDTO } from "../types/pomodoro.types";
+import { statsKeys } from "@/features/stats/hooks/statsKeys";
 
 import {
   getTaskByIdQueryKey,
@@ -146,6 +147,9 @@ export const useCreatePomodoro = ({
       });
       queryClient.invalidateQueries({
         queryKey: ["pomodoro", "today-stats"],
+      });
+      queryClient.invalidateQueries({
+        queryKey: statsKeys.all,
       });
 
       mutationConfig.onSuccess?.(data, variables, onMutateResult, context);

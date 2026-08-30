@@ -8,6 +8,7 @@ import authRoutes from "./modules/Auth/auth.routes";
 import blockerLogRoutes from "./modules/Blocker-logs/blockerLog.routes";
 import pomodoroSessionRoutes from "./modules/Pomodoro-sessions/pomodoro_sessions.routes";
 import projectRoutes from "./modules/Projects/project.routes";
+import statsRoutes from "./modules/Stats/stats.routes";
 import taskRoutes from "./modules/Tasks/task.routes";
 
 const app = express();
@@ -23,6 +24,7 @@ app.use("/projects", authMiddleware, projectRoutes);
 app.use("/tasks", authMiddleware, taskRoutes);
 app.use("/pomodoro-sessions", authMiddleware, pomodoroSessionRoutes);
 app.use("/blocker-logs", authMiddleware, blockerLogRoutes);
+app.use("/stats", authMiddleware, statsRoutes);
 
 // Health check
 app.get("/", (_req, res) => {

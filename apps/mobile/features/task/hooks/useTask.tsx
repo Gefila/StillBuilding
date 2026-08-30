@@ -7,6 +7,7 @@ import {
   getProjectQueryKey,
 } from "@/features/project/hooks/projectKeys";
 import { authKeys } from "@/features/auth/hooks/useAuth";
+import { statsKeys } from "@/features/stats/hooks/statsKeys";
 import { getTaskByIdQueryKey, getTaskQueryKey } from "./taskKeys";
 import type { Project } from "@/features/project/types/project.types";
 
@@ -295,11 +296,14 @@ export const useUpdateTask = ({
         refetchType: "none",
       });
 
-      // 6. Invalidate profile query to resync streak data if task was marked Done
+      // 6. Invalidate profile & stats query to resync streak & heatmap data if task was marked Done
       if (variables.data?.status === "Done" || data?.status === "Done") {
         queryClient.invalidateQueries({
           queryKey: authKeys.me(),
           exact: true,
+        });
+        queryClient.invalidateQueries({
+          queryKey: statsKeys.all,
         });
       }
 
@@ -358,11 +362,14 @@ export const useCreateTask = ({
         refetchType: "none",
       });
 
-      // Invalidate profile query to resync streak if created as Done
+      // Invalidate profile & stats query to resync streak & heatmap if created as Done
       if (variables.status === "Done" || data?.status === "Done") {
         queryClient.invalidateQueries({
           queryKey: authKeys.me(),
           exact: true,
+        });
+        queryClient.invalidateQueries({
+          queryKey: statsKeys.all,
         });
       }
 

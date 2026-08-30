@@ -5,6 +5,7 @@ import { ScreenHeader } from "@/components/ScreenHeader";
 import LogoutButton from "@/components/profile/LogoutButton";
 import { MenuButtonGroup } from "@/components/profile/MenuButtonGroup";
 import ProfileHeader from "@/components/profile/ProfileHeader";
+import ActivityHeatmapCard from "@/features/stats/components/ActivityHeatmapCard";
 import { Ionicons } from "@expo/vector-icons";
 
 type IoniconName = keyof typeof Ionicons.glyphMap;
@@ -44,10 +45,13 @@ export default function Profile() {
           subtitle="Kelola akun dan pengaturan preferensi fokus"
         />
 
-        {/* 2. Profile Card */}
+        {/* 2. Profile Card & Streak Summary */}
         <ProfileHeader />
 
-        {/* 3. Account Settings Menu */}
+        {/* 3. GitHub-Style Activity Heatmap */}
+        <ActivityHeatmapCard weeks={16} />
+
+        {/* 4. Account Settings Menu */}
         <MenuButtonGroup menuItems={accountItems} title="Akun" />
 
         {/* 4. App Preferences Menu */}

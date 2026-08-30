@@ -16,6 +16,7 @@ import { useGetTodayPomodoroStats } from "@/features/pomodoro/hooks/usePomodoro"
 import HomeHeader from "@/components/home/HomeHeader";
 import DailySummaryCards from "@/components/home/DailySummaryCards";
 import QuickFocusBanner from "@/components/home/QuickFocusBanner";
+import ActivityHeatmapCard from "@/features/stats/components/ActivityHeatmapCard";
 import Tasks from "@/components/tasks/Tasks";
 import { useAuthStore } from "@/features/auth/store/useAuthStore";
 
@@ -89,7 +90,10 @@ export default function Home() {
         {/* 3. Quick Focus / Active Pomodoro Banner */}
         <QuickFocusBanner activeTaskTitle={activeTask?.title} />
 
-        {/* 4. Filterable Tasks List */}
+        {/* 4. GitHub-Style Activity & Productivity Heatmap */}
+        <ActivityHeatmapCard weeks={16} />
+
+        {/* 5. Filterable Tasks List */}
         {isLoading ? (
           <View className="py-12 items-center justify-center">
             <ActivityIndicator size="large" color="#18181b" />
