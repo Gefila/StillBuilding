@@ -8,9 +8,7 @@ interface QuickFocusBannerProps {
   activeTaskId?: string;
 }
 
-export default function QuickFocusBanner({
-  activeTaskTitle,
-}: QuickFocusBannerProps) {
+function QuickFocusBannerComponent({ activeTaskTitle }: QuickFocusBannerProps) {
   const router = useRouter();
 
   if (!activeTaskTitle) {
@@ -63,3 +61,5 @@ export default function QuickFocusBanner({
     </TouchableOpacity>
   );
 }
+
+export default React.memo(QuickFocusBannerComponent);

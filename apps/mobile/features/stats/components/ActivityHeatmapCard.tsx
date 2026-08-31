@@ -1,9 +1,9 @@
-import React, { useEffect, useMemo, useRef, useState } from "react";
+import React, { useCallback, useMemo, useRef, useState } from "react";
 import {
   ActivityIndicator,
+  Pressable,
   ScrollView,
   Text,
-  TouchableOpacity,
   View,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
@@ -34,13 +34,15 @@ const MONTH_NAMES_ID = [
   "Des",
 ];
 
+const weekdayFormatter = new Intl.DateTimeFormat("id-ID", {
+  weekday: "long",
+});
+
 function formatHeatmapDate(dateStr: string): string {
   try {
     const [y, m, d] = dateStr.split("-").map(Number);
     const date = new Date(y, m - 1, d);
-    const weekday = new Intl.DateTimeFormat("id-ID", {
-      weekday: "long",
-    }).format(date);
+    const weekday = weekdayFormatter.format(date);
     const month = MONTH_NAMES_ID[m - 1] || "";
     return `${weekday}, ${d} ${month} ${y}`;
   } catch {
@@ -48,7 +50,57 @@ function formatHeatmapDate(dateStr: string): string {
   }
 }
 
-export default function ActivityHeatmapCard({
+interface HeatmapCellProps {
+  day: ActivityDay;
+  isSelected: boolean;
+  cellSize: number;
+  cellGap: number;
+  cellRadius: number;
+  compact: boolean;
+  onPress: (day: ActivityDay) => void;
+}
+
+const HeatmapCell = React.memo(
+  ({
+    day,
+    isSelected,
+    cellSize,
+    cellGap,
+    cellRadius,
+    compact,
+    onPress,
+  }: HeatmapCellProps) => {
+    const colors = LEVEL_COLORS[day.level] || LEVEL_COLORS[0];
+    return (
+      <Pressable
+        onPress={() => onPress(day)}
+        hitSlop={compact ? 2 : 3}
+        style={{
+          width: cellSize,
+          height: cellSize,
+          marginBottom: cellGap,
+          borderRadius: cellRadius,
+          backgroundColor: colors.bg,
+          borderColor: isSelected ? "#18181b" : colors.border,
+          borderWidth: isSelected ? 1.5 : 1,
+          transform: [
+            {
+              scale: isSelected ? (compact ? 1.2 : 1.15) : 1,
+            },
+          ],
+        }}
+      />
+    );
+  },
+  (prev, next) =>
+    prev.isSelected === next.isSelected &&
+    prev.day.date === next.day.date &&
+    prev.day.level === next.day.level &&
+    prev.cellSize === next.cellSize &&
+    prev.cellGap === next.cellGap,
+);
+
+function ActivityHeatmapCardComponent({
   weeks = 16,
   compact = false,
 }: {
@@ -57,7 +109,8 @@ export default function ActivityHeatmapCard({
 }) {
   const { data, isLoading, isError } = useActivityHeatmap({ weeks });
   const scrollViewRef = useRef<ScrollView>(null);
-  const [selectedDate, setSelectedDate] = useState<string | null>(null);
+  const hasScrolledToEnd = useRef(false);
+  const [userSelectedDate, setUserSelectedDate] = useState<string | null>(null);
 
   const cellSize = compact ? 10 : 14;
   const cellGap = compact ? 2 : 3;
@@ -89,39 +142,31 @@ export default function ActivityHeatmapCard({
     });
   }, [weekColumns]);
 
-  // Auto-select today or last available date on load
-  useEffect(() => {
-    if (data?.days && data.days.length > 0 && !selectedDate) {
-      // Find today or take the last day
-      const todayStr = new Intl.DateTimeFormat("en-CA").format(new Date());
-      const todayEntry = data.days.find((d) => d.date === todayStr);
-      if (todayEntry) {
-        setSelectedDate(todayEntry.date);
-      } else {
-        setSelectedDate(data.days[data.days.length - 1].date);
-      }
-    }
-  }, [data?.days, selectedDate]);
-
-  // Auto scroll to the end (current week) when data loads
-  useEffect(() => {
-    if (data?.days && data.days.length > 0) {
-      const timer = setTimeout(() => {
-        scrollViewRef.current?.scrollToEnd({ animated: false });
-      }, 60);
-      return () => clearTimeout(timer);
-    }
-  }, [data?.days]);
+  // Derived effective selected date without triggering post-mount state re-renders
+  const effectiveSelectedDate = useMemo(() => {
+    if (userSelectedDate) return userSelectedDate;
+    if (!data?.days || data.days.length === 0) return null;
+    const todayStr = new Intl.DateTimeFormat("en-CA").format(new Date());
+    const todayEntry = data.days.find((d) => d.date === todayStr);
+    return todayEntry ? todayEntry.date : data.days[data.days.length - 1].date;
+  }, [userSelectedDate, data?.days]);
 
   const selectedDayInfo = useMemo(() => {
-    if (!data?.days || !selectedDate) return null;
-    return data.days.find((d) => d.date === selectedDate) || null;
-  }, [data?.days, selectedDate]);
+    if (!data?.days || !effectiveSelectedDate) return null;
+    return data.days.find((d) => d.date === effectiveSelectedDate) || null;
+  }, [data?.days, effectiveSelectedDate]);
 
-  const handleCellPress = (day: ActivityDay) => {
+  const handleCellPress = useCallback((day: ActivityDay) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-    setSelectedDate(day.date);
-  };
+    setUserSelectedDate(day.date);
+  }, []);
+
+  const handleContentSizeChange = useCallback(() => {
+    if (!hasScrolledToEnd.current && data?.days && data.days.length > 0) {
+      hasScrolledToEnd.current = true;
+      scrollViewRef.current?.scrollToEnd({ animated: false });
+    }
+  }, [data?.days]);
 
   return (
     <View
@@ -217,6 +262,7 @@ export default function ActivityHeatmapCard({
               showsHorizontalScrollIndicator={false}
               className="flex-1"
               contentContainerStyle={{ paddingRight: 4 }}
+              onContentSizeChange={handleContentSizeChange}
             >
               <View className="flex-col">
                 {/* Month Headers */}
@@ -253,38 +299,18 @@ export default function ActivityHeatmapCard({
                       className="flex-col"
                       style={{ marginRight: cellGap }}
                     >
-                      {col.map((day) => {
-                        const isSelected = selectedDate === day.date;
-                        const colors =
-                          LEVEL_COLORS[day.level] || LEVEL_COLORS[0];
-                        return (
-                          <TouchableOpacity
-                            key={day.date}
-                            activeOpacity={0.7}
-                            onPress={() => handleCellPress(day)}
-                            style={{
-                              width: cellSize,
-                              height: cellSize,
-                              marginBottom: cellGap,
-                              borderRadius: cellRadius,
-                              backgroundColor: colors.bg,
-                              borderColor: isSelected
-                                ? "#18181b"
-                                : colors.border,
-                              borderWidth: isSelected ? 1.5 : 1,
-                              transform: [
-                                {
-                                  scale: isSelected
-                                    ? compact
-                                      ? 1.2
-                                      : 1.15
-                                    : 1,
-                                },
-                              ],
-                            }}
-                          />
-                        );
-                      })}
+                      {col.map((day) => (
+                        <HeatmapCell
+                          key={day.date}
+                          day={day}
+                          isSelected={effectiveSelectedDate === day.date}
+                          cellSize={cellSize}
+                          cellGap={cellGap}
+                          cellRadius={cellRadius}
+                          compact={compact}
+                          onPress={handleCellPress}
+                        />
+                      ))}
                     </View>
                   ))}
                 </View>
@@ -430,3 +456,5 @@ export default function ActivityHeatmapCard({
     </View>
   );
 }
+
+export default React.memo(ActivityHeatmapCardComponent);

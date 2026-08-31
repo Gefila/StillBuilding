@@ -1,14 +1,20 @@
+const fullDateFormatter = new Intl.DateTimeFormat("id-ID", {
+  day: "2-digit",
+  month: "long",
+  year: "numeric",
+});
+
+const shortDateFormatter = new Intl.DateTimeFormat("id-ID", {
+  day: "numeric",
+  month: "short",
+});
+
 export function formatDateID(dateString?: string): string {
   if (!dateString) return "";
   const date = new Date(dateString);
   if (isNaN(date.getTime())) return "";
 
-  const tanggal = new Intl.DateTimeFormat("id-ID", {
-    day: "2-digit",
-    month: "long",
-    year: "numeric",
-  }).format(date);
-
+  const tanggal = fullDateFormatter.format(date);
   const jam = String(date.getHours()).padStart(2, "0");
   const menit = String(date.getMinutes()).padStart(2, "0");
 
@@ -36,10 +42,7 @@ export function formatRelativeDate(dateString?: string): string {
   yesterday.setDate(now.getDate() - 1);
   if (date.toDateString() === yesterday.toDateString()) return "Kemarin";
 
-  return new Intl.DateTimeFormat("id-ID", {
-    day: "numeric",
-    month: "short",
-  }).format(date);
+  return shortDateFormatter.format(date);
 }
 
 export function formatLastSessionTime(dateString?: string): string {

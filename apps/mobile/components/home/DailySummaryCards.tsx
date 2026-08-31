@@ -1,8 +1,7 @@
 import { Ionicons } from "@expo/vector-icons";
-import React from "react";
+import React, { useMemo } from "react";
 import { Text, View } from "react-native";
 import { useAuthStore } from "@/features/auth/store/useAuthStore";
-import { useCurrentUser } from "@/features/auth/hooks/useAuth";
 import { getStreakInfo } from "@/utils/streakHelpers";
 
 interface DailySummaryCardsProps {
@@ -11,19 +10,21 @@ interface DailySummaryCardsProps {
   focusMinutes?: number;
 }
 
-export default function DailySummaryCards({
+function DailySummaryCardsComponent({
   totalTasks = 0,
   completedTasks = 0,
   focusMinutes = 50,
 }: DailySummaryCardsProps) {
-  const storedUser = useAuthStore((state) => state.user);
-  const { data: currentUser } = useCurrentUser();
-  const user = currentUser || storedUser;
+  const user = useAuthStore((state) => state.user);
 
-  const streakInfo = getStreakInfo(
-    user?.current_strike,
-    user?.longest_streak,
-    user?.last_streak_date,
+  const streakInfo = useMemo(
+    () =>
+      getStreakInfo(
+        user?.current_strike,
+        user?.longest_streak,
+        user?.last_streak_date,
+      ),
+    [user?.current_strike, user?.longest_streak, user?.last_streak_date],
   );
 
   const completionRate =
@@ -119,3 +120,5 @@ export default function DailySummaryCards({
     </View>
   );
 }
+
+export default React.memo(DailySummaryCardsComponent);

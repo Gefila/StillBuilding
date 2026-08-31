@@ -1,4 +1,4 @@
-import React from "react";
+import React, { useMemo } from "react";
 import { ActivityIndicator, Text, TouchableOpacity, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
@@ -36,7 +36,7 @@ const PRIORITY_STYLES: Record<Priority, PriorityStyle> = {
 const getPriorityStyle = (priority?: Priority): PriorityStyle =>
   PRIORITY_STYLES[priority ?? "Medium"] ?? PRIORITY_STYLES.Medium;
 
-export function TaskItem({
+function TaskItemComponent({
   task,
   projectName,
 }: {
@@ -48,6 +48,11 @@ export function TaskItem({
   const style = getPriorityStyle(task.priority as Priority);
   const isDone = task.status === "Done";
   const currentProjectName = task.project?.name || projectName;
+
+  const formattedDate = useMemo(
+    () => formatDateID(task.created_at),
+    [task.created_at],
+  );
 
   const handleToggleStatus = (e: any) => {
     e.stopPropagation?.();
@@ -157,7 +162,7 @@ export function TaskItem({
           <View className="flex-row items-center shrink-0">
             <Ionicons name="time-outline" size={11} color="#a1a1aa" />
             <Text className="text-[11px] text-muted font-medium ml-1">
-              {formatDateID(task.created_at)}
+              {formattedDate}
             </Text>
           </View>
         </View>
@@ -165,3 +170,14 @@ export function TaskItem({
     </TouchableOpacity>
   );
 }
+
+export const TaskItem = React.memo(
+  TaskItemComponent,
+  (prev, next) =>
+    prev.task.id === next.task.id &&
+    prev.task.status === next.task.status &&
+    prev.task.title === next.task.title &&
+    prev.task.priority === next.task.priority &&
+    prev.task.created_at === next.task.created_at &&
+    prev.projectName === next.projectName,
+);

@@ -1,4 +1,4 @@
-import React, { useState } from "react";
+import React, { useMemo, useState } from "react";
 import { Text, TouchableOpacity, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
@@ -7,7 +7,7 @@ import type { Task } from "@/features/task/types/task.types";
 
 type FilterType = "all" | "pending" | "done";
 
-export default function Tasks({
+function TasksComponent({
   tasks = [],
   title = "Daftar Tugas",
   projectName,
@@ -21,20 +21,40 @@ export default function Tasks({
   const router = useRouter();
   const [activeFilter, setActiveFilter] = useState<FilterType>("all");
 
-  const pendingTasks = tasks.filter((t) => t.status !== "Done");
-  const doneTasks = tasks.filter((t) => t.status === "Done");
+  const { pendingCount, doneCount, filteredTasks } = useMemo(() => {
+    let pending = 0;
+    let done = 0;
+    const filtered: Task[] = [];
 
-  const filteredTasks = tasks.filter((task) => {
-    if (activeFilter === "pending") return task.status !== "Done";
-    if (activeFilter === "done") return task.status === "Done";
-    return true;
-  });
+    for (const task of tasks) {
+      if (task.status === "Done") {
+        done++;
+        if (activeFilter === "all" || activeFilter === "done") {
+          filtered.push(task);
+        }
+      } else {
+        pending++;
+        if (activeFilter === "all" || activeFilter === "pending") {
+          filtered.push(task);
+        }
+      }
+    }
 
-  const filters: { key: FilterType; label: string; count: number }[] = [
-    { key: "all", label: "Semua", count: tasks.length },
-    { key: "pending", label: "Aktif", count: pendingTasks.length },
-    { key: "done", label: "Selesai", count: doneTasks.length },
-  ];
+    return {
+      pendingCount: pending,
+      doneCount: done,
+      filteredTasks: filtered,
+    };
+  }, [tasks, activeFilter]);
+
+  const filters: { key: FilterType; label: string; count: number }[] = useMemo(
+    () => [
+      { key: "all", label: "Semua", count: tasks.length },
+      { key: "pending", label: "Aktif", count: pendingCount },
+      { key: "done", label: "Selesai", count: doneCount },
+    ],
+    [tasks.length, pendingCount, doneCount],
+  );
 
   const handleCreateTask = () => {
     if (projectId) {
@@ -147,3 +167,5 @@ export default function Tasks({
     </View>
   );
 }
+
+export default React.memo(TasksComponent);

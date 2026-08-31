@@ -1,19 +1,22 @@
 import React from "react";
 import { Image, Text, TouchableOpacity, View } from "react-native";
 import { useAuthStore } from "@/features/auth/store/useAuthStore";
-import { useCurrentUser } from "@/features/auth/hooks/useAuth";
 import { useRouter } from "expo-router";
 
-export default function HomeHeader({
+const headerDateFormatter = new Intl.DateTimeFormat("id-ID", {
+  weekday: "long",
+  day: "numeric",
+  month: "short",
+});
+
+function HomeHeaderComponent({
   userName: propUserName,
 }: {
   userName?: string;
 }) {
   const router = useRouter();
-  const storedUser = useAuthStore((state) => state.user);
-  const { data: currentUser } = useCurrentUser();
+  const user = useAuthStore((state) => state.user);
 
-  const user = currentUser || storedUser;
   const userName =
     propUserName ||
     user?.name ||
@@ -33,13 +36,7 @@ export default function HomeHeader({
     return "Selamat Malam 🌙";
   };
 
-  const getFormattedToday = () => {
-    return new Intl.DateTimeFormat("id-ID", {
-      weekday: "long",
-      day: "numeric",
-      month: "short",
-    }).format(new Date());
-  };
+  const formattedToday = headerDateFormatter.format(new Date());
 
   return (
     <View className="pb-3">
@@ -47,7 +44,7 @@ export default function HomeHeader({
       <View className="flex-row items-center justify-between">
         <View className="flex-1">
           <Text className="text-[11px] font-semibold text-muted uppercase tracking-wider">
-            {getFormattedToday()}
+            {formattedToday}
           </Text>
           <Text className="text-2xl font-bold text-foreground tracking-tight mt-0.5">
             {getGreeting()}
@@ -74,3 +71,5 @@ export default function HomeHeader({
     </View>
   );
 }
+
+export default React.memo(HomeHeaderComponent);

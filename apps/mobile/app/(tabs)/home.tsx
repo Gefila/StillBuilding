@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from "react";
+import React, { useState, useCallback, useMemo } from "react";
 import {
   ActivityIndicator,
   RefreshControl,
@@ -19,6 +19,7 @@ import QuickFocusBanner from "@/components/home/QuickFocusBanner";
 import ActivityHeatmapCard from "@/features/stats/components/ActivityHeatmapCard";
 import Tasks from "@/components/tasks/Tasks";
 import { useAuthStore } from "@/features/auth/store/useAuthStore";
+import type { Task } from "@/features/task/types/task.types";
 
 export default function Home() {
   const isFocused = useIsFocused();
@@ -44,7 +45,7 @@ export default function Home() {
       },
     });
 
-  const taskList = Array.isArray(tasks) ? tasks : [];
+  const taskList = useMemo(() => (Array.isArray(tasks) ? tasks : []), [tasks]);
 
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
@@ -55,8 +56,16 @@ export default function Home() {
     }
   }, [refetchTasks, refetchPomodoroStats]);
 
-  const completedCount = taskList.filter((t) => t.status === "Done").length;
-  const activeTask = taskList.find((t) => t.status === "Active");
+  const { completedCount, activeTask } = useMemo(() => {
+    let count = 0;
+    let active: Task | undefined;
+    for (const t of taskList) {
+      if (t.status === "Done") count++;
+      if (t.status === "Active" && !active) active = t;
+    }
+    return { completedCount: count, activeTask: active };
+  }, [taskList]);
+
   const userName =
     user?.name || user?.full_name || user?.username || "Pengguna";
 
