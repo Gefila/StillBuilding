@@ -13,6 +13,10 @@ export default function QuickFocusBanner({
 }: QuickFocusBannerProps) {
   const router = useRouter();
 
+  if (!activeTaskTitle) {
+    return null;
+  }
+
   const handlePress = () => {
     router.push("/(tabs)/focus");
   };

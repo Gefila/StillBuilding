@@ -88,7 +88,12 @@ export default function Home() {
         />
 
         {/* 3. Quick Focus / Active Pomodoro Banner */}
-        <QuickFocusBanner activeTaskTitle={activeTask?.title} />
+        {activeTask && (
+          <QuickFocusBanner
+            activeTaskTitle={activeTask.title}
+            activeTaskId={activeTask.id}
+          />
+        )}
 
         {/* 4. GitHub-Style Activity & Productivity Heatmap */}
         <ActivityHeatmapCard weeks={16} compact={true} />
