@@ -105,7 +105,7 @@ export default function Home() {
         )}
 
         {/* 4. GitHub-Style Activity & Productivity Heatmap */}
-        <ActivityHeatmapCard weeks={16} compact={true} />
+        {/* <ActivityHeatmapCard weeks={16} /> */}
 
         {/* 5. Filterable Tasks List */}
         {isLoading ? (

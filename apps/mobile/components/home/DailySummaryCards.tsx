@@ -31,7 +31,7 @@ function DailySummaryCardsComponent({
     totalTasks > 0 ? Math.round((completedTasks / totalTasks) * 100) : 0;
 
   return (
-    <View className="flex-row gap-2.5 my-1.5">
+    <View className="flex-row gap-2.5 my-1.5 mb-2.5">
       {/* Card 1: Fokus Harian */}
       <View className="flex-1 bg-surface p-3.5 rounded-2xl border border-border shadow-sm">
         <View className="flex-row items-center justify-between mb-2">

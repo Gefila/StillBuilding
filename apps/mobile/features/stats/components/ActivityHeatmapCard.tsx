@@ -107,9 +107,11 @@ HeatmapCell.displayName = "HeatmapCell";
 function ActivityHeatmapCardComponent({
   weeks = 16,
   compact = false,
+  className = "",
 }: {
   weeks?: number;
   compact?: boolean;
+  className?: string;
 }) {
   const { data, isLoading, isError } = useActivityHeatmap({ weeks });
   const scrollViewRef = useRef<ScrollView>(null);
@@ -176,11 +178,11 @@ function ActivityHeatmapCardComponent({
     <View
       className={`bg-surface rounded-3xl ${
         compact ? "p-3.5" : "p-4"
-      } border border-border my-2 shadow-xs`}
+      } border border-border shadow-xs ${className || "my-2"}`}
     >
-      {/* Header Row: Title, Date Horizon, & Total Activities Badge */}
+      {/* Header Row: Title & Subtitle on Left, Selected Day Activity Info on Right */}
       <View className="flex-row items-center justify-between mb-2.5">
-        <View className="flex-1">
+        <View className="flex-1 mr-2">
           <View className="flex-row items-center gap-1.5">
             <Ionicons
               name="grid-outline"
@@ -193,29 +195,54 @@ function ActivityHeatmapCardComponent({
               Ritme Produktivitas
             </Text>
           </View>
-          <Text
-            className={`${compact ? "text-[10px]" : "text-[11px]"} text-muted font-medium mt-0.5`}
-          >
-            {weeks} minggu terakhir (Senin - Minggu)
-          </Text>
+          {!compact && (
+            <Text className="text-[11px] text-muted font-medium mt-0.5">
+              {weeks} minggu terakhir (Senin - Minggu)
+            </Text>
+          )}
         </View>
 
-        {data?.summary && (
-          <View
-            className={`bg-emerald-50 border border-emerald-200 ${
-              compact ? "px-2 py-0.5" : "px-2.5 py-1"
-            } rounded-full flex-row items-center`}
-          >
-            <Text className={`${compact ? "text-[10px]" : "text-xs"} mr-1`}>
-              🟩
-            </Text>
+        {/* Top Right: Selected Day Activity Info (Moved from Footer) */}
+        {selectedDayInfo ? (
+          <View className="items-end">
+            <View className="flex-row items-center gap-1">
+              <View
+                className="w-1.5 h-1.5 rounded-full"
+                style={{
+                  backgroundColor:
+                    LEVEL_COLORS[
+                      selectedDayInfo.level as keyof typeof LEVEL_COLORS
+                    ]?.border || "#16a34a",
+                }}
+              />
+              <Text className="text-[10px] font-bold text-foreground">
+                {selectedDayInfo.total_activities > 0
+                  ? `${selectedDayInfo.total_activities} aktif`
+                  : "0 aktivitas"}
+                {selectedDayInfo.total_activities > 0 && (
+                  <Text className="text-[9px] font-normal text-muted">
+                    {" "}
+                    ({selectedDayInfo.tasks_completed}t,{" "}
+                    {selectedDayInfo.pomodoro_sessions}f)
+                  </Text>
+                )}
+              </Text>
+            </View>
             <Text
-              className={`${compact ? "text-[10px]" : "text-[11px]"} font-bold text-emerald-800`}
+              className="text-[9px] text-muted font-medium mt-0.5"
+              numberOfLines={1}
             >
+              {formatHeatmapDate(selectedDayInfo.date)}
+            </Text>
+          </View>
+        ) : !compact && data?.summary ? (
+          <View className="bg-emerald-50 border border-emerald-200 px-2.5 py-1 rounded-full flex-row items-center">
+            <Text className="text-xs mr-1">🟩</Text>
+            <Text className="text-[11px] font-bold text-emerald-800">
               {data.summary.total_activities} Kontribusi
             </Text>
           </View>
-        )}
+        ) : null}
       </View>
 
       {/* Grid State Handling */}
@@ -264,7 +291,7 @@ function ActivityHeatmapCardComponent({
               ref={scrollViewRef}
               horizontal
               showsHorizontalScrollIndicator={false}
-              className="flex-1"
+              className={compact ? "" : "flex-1"}
               contentContainerStyle={{ paddingRight: 4 }}
               onContentSizeChange={handleContentSizeChange}
             >
@@ -322,139 +349,30 @@ function ActivityHeatmapCardComponent({
             </ScrollView>
           </View>
 
-          {/* Footer Area: Compact Mode (Merged 1-line) vs Full Mode (Full Info Card) */}
-          {compact ? (
-            <View className="flex-row items-center justify-between mt-2 pt-2 border-t border-border/80">
-              {/* Left: Selected Day Short Info */}
-              {selectedDayInfo ? (
-                <View className="flex-1 flex-row items-center mr-2">
-                  <Text
-                    className="text-[10px] font-bold text-foreground mr-1"
-                    numberOfLines={1}
-                  >
-                    {formatHeatmapDate(selectedDayInfo.date)}:
-                  </Text>
-                  {selectedDayInfo.total_activities > 0 ? (
-                    <Text
-                      className="text-[10px] text-muted font-medium"
-                      numberOfLines={1}
-                    >
-                      {selectedDayInfo.total_activities} aktif (
-                      {selectedDayInfo.tasks_completed} tugas,{" "}
-                      {selectedDayInfo.pomodoro_sessions} fokus)
-                    </Text>
-                  ) : (
-                    <Text
-                      className="text-[10px] text-muted font-normal"
-                      numberOfLines={1}
-                    >
-                      0 aktivitas
-                    </Text>
-                  )}
-                </View>
-              ) : (
-                <View className="flex-1" />
-              )}
-
-              {/* Right: Compact Color Legend */}
-              <View className="flex-row items-center gap-0.5">
-                <Text className="text-[8px] font-semibold text-muted mr-0.5">
-                  Kurang
-                </Text>
-                {[0, 1, 2, 3, 4].map((lvl) => (
-                  <View
-                    key={lvl}
-                    style={{
-                      width: 7,
-                      height: 7,
-                      borderRadius: 1.5,
-                      backgroundColor:
-                        LEVEL_COLORS[lvl as keyof typeof LEVEL_COLORS].bg,
-                      borderColor:
-                        LEVEL_COLORS[lvl as keyof typeof LEVEL_COLORS].border,
-                      borderWidth: 0.5,
-                    }}
-                  />
-                ))}
-                <Text className="text-[8px] font-semibold text-muted ml-0.5">
-                  Banyak
-                </Text>
-              </View>
-            </View>
-          ) : (
-            <>
-              {/* Interactive Info Strip (Selected Date Details) */}
-              {selectedDayInfo && (
-                <View className="mt-3.5 pt-3 border-t border-border bg-surface-subtle/60 -mx-4 -mb-4 p-3.5 rounded-b-3xl">
-                  <View className="flex-row items-center justify-between">
-                    <Text className="text-xs font-bold text-foreground">
-                      {formatHeatmapDate(selectedDayInfo.date)}
-                    </Text>
-                    <View className="flex-row items-center bg-surface px-2 py-0.5 rounded-full border border-border">
-                      <Text className="text-[10px] font-bold text-foreground">
-                        {selectedDayInfo.total_activities} Aktivitas
-                      </Text>
-                    </View>
-                  </View>
-
-                  {selectedDayInfo.total_activities > 0 ? (
-                    <View className="flex-row items-center gap-3 mt-1.5 flex-wrap">
-                      <View className="flex-row items-center">
-                        <Ionicons
-                          name="checkmark-circle-outline"
-                          size={12}
-                          color="#16a34a"
-                        />
-                        <Text className="text-[11px] font-medium text-muted ml-1">
-                          {selectedDayInfo.tasks_completed} tugas selesai
-                        </Text>
-                      </View>
-                      <View className="flex-row items-center">
-                        <Ionicons
-                          name="timer-outline"
-                          size={12}
-                          color="#2563eb"
-                        />
-                        <Text className="text-[11px] font-medium text-muted ml-1">
-                          {selectedDayInfo.pomodoro_sessions} sesi fokus (
-                          {selectedDayInfo.focus_minutes}m)
-                        </Text>
-                      </View>
-                    </View>
-                  ) : (
-                    <Text className="text-[11px] text-muted font-medium mt-1">
-                      Tidak ada aktivitas kerja yang dicatat pada hari ini.
-                    </Text>
-                  )}
-                </View>
-              )}
-
-              {/* Color Legend (Bottom Right) */}
-              <View className="flex-row items-center justify-end gap-1 mt-2.5">
-                <Text className="text-[9px] font-semibold text-muted mr-1">
-                  Kurang
-                </Text>
-                {[0, 1, 2, 3, 4].map((lvl) => (
-                  <View
-                    key={lvl}
-                    style={{
-                      width: 9,
-                      height: 9,
-                      borderRadius: 2,
-                      backgroundColor:
-                        LEVEL_COLORS[lvl as keyof typeof LEVEL_COLORS].bg,
-                      borderColor:
-                        LEVEL_COLORS[lvl as keyof typeof LEVEL_COLORS].border,
-                      borderWidth: 0.5,
-                    }}
-                  />
-                ))}
-                <Text className="text-[9px] font-semibold text-muted ml-1">
-                  Banyak
-                </Text>
-              </View>
-            </>
-          )}
+          {/* Color Legend (Bottom Right) */}
+          <View className="flex-row items-center justify-end gap-1 mt-2.5">
+            <Text className="text-[9px] font-semibold text-muted mr-1">
+              Kurang
+            </Text>
+            {[0, 1, 2, 3, 4].map((lvl) => (
+              <View
+                key={lvl}
+                style={{
+                  width: compact ? 7 : 8,
+                  height: compact ? 7 : 8,
+                  borderRadius: 2,
+                  backgroundColor:
+                    LEVEL_COLORS[lvl as keyof typeof LEVEL_COLORS].bg,
+                  borderColor:
+                    LEVEL_COLORS[lvl as keyof typeof LEVEL_COLORS].border,
+                  borderWidth: 0.5,
+                }}
+              />
+            ))}
+            <Text className="text-[9px] font-semibold text-muted ml-1">
+              Banyak
+            </Text>
+          </View>
         </>
       )}
     </View>
