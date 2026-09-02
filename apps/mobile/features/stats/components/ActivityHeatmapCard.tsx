@@ -60,38 +60,40 @@ interface HeatmapCellProps {
   onPress: (day: ActivityDay) => void;
 }
 
+function HeatmapCellComponent({
+  day,
+  isSelected,
+  cellSize,
+  cellGap,
+  cellRadius,
+  compact,
+  onPress,
+}: HeatmapCellProps) {
+  const colors = LEVEL_COLORS[day.level] || LEVEL_COLORS[0];
+  return (
+    <Pressable
+      onPress={() => onPress(day)}
+      hitSlop={compact ? 2 : 3}
+      style={{
+        width: cellSize,
+        height: cellSize,
+        marginBottom: cellGap,
+        borderRadius: cellRadius,
+        backgroundColor: colors.bg,
+        borderColor: isSelected ? "#18181b" : colors.border,
+        borderWidth: isSelected ? 1.5 : 1,
+        transform: [
+          {
+            scale: isSelected ? (compact ? 1.2 : 1.15) : 1,
+          },
+        ],
+      }}
+    />
+  );
+}
+
 const HeatmapCell = React.memo(
-  ({
-    day,
-    isSelected,
-    cellSize,
-    cellGap,
-    cellRadius,
-    compact,
-    onPress,
-  }: HeatmapCellProps) => {
-    const colors = LEVEL_COLORS[day.level] || LEVEL_COLORS[0];
-    return (
-      <Pressable
-        onPress={() => onPress(day)}
-        hitSlop={compact ? 2 : 3}
-        style={{
-          width: cellSize,
-          height: cellSize,
-          marginBottom: cellGap,
-          borderRadius: cellRadius,
-          backgroundColor: colors.bg,
-          borderColor: isSelected ? "#18181b" : colors.border,
-          borderWidth: isSelected ? 1.5 : 1,
-          transform: [
-            {
-              scale: isSelected ? (compact ? 1.2 : 1.15) : 1,
-            },
-          ],
-        }}
-      />
-    );
-  },
+  HeatmapCellComponent,
   (prev, next) =>
     prev.isSelected === next.isSelected &&
     prev.day.date === next.day.date &&
@@ -99,6 +101,8 @@ const HeatmapCell = React.memo(
     prev.cellSize === next.cellSize &&
     prev.cellGap === next.cellGap,
 );
+
+HeatmapCell.displayName = "HeatmapCell";
 
 function ActivityHeatmapCardComponent({
   weeks = 16,
