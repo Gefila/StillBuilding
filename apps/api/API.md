@@ -192,6 +192,34 @@ Memperbarui data profil pengguna (nama lengkap, username unik, dan avatar).
   }
   ```
 
+#### `PUT /auth/password`
+
+Memperbarui kata sandi akun pengguna dengan memverifikasi kata sandi saat ini terlebih dahulu.
+
+- **Auth**: Wajib (`Bearer <token>`)
+- **Request Body**:
+  ```json
+  {
+    "current_password": "OldPassword123!",
+    "new_password": "NewPassword456!",
+    "confirm_password": "NewPassword456!"
+  }
+  ```
+- **Response (200 OK)**:
+  ```json
+  {
+    "status": "success",
+    "message": "Kata sandi berhasil diperbarui"
+  }
+  ```
+- **Error Response (400 Bad Request)**:
+  ```json
+  {
+    "status": "error",
+    "message": "Kata sandi saat ini tidak valid"
+  }
+  ```
+
 #### `POST /auth/logout`
 
 Sign out sesi pengguna saat ini.

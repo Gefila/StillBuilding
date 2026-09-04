@@ -48,4 +48,18 @@ export const authController = {
       data: updatedUser,
     });
   }),
+  changePassword: catchAsync(async (req: Request, res: Response) => {
+    if (!req.user) {
+      throw new Error("Unauthorized");
+    }
+    const result = await authService.changePassword(
+      req.user.id,
+      req.user.email || "",
+      req.body,
+    );
+    res.json({
+      status: "success",
+      message: result.message,
+    });
+  }),
 };

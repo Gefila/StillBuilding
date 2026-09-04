@@ -1,51 +1,30 @@
-import React, { useState } from "react";
+import React from "react";
 import { Text, View } from "react-native";
 import { useRouter } from "expo-router";
 import { Controller, useForm } from "react-hook-form";
 import { zodResolver } from "@hookform/resolvers/zod";
-import { z } from "zod";
 import { Ionicons } from "@expo/vector-icons";
-import { Toast } from "toastify-react-native";
 import * as Haptics from "expo-haptics";
 
 import { FormField } from "@/components/FormField";
 import { Button } from "@/components/Button";
 import { PasswordRequirements } from "./PasswordRequirements";
-
-export const changePasswordSchema = z
-  .object({
-    current_password: z.string().min(1, "Kata sandi saat ini wajib diisi"),
-    new_password: z
-      .string()
-      .min(8, "Kata sandi baru minimal 8 karakter")
-      .regex(/[a-z]/, "Kata sandi harus mengandung huruf kecil")
-      .regex(/[A-Z]/, "Kata sandi harus mengandung huruf besar")
-      .regex(
-        /[0-9!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/,
-        "Kata sandi harus mengandung minimal 1 angka atau simbol",
-      ),
-    confirm_password: z.string().min(1, "Konfirmasi kata sandi wajib diisi"),
-  })
-  .refine((data) => data.new_password === data.confirm_password, {
-    message: "Konfirmasi kata sandi tidak cocok",
-    path: ["confirm_password"],
-  })
-  .refine((data) => data.current_password !== data.new_password, {
-    message: "Kata sandi baru tidak boleh sama dengan kata sandi saat ini",
-    path: ["new_password"],
-  });
-
-export type ChangePasswordDTO = z.infer<typeof changePasswordSchema>;
+import { useChangePassword } from "@/features/auth/hooks/useAuth";
+import {
+  changePasswordSchema,
+  type ChangePasswordDTO,
+} from "@/features/auth/types/auth.types";
 
 export function ChangePasswordForm() {
   const router = useRouter();
-  const [isSubmitting, setIsSubmitting] = useState(false);
+  const changePasswordMutation = useChangePassword();
 
   const {
     control,
     handleSubmit,
     watch,
     reset,
+    setError,
     formState: { errors },
   } = useForm<ChangePasswordDTO>({
     resolver: zodResolver(changePasswordSchema),
@@ -59,23 +38,35 @@ export function ChangePasswordForm() {
 
   const watchedNewPassword = watch("new_password");
 
-  const onSubmit = async (_data: ChangePasswordDTO) => {
+  const onSubmit = (data: ChangePasswordDTO) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
-    setIsSubmitting(true);
 
-    try {
-      // Simulasi panggilan mutasi frontend sebelum endpoint backend dihubungkan
-      await new Promise((resolve) => setTimeout(resolve, 800));
-
-      Toast.success("Kata sandi berhasil diperbarui!");
-      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-      reset();
-      router.back();
-    } catch {
-      Toast.error("Gagal memperbarui kata sandi. Silakan coba lagi.");
-    } finally {
-      setIsSubmitting(false);
-    }
+    changePasswordMutation.mutate(
+      {
+        current_password: data.current_password,
+        new_password: data.new_password,
+        confirm_password: data.confirm_password,
+      },
+      {
+        onSuccess: () => {
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+          reset();
+        },
+        onError: (err: any) => {
+          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Error);
+          const serverMessage = err?.response?.data?.message;
+          if (
+            serverMessage &&
+            serverMessage.toLowerCase().includes("kata sandi saat ini")
+          ) {
+            setError("current_password", {
+              type: "manual",
+              message: serverMessage,
+            });
+          }
+        },
+      },
+    );
   };
 
   return (
@@ -171,7 +162,7 @@ export function ChangePasswordForm() {
           label="Perbarui Kata Sandi"
           variant="primary"
           size="lg"
-          isLoading={isSubmitting}
+          isLoading={changePasswordMutation.isPending}
           onPress={handleSubmit(onSubmit)}
           iconRight={
             <Ionicons name="checkmark-circle" size={18} color="#ffffff" />
@@ -183,7 +174,7 @@ export function ChangePasswordForm() {
           variant="outline"
           size="lg"
           onPress={() => router.back()}
-          disabled={isSubmitting}
+          disabled={changePasswordMutation.isPending}
         />
       </View>
     </View>

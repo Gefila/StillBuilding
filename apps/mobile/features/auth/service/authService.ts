@@ -2,6 +2,7 @@ import api from "@/lib/axios";
 import type {
   ApiResponse,
   AuthUser,
+  ChangePasswordDTO,
   LoginDTO,
   LoginResponseData,
   RegisterDTO,
@@ -76,5 +77,10 @@ export const authService = {
       throw new Error(response.data.message || "Gagal memperbarui profil");
     }
     return response.data.data;
+  },
+
+  changePassword: async (payload: ChangePasswordDTO): Promise<ApiResponse> => {
+    const response = await api.put<ApiResponse>("auth/password", payload);
+    return response.data;
   },
 };

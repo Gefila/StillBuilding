@@ -49,10 +49,34 @@ export const updateProfileSchema = z.object({
   avatar: z.string().url("Format URL avatar tidak valid").optional(),
 });
 
+export const changePasswordSchema = z
+  .object({
+    current_password: z.string().min(1, "Kata sandi saat ini wajib diisi"),
+    new_password: z
+      .string()
+      .min(8, "Kata sandi baru minimal 8 karakter")
+      .regex(/[a-z]/, "Kata sandi harus mengandung huruf kecil")
+      .regex(/[A-Z]/, "Kata sandi harus mengandung huruf besar")
+      .regex(
+        /[0-9!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/,
+        "Kata sandi harus mengandung minimal 1 angka atau simbol",
+      ),
+    confirm_password: z.string().min(1, "Konfirmasi kata sandi wajib diisi"),
+  })
+  .refine((data) => data.new_password === data.confirm_password, {
+    message: "Konfirmasi kata sandi tidak cocok",
+    path: ["confirm_password"],
+  })
+  .refine((data) => data.current_password !== data.new_password, {
+    message: "Kata sandi baru tidak boleh sama dengan kata sandi saat ini",
+    path: ["new_password"],
+  });
+
 export type LoginDTO = z.infer<typeof loginSchema>;
 export type RegisterDTO = z.infer<typeof registerSchema>;
 export type RefreshTokenDTO = z.infer<typeof refreshTokenSchema>;
 export type UpdateProfileDTO = z.infer<typeof updateProfileSchema>;
+export type ChangePasswordDTO = z.infer<typeof changePasswordSchema>;
 
 export interface AuthUser {
   id: string;
@@ -64,6 +88,10 @@ export interface AuthUser {
   current_strike?: number;
   longest_streak?: number;
   last_streak_date?: string;
+  is_email_verified?: boolean;
+  created_at?: string;
+  last_sign_in_at?: string;
+  provider?: string;
 }
 
 export interface LoginResponseData {

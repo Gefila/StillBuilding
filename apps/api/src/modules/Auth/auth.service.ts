@@ -1,6 +1,11 @@
 import { supabase, supabaseAuth } from "../../config/supabase";
 import { AppError } from "../../utils/AppError";
-import type { LoginDTO, RegisterDTO, UpdateProfileDTO } from "./auth.types";
+import type {
+  ChangePasswordDTO,
+  LoginDTO,
+  RegisterDTO,
+  UpdateProfileDTO,
+} from "./auth.types";
 
 export const authService = {
   async register(payload: RegisterDTO) {
@@ -77,10 +82,15 @@ export const authService = {
         email: data.user?.email,
         username: profile?.username,
         name: profile?.full_name,
+        full_name: profile?.full_name,
         avatar: profile?.avatar,
         current_strike: profile?.current_strike,
         longest_streak: profile?.longest_streak,
         last_streak_date: profile?.last_streak_date,
+        is_email_verified: !!data.user?.email_confirmed_at,
+        created_at: data.user?.created_at,
+        last_sign_in_at: data.user?.last_sign_in_at,
+        provider: data.user?.app_metadata?.provider || "email",
       },
     };
   },
@@ -106,22 +116,36 @@ export const authService = {
     };
   },
   async getCurrentUser(userId: string) {
-    const { data: profile, error } = await supabase
-      .from("profiles")
-      .select(
-        "id, username, full_name, avatar, current_strike, longest_streak, last_streak_date",
-      )
-      .eq("id", userId)
-      .single();
+    const [profileResult, authUserResult] = await Promise.all([
+      supabase
+        .from("profiles")
+        .select(
+          "id, username, full_name, avatar, current_strike, longest_streak, last_streak_date",
+        )
+        .eq("id", userId)
+        .single(),
+      supabase.auth.admin.getUserById(userId),
+    ]);
 
-    if (error || !profile) {
+    if (profileResult.error || !profileResult.data) {
       throw new AppError(
-        `Failed to fetch user profile: ${error?.message || "Profile not found"}`,
+        `Failed to fetch user profile: ${profileResult.error?.message || "Profile not found"}`,
         404,
       );
     }
 
-    return profile;
+    const profile = profileResult.data;
+    const authUser = authUserResult.data?.user;
+
+    return {
+      ...profile,
+      name: profile.full_name,
+      email: authUser?.email,
+      is_email_verified: !!authUser?.email_confirmed_at,
+      created_at: authUser?.created_at,
+      last_sign_in_at: authUser?.last_sign_in_at,
+      provider: authUser?.app_metadata?.provider || "email",
+    };
   },
   async updateProfile(userId: string, payload: UpdateProfileDTO) {
     if (payload.username) {
@@ -167,5 +191,39 @@ export const authService = {
     }
 
     return updatedProfile;
+  },
+  async changePassword(
+    userId: string,
+    email: string,
+    payload: ChangePasswordDTO,
+  ) {
+    if (!email) {
+      throw new AppError("Email pengguna tidak ditemukan", 400);
+    }
+
+    const { error: verifyError } = await supabaseAuth.auth.signInWithPassword({
+      email,
+      password: payload.current_password,
+    });
+
+    if (verifyError) {
+      throw new AppError("Kata sandi saat ini tidak valid", 400);
+    }
+
+    const { error: updateError } = await supabase.auth.admin.updateUserById(
+      userId,
+      {
+        password: payload.new_password,
+      },
+    );
+
+    if (updateError) {
+      throw new AppError(
+        `Gagal memperbarui kata sandi: ${updateError.message}`,
+        400,
+      );
+    }
+
+    return { message: "Kata sandi berhasil diperbarui" };
   },
 };

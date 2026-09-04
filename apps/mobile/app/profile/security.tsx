@@ -36,7 +36,7 @@ export default function SecurityScreen() {
           />
 
           {/* Account Security Status Card */}
-          <SecurityStatusCard email={user?.email} />
+          <SecurityStatusCard user={user} />
 
           {/* Change Password Form */}
           <ChangePasswordForm />

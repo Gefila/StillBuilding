@@ -3,6 +3,7 @@ import { authMiddleware } from "../../middlewares/auth.middleware";
 import { validate } from "../../middlewares/validate.middleware";
 import { authController } from "./auth.controller";
 import {
+  changePasswordSchema,
   loginSchema,
   refreshTokenSchema,
   registerSchema,
@@ -25,6 +26,12 @@ router.put(
   authMiddleware,
   validate(updateProfileSchema),
   authController.updateProfile,
+);
+router.put(
+  "/password",
+  authMiddleware,
+  validate(changePasswordSchema),
+  authController.changePassword,
 );
 router.post("/logout", authMiddleware, authController.logout);
 

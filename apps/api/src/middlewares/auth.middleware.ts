@@ -43,7 +43,10 @@ export const authMiddleware = async (
     throw new AppError("Unauthorized: Profile not found", 401);
   }
 
-  req.user = profile as AuthUser;
+  req.user = {
+    ...profile,
+    email: data.user.email,
+  } as AuthUser;
   req.token = token;
   next();
 };

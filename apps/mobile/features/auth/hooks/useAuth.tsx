@@ -5,6 +5,7 @@ import { MutationConfig, queryClient, QueryConfig } from "@/lib/reactQuery";
 import { authService } from "../service/authService";
 import { useAuthStore } from "../store/useAuthStore";
 import type {
+  ChangePasswordDTO,
   LoginDTO,
   RegisterDTO,
   UpdateProfileDTO,
@@ -140,6 +141,35 @@ export const useUpdateProfile = ({
         error?.message ||
         error?.error ||
         "Gagal memperbarui profil. Silakan coba lagi.";
+      Toast.error(message);
+      mutationConfig.onError?.(error, variables, onMutateResult, context);
+    },
+  });
+};
+
+type UseChangePasswordOptions = {
+  mutationConfig?: MutationConfig<typeof authService.changePassword>;
+};
+
+export const useChangePassword = ({
+  mutationConfig = {},
+}: UseChangePasswordOptions = {}) => {
+  const router = useRouter();
+
+  return useMutation({
+    mutationFn: (payload: ChangePasswordDTO) =>
+      authService.changePassword(payload),
+    ...mutationConfig,
+    onSuccess: (data, variables, onMutateResult, context) => {
+      Toast.success(data?.message || "Kata sandi berhasil diperbarui!");
+      router.back();
+      mutationConfig.onSuccess?.(data, variables, onMutateResult, context);
+    },
+    onError: (error: any, variables, onMutateResult, context) => {
+      const message =
+        error?.response?.data?.message ||
+        error?.message ||
+        "Gagal memperbarui kata sandi. Silakan coba lagi.";
       Toast.error(message);
       mutationConfig.onError?.(error, variables, onMutateResult, context);
     },
