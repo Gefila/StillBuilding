@@ -1,13 +1,19 @@
 import React from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { Image, Text, TouchableOpacity, View } from "react-native";
+import { useIsFocused } from "@react-navigation/native";
 import { useAuthStore } from "@/features/auth/store/useAuthStore";
 import { useCurrentUser } from "@/features/auth/hooks/useAuth";
 import { getStreakInfo } from "@/utils/streakHelpers";
 
 export default function ProfileHeader() {
+  const isFocused = useIsFocused();
   const storedUser = useAuthStore((state) => state.user);
-  const { data: currentUser } = useCurrentUser();
+  const { data: currentUser } = useCurrentUser({
+    queryConfig: {
+      subscribed: isFocused,
+    },
+  });
 
   const user = currentUser || storedUser;
   const displayName =

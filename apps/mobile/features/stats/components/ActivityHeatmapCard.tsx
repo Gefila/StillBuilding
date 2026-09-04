@@ -8,6 +8,7 @@ import {
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
+import { useIsFocused } from "@react-navigation/native";
 import { useActivityHeatmap } from "../hooks/useStats";
 import type { ActivityDay } from "../types/stats.types";
 
@@ -113,7 +114,13 @@ function ActivityHeatmapCardComponent({
   compact?: boolean;
   className?: string;
 }) {
-  const { data, isLoading, isError } = useActivityHeatmap({ weeks });
+  const isFocused = useIsFocused();
+  const { data, isLoading, isError } = useActivityHeatmap({
+    weeks,
+    queryConfig: {
+      subscribed: isFocused,
+    },
+  });
   const scrollViewRef = useRef<ScrollView>(null);
   const hasScrolledToEnd = useRef(false);
   const [userSelectedDate, setUserSelectedDate] = useState<string | null>(null);

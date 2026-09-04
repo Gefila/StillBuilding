@@ -1,7 +1,7 @@
-import { useMutation, useQuery } from "@tanstack/react-query";
+import { queryOptions, useMutation, useQuery } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 import { Toast } from "toastify-react-native";
-import { queryClient } from "@/lib/reactQuery";
+import { queryClient, QueryConfig } from "@/lib/reactQuery";
 import { authService } from "../service/authService";
 import { useAuthStore } from "../store/useAuthStore";
 import type { LoginDTO, RegisterDTO } from "../types/auth.types";
@@ -73,12 +73,25 @@ export const useLogout = () => {
   });
 };
 
-export const useCurrentUser = () => {
+export const getCurrentUserQueryOptions = () => {
+  return queryOptions({
+    queryKey: authKeys.me(),
+    queryFn: () => authService.getMe(),
+  });
+};
+
+type UseCurrentUserOptions = {
+  queryConfig?: QueryConfig<typeof getCurrentUserQueryOptions>;
+};
+
+export const useCurrentUser = ({
+  queryConfig = {},
+}: UseCurrentUserOptions = {}) => {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
 
   return useQuery({
-    queryKey: authKeys.me(),
-    queryFn: () => authService.getMe(),
+    ...getCurrentUserQueryOptions(),
     enabled: isAuthenticated,
+    ...queryConfig,
   });
 };

@@ -3,19 +3,23 @@ import React, { useMemo } from "react";
 import { Text, View } from "react-native";
 import { useAuthStore } from "@/features/auth/store/useAuthStore";
 import { getStreakInfo } from "@/utils/streakHelpers";
+import type { AuthUser } from "@/features/auth/types/auth.types";
 
 interface DailySummaryCardsProps {
   totalTasks: number;
   completedTasks: number;
   focusMinutes?: number;
+  user?: AuthUser | null;
 }
 
 function DailySummaryCardsComponent({
   totalTasks = 0,
   completedTasks = 0,
   focusMinutes = 50,
+  user: propUser,
 }: DailySummaryCardsProps) {
-  const user = useAuthStore((state) => state.user);
+  const storedUser = useAuthStore((state) => state.user);
+  const user = propUser ?? storedUser;
 
   const streakInfo = useMemo(
     () =>

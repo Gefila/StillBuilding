@@ -1,4 +1,4 @@
-import React, { useState, useCallback, useMemo } from "react";
+import React, { useState, useCallback, useMemo, useEffect } from "react";
 import {
   ActivityIndicator,
   RefreshControl,
@@ -19,6 +19,7 @@ import QuickFocusBanner from "@/components/home/QuickFocusBanner";
 import ActivityHeatmapCard from "@/features/stats/components/ActivityHeatmapCard";
 import Tasks from "@/components/tasks/Tasks";
 import { useAuthStore } from "@/features/auth/store/useAuthStore";
+import { useCurrentUser } from "@/features/auth/hooks/useAuth";
 import type { Task } from "@/features/task/types/task.types";
 
 export default function Home() {
@@ -26,7 +27,22 @@ export default function Home() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const [refreshing, setRefreshing] = useState(false);
-  const user = useAuthStore((state) => state.user);
+  const storedUser = useAuthStore((state) => state.user);
+  const setUser = useAuthStore((state) => state.setUser);
+  const { data: currentUser, refetch: refetchCurrentUser } = useCurrentUser({
+    queryConfig: {
+      subscribed: isFocused,
+    },
+  });
+
+  const user = currentUser || storedUser;
+
+  // Sinkronkan data profil terbaru ke local auth store
+  useEffect(() => {
+    if (currentUser) {
+      setUser(currentUser);
+    }
+  }, [currentUser, setUser]);
 
   const {
     data: tasks,
@@ -50,11 +66,15 @@ export default function Home() {
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     try {
-      await Promise.all([refetchTasks(), refetchPomodoroStats()]);
+      await Promise.all([
+        refetchTasks(),
+        refetchPomodoroStats(),
+        refetchCurrentUser(),
+      ]);
     } finally {
       setRefreshing(false);
     }
-  }, [refetchTasks, refetchPomodoroStats]);
+  }, [refetchTasks, refetchPomodoroStats, refetchCurrentUser]);
 
   const { completedCount, activeTask } = useMemo(() => {
     let count = 0;
@@ -94,6 +114,7 @@ export default function Home() {
           totalTasks={taskList.length}
           completedTasks={completedCount}
           focusMinutes={pomodoroStats?.focus_minutes ?? 0}
+          user={user}
         />
 
         {/* 3. Quick Focus / Active Pomodoro Banner */}
