@@ -31,7 +31,6 @@ export default function LoginScreen() {
     defaultValues: {
       email: "",
       password: "",
-      rememberMe: false,
     },
     mode: "onBlur",
   });
@@ -110,35 +109,8 @@ export default function LoginScreen() {
               )}
             />
 
-            {/* Remember Me & Forgot Password */}
-            <View className="flex-row items-center justify-between mt-1 mb-5">
-              <Controller
-                control={control}
-                name="rememberMe"
-                render={({ field: { onChange, value } }) => (
-                  <TouchableOpacity
-                    activeOpacity={0.7}
-                    onPress={() => onChange(!value)}
-                    className="flex-row items-center gap-2"
-                  >
-                    <View
-                      className={`w-4 h-4 rounded border items-center justify-center ${
-                        value
-                          ? "bg-primary border-primary"
-                          : "border-border bg-surface"
-                      }`}
-                    >
-                      {value && (
-                        <Ionicons name="checkmark" size={12} color="#ffffff" />
-                      )}
-                    </View>
-                    <Text className="text-xs text-muted font-medium">
-                      Ingat Saya
-                    </Text>
-                  </TouchableOpacity>
-                )}
-              />
-
+            {/* Forgot Password */}
+            <View className="flex-row justify-end mt-1 mb-5">
               <TouchableOpacity activeOpacity={0.7}>
                 <Text className="text-xs text-foreground font-semibold">
                   Lupa Kata Sandi?

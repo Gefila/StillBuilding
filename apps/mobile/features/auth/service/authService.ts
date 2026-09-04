@@ -12,6 +12,7 @@ export const authService = {
     const response = await api.post<ApiResponse>("auth/register", {
       email: payload.email,
       password: payload.password,
+      name: payload.name,
     });
     return response.data;
   },

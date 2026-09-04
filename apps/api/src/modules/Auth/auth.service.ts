@@ -4,21 +4,43 @@ import type { LoginDTO, RegisterDTO } from "./auth.types";
 
 export const authService = {
   async register(payload: RegisterDTO) {
+    const fullName = payload.name?.trim() || payload.email.split("@")[0];
+    const username = fullName
+      .toLowerCase()
+      .replace(/[^a-z0-9_]/g, "_")
+      .slice(0, 30);
+
     const { data, error } = await supabaseAuth.auth.signUp({
       email: payload.email,
       password: payload.password,
       options: {
         data: {
-          full_name: payload.email.split("@")[0],
+          full_name: fullName,
+          username,
           avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(
-            payload.email.split("@")[0],
+            fullName,
           )}&background=random`,
         },
       },
     });
+
     if (error) {
       throw new AppError(`Failed to register user: ${error.message}`, 400);
     }
+
+    if (data.user?.id) {
+      await supabase
+        .from("profiles")
+        .update({
+          full_name: fullName,
+          username,
+          avatar: `https://ui-avatars.com/api/?name=${encodeURIComponent(
+            fullName,
+          )}&background=random`,
+        })
+        .eq("id", data.user.id);
+    }
+
     return data;
   },
   async login(payload: LoginDTO) {
@@ -62,10 +84,12 @@ export const authService = {
       },
     };
   },
-  async logout() {
-    const { error } = await supabaseAuth.auth.signOut();
-    if (error) {
-      throw new AppError(`Failed to logout user: ${error.message}`, 500);
+  async logout(token?: string) {
+    if (token) {
+      const { error } = await supabase.auth.admin.signOut(token);
+      if (error) {
+        console.warn("Failed to revoke session on logout:", error.message);
+      }
     }
   },
   async refreshToken(refreshToken: string) {

@@ -18,8 +18,8 @@ export const authController = {
       data: login,
     });
   }),
-  logout: catchAsync(async (_req: Request, res: Response) => {
-    await authService.logout();
+  logout: catchAsync(async (req: Request, res: Response) => {
+    await authService.logout(req.token);
     res.json({ status: "success", message: "User logged out successfully" });
   }),
   refreshToken: catchAsync(async (req: Request, res: Response) => {

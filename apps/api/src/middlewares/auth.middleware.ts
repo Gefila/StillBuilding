@@ -3,11 +3,12 @@ import { supabase } from "../config/supabase";
 import type { AuthUser } from "../modules/Auth/auth.types";
 import { AppError } from "../utils/AppError";
 
-// Extend Express Request agar bisa menyimpan user
+// Extend Express Request agar bisa menyimpan user dan token
 declare global {
   namespace Express {
     interface Request {
       user?: AuthUser;
+      token?: string;
     }
   }
 }
@@ -43,5 +44,6 @@ export const authMiddleware = async (
   }
 
   req.user = profile as AuthUser;
+  req.token = token;
   next();
 };
