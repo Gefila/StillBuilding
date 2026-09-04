@@ -32,7 +32,6 @@ export const projectController = {
     const { id } = req.params as { id: string };
     const userId = req.user?.id as string;
     const project = await projectService.delete(id, userId);
-    console.log("Deleted project:", project);
     res.status(200).json({ status: "success", data: project });
   }),
 };

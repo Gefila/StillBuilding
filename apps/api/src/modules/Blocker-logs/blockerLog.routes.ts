@@ -1,5 +1,8 @@
 import { Router } from "express";
-import { validate } from "../../middlewares/validate.middleware";
+import {
+  validate,
+  validateIdParam,
+} from "../../middlewares/validate.middleware";
 import { blockerLogController } from "./blockerLog.controller";
 import {
   createBlockerLogSchema,
@@ -9,13 +12,14 @@ import {
 const router = Router();
 
 router.get("/", blockerLogController.getAll);
-router.get("/:id", blockerLogController.getById);
+router.get("/:id", validateIdParam, blockerLogController.getById);
 router.post("/", validate(createBlockerLogSchema), blockerLogController.create);
 router.put(
   "/:id",
+  validateIdParam,
   validate(updateBlockerLogSchema),
   blockerLogController.update,
 );
-router.delete("/:id", blockerLogController.delete);
+router.delete("/:id", validateIdParam, blockerLogController.delete);
 
 export default router;

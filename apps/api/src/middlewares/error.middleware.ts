@@ -68,6 +68,12 @@ export const errorHandler = (
     } else if (errorCode === "23502") {
       statusCode = 400;
       message = "Kolom data wajib tidak boleh kosong.";
+    } else if (
+      errorCode === "22P02" ||
+      fullErrorStr.includes("invalid input syntax for type uuid")
+    ) {
+      statusCode = 400;
+      message = "Format ID data tidak valid.";
     } else if (errorCode === "PGRST116") {
       statusCode = 404;
       message = "Data tidak ditemukan.";

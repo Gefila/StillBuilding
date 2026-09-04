@@ -3,12 +3,13 @@ import "dotenv/config";
 
 const supabaseUrl = process.env.SUPABASE_URL;
 const supabaseServiceKey = process.env.SUPABASE_SERVICE_KEY;
+const supabaseAnonKey = process.env.SUPABASE_ANON_KEY;
 
-if (!supabaseUrl || !supabaseServiceKey) {
-  throw new Error("Missing SUPABASE_URL or SUPABASE_SERVICE_KEY in .env");
+if (!supabaseUrl || !supabaseServiceKey || !supabaseAnonKey) {
+  throw new Error(
+    "Missing SUPABASE_URL, SUPABASE_SERVICE_KEY, or SUPABASE_ANON_KEY in .env",
+  );
 }
-
-const supabaseAnonKey = process.env.SUPABASE_ANON_KEY || supabaseServiceKey;
 
 // Client Admin untuk Operasi Database & Bypassing RLS
 export const supabase = createClient(supabaseUrl, supabaseServiceKey, {

@@ -1,5 +1,8 @@
 import { Router } from "express";
-import { validate } from "../../middlewares/validate.middleware";
+import {
+  validate,
+  validateIdParam,
+} from "../../middlewares/validate.middleware";
 import { pomodoroSessionController } from "./pomodoro_sessions.controller";
 import {
   createPomodoroSessionSchema,
@@ -10,7 +13,7 @@ const router = Router();
 
 router.get("/", pomodoroSessionController.getAll);
 router.get("/today-stats", pomodoroSessionController.getTodayStats);
-router.get("/:id", pomodoroSessionController.getById);
+router.get("/:id", validateIdParam, pomodoroSessionController.getById);
 router.post(
   "/",
   validate(createPomodoroSessionSchema),
@@ -18,9 +21,10 @@ router.post(
 );
 router.put(
   "/:id",
+  validateIdParam,
   validate(updatePomodoroSessionSchema),
   pomodoroSessionController.update,
 );
-router.delete("/:id", pomodoroSessionController.delete);
+router.delete("/:id", validateIdParam, pomodoroSessionController.delete);
 
 export default router;

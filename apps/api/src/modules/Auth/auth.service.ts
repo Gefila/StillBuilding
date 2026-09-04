@@ -30,7 +30,18 @@ export const authService = {
     });
 
     if (error) {
-      throw new AppError(`Failed to register user: ${error.message}`, 400);
+      const errorMsg = error.message.toLowerCase();
+      if (
+        errorMsg.includes("already registered") ||
+        errorMsg.includes("already exists") ||
+        errorMsg.includes("user already")
+      ) {
+        throw new AppError("Email tersebut sudah terdaftar di sistem.", 400);
+      }
+      throw new AppError(
+        "Gagal mendaftarkan akun. Silakan periksa kembali data Anda.",
+        400,
+      );
     }
 
     if (data.user?.id) {
@@ -55,7 +66,7 @@ export const authService = {
     });
 
     if (error) {
-      throw new AppError(`Failed to login user: ${error.message}`, 401);
+      throw new AppError("Email atau kata sandi tidak valid", 401);
     }
 
     const { data: profile, error: profileError } = await supabase
@@ -67,10 +78,7 @@ export const authService = {
       .single();
 
     if (profileError) {
-      throw new AppError(
-        `Failed to fetch user profile: ${profileError.message}`,
-        401,
-      );
+      throw new AppError("Profil pengguna tidak ditemukan", 404);
     }
 
     return {
@@ -107,7 +115,10 @@ export const authService = {
       refresh_token: refreshToken,
     });
     if (error) {
-      throw new AppError(`Failed to refresh token: ${error.message}`, 401);
+      throw new AppError(
+        "Sesi tidak valid atau telah kedaluwarsa. Silakan masuk kembali.",
+        401,
+      );
     }
     return {
       accessToken: data.session?.access_token,
@@ -128,10 +139,7 @@ export const authService = {
     ]);
 
     if (profileResult.error || !profileResult.data) {
-      throw new AppError(
-        `Failed to fetch user profile: ${profileResult.error?.message || "Profile not found"}`,
-        404,
-      );
+      throw new AppError("Profil pengguna tidak ditemukan", 404);
     }
 
     const profile = profileResult.data;
@@ -184,10 +192,7 @@ export const authService = {
       .single();
 
     if (error || !updatedProfile) {
-      throw new AppError(
-        `Failed to update profile: ${error?.message || "Profile not found"}`,
-        500,
-      );
+      throw new AppError("Gagal memperbarui data profil pengguna", 500);
     }
 
     return updatedProfile;
@@ -219,7 +224,7 @@ export const authService = {
 
     if (updateError) {
       throw new AppError(
-        `Gagal memperbarui kata sandi: ${updateError.message}`,
+        "Gagal memperbarui kata sandi. Pastikan format kata sandi baru sesuai ketentuan.",
         400,
       );
     }
