@@ -31,6 +31,7 @@ export default function Profile() {
       id: "2",
       title: "Keamanan & Kata Sandi",
       icon: "shield-checkmark-outline",
+      onPress: () => router.push("/profile/security" as any),
     },
     { id: "3", title: "Notifikasi", icon: "notifications-outline" },
   ];
