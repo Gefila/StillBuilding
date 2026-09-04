@@ -1,30 +1,38 @@
 import { z } from "zod";
 
+export const strongPasswordSchema = z
+  .string()
+  .min(1, "Kata sandi wajib diisi")
+  .min(8, "Kata sandi minimal 8 karakter")
+  .regex(/[a-z]/, "Kata sandi harus mengandung huruf kecil")
+  .regex(/[A-Z]/, "Kata sandi harus mengandung huruf besar")
+  .regex(
+    /[0-9!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/,
+    "Kata sandi harus mengandung minimal 1 angka atau simbol",
+  );
+
 export const loginSchema = z.object({
-  email: z.string().min(1, "Email is required").email("Invalid email address"),
-  password: z
+  email: z
     .string()
-    .min(1, "Password is required")
-    .min(6, "Password must be at least 6 characters"),
+    .min(1, "Email wajib diisi")
+    .email("Format email tidak valid"),
+  password: z.string().min(1, "Kata sandi wajib diisi"),
 });
 
 export const registerSchema = z
   .object({
-    name: z.string().min(1, "Full name is required").optional(),
+    name: z.string().min(1, "Nama lengkap wajib diisi").optional(),
     email: z
       .string()
-      .min(1, "Email is required")
-      .email("Invalid email address"),
-    password: z
-      .string()
-      .min(1, "Password is required")
-      .min(6, "Password must be at least 6 characters"),
+      .min(1, "Email wajib diisi")
+      .email("Format email tidak valid"),
+    password: strongPasswordSchema,
     confirmPassword: z.string().optional(),
   })
   .refine(
     (data) => !data.confirmPassword || data.password === data.confirmPassword,
     {
-      message: "Confirm password does not match",
+      message: "Konfirmasi kata sandi tidak cocok",
       path: ["confirmPassword"],
     },
   );
@@ -52,15 +60,7 @@ export const updateProfileSchema = z.object({
 export const changePasswordSchema = z
   .object({
     current_password: z.string().min(1, "Kata sandi saat ini wajib diisi"),
-    new_password: z
-      .string()
-      .min(8, "Kata sandi baru minimal 8 karakter")
-      .regex(/[a-z]/, "Kata sandi harus mengandung huruf kecil")
-      .regex(/[A-Z]/, "Kata sandi harus mengandung huruf besar")
-      .regex(
-        /[0-9!@#$%^&*()_+\-=[\]{};':"\\|,.<>/?]/,
-        "Kata sandi harus mengandung minimal 1 angka atau simbol",
-      ),
+    new_password: strongPasswordSchema,
     confirm_password: z.string().min(1, "Konfirmasi kata sandi wajib diisi"),
   })
   .refine((data) => data.new_password === data.confirm_password, {
