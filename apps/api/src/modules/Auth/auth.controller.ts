@@ -37,4 +37,15 @@ export const authController = {
     const user = await authService.getCurrentUser(req.user.id);
     res.json({ status: "success", data: user });
   }),
+  updateProfile: catchAsync(async (req: Request, res: Response) => {
+    if (!req.user) {
+      throw new Error("Unauthorized");
+    }
+    const updatedUser = await authService.updateProfile(req.user.id, req.body);
+    res.json({
+      status: "success",
+      message: "Profil berhasil diperbarui",
+      data: updatedUser,
+    });
+  }),
 };

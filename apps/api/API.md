@@ -162,6 +162,36 @@ Mengambil data profil pengguna yang sedang login.
   }
   ```
 
+#### `PUT /auth/profile`
+
+Memperbarui data profil pengguna (nama lengkap, username unik, dan avatar).
+
+- **Auth**: Wajib (`Bearer <token>`)
+- **Request Body**:
+  ```json
+  {
+    "full_name": "John Doe",
+    "username": "johndoe_pro",
+    "avatar": "https://api.dicebear.com/7.x/notionists/svg?seed=John"
+  }
+  ```
+- **Response (200 OK)**:
+  ```json
+  {
+    "status": "success",
+    "message": "Profil berhasil diperbarui",
+    "data": {
+      "id": "c88f98a2-...",
+      "username": "johndoe_pro",
+      "full_name": "John Doe",
+      "avatar": "https://api.dicebear.com/7.x/notionists/svg?seed=John",
+      "current_strike": 3,
+      "longest_streak": 7,
+      "last_streak_date": "2026-08-15"
+    }
+  }
+  ```
+
 #### `POST /auth/logout`
 
 Sign out sesi pengguna saat ini.

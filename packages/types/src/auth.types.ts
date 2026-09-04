@@ -33,9 +33,26 @@ export const refreshTokenSchema = z.object({
   refresh_token: z.string().min(1, "Refresh token is required"),
 });
 
+export const updateProfileSchema = z.object({
+  full_name: z
+    .string()
+    .min(1, "Nama lengkap wajib diisi")
+    .max(50, "Nama lengkap maksimal 50 karakter"),
+  username: z
+    .string()
+    .min(3, "Username minimal 3 karakter")
+    .max(30, "Username maksimal 30 karakter")
+    .regex(
+      /^[a-z0-9_]+$/,
+      "Username hanya boleh berisi huruf kecil, angka, dan underscore",
+    ),
+  avatar: z.string().url("Format URL avatar tidak valid").optional(),
+});
+
 export type LoginDTO = z.infer<typeof loginSchema>;
 export type RegisterDTO = z.infer<typeof registerSchema>;
 export type RefreshTokenDTO = z.infer<typeof refreshTokenSchema>;
+export type UpdateProfileDTO = z.infer<typeof updateProfileSchema>;
 
 export interface AuthUser {
   id: string;

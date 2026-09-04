@@ -6,6 +6,7 @@ interface MenuItem {
   id: string;
   title: string;
   icon: keyof typeof Ionicons.glyphMap;
+  onPress?: () => void;
 }
 
 export function MenuButtonGroup({
@@ -29,6 +30,7 @@ export function MenuButtonGroup({
             <View key={item.id}>
               <TouchableOpacity
                 activeOpacity={0.7}
+                onPress={item.onPress}
                 className="flex-row items-center justify-between p-3.5"
               >
                 <View className="flex-row items-center">

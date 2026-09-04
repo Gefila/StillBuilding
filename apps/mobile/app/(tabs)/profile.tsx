@@ -1,5 +1,6 @@
 import React from "react";
 import { ScrollView, View } from "react-native";
+import { useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ScreenHeader } from "@/components/ScreenHeader";
 import LogoutButton from "@/components/profile/LogoutButton";
@@ -11,10 +12,21 @@ import { Ionicons } from "@expo/vector-icons";
 type IoniconName = keyof typeof Ionicons.glyphMap;
 
 export default function Profile() {
+  const router = useRouter();
   const insets = useSafeAreaInsets();
 
-  const accountItems: { id: string; title: string; icon: IoniconName }[] = [
-    { id: "1", title: "Informasi Pribadi", icon: "person-outline" },
+  const accountItems: {
+    id: string;
+    title: string;
+    icon: IoniconName;
+    onPress?: () => void;
+  }[] = [
+    {
+      id: "1",
+      title: "Informasi Pribadi",
+      icon: "person-outline",
+      onPress: () => router.push("/profile/edit" as any),
+    },
     {
       id: "2",
       title: "Keamanan & Kata Sandi",

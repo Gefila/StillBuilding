@@ -1,6 +1,6 @@
 import { supabase, supabaseAuth } from "../../config/supabase";
 import { AppError } from "../../utils/AppError";
-import type { LoginDTO, RegisterDTO } from "./auth.types";
+import type { LoginDTO, RegisterDTO, UpdateProfileDTO } from "./auth.types";
 
 export const authService = {
   async register(payload: RegisterDTO) {
@@ -122,5 +122,50 @@ export const authService = {
     }
 
     return profile;
+  },
+  async updateProfile(userId: string, payload: UpdateProfileDTO) {
+    if (payload.username) {
+      const { data: existingUser } = await supabase
+        .from("profiles")
+        .select("id")
+        .eq("username", payload.username)
+        .neq("id", userId)
+        .maybeSingle();
+
+      if (existingUser) {
+        throw new AppError("Username sudah digunakan oleh pengguna lain", 400);
+      }
+    }
+
+    const updateData: {
+      full_name: string;
+      username: string;
+      avatar?: string;
+    } = {
+      full_name: payload.full_name,
+      username: payload.username,
+    };
+
+    if (payload.avatar) {
+      updateData.avatar = payload.avatar;
+    }
+
+    const { data: updatedProfile, error } = await supabase
+      .from("profiles")
+      .update(updateData)
+      .eq("id", userId)
+      .select(
+        "id, username, full_name, avatar, current_strike, longest_streak, last_streak_date",
+      )
+      .single();
+
+    if (error || !updatedProfile) {
+      throw new AppError(
+        `Failed to update profile: ${error?.message || "Profile not found"}`,
+        500,
+      );
+    }
+
+    return updatedProfile;
   },
 };

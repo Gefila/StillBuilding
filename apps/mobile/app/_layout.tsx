@@ -40,6 +40,10 @@ function RootNavigator() {
           name="pomodoro"
           options={{ headerShown: false, animation: "slide_from_bottom" }}
         />
+        <Stack.Screen
+          name="profile"
+          options={{ headerShown: false, animation: "slide_from_right" }}
+        />
       </Stack.Protected>
 
       <Stack.Protected guard={!isAuthenticated}>

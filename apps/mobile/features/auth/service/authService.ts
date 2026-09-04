@@ -5,6 +5,7 @@ import type {
   LoginDTO,
   LoginResponseData,
   RegisterDTO,
+  UpdateProfileDTO,
 } from "../types/auth.types";
 
 export const authService = {
@@ -62,6 +63,17 @@ export const authService = {
     const response = await api.get<ApiResponse<AuthUser>>("auth/me");
     if (!response.data.data) {
       throw new Error("Gagal mengambil data pengguna");
+    }
+    return response.data.data;
+  },
+
+  updateProfile: async (payload: UpdateProfileDTO): Promise<AuthUser> => {
+    const response = await api.put<ApiResponse<AuthUser>>(
+      "auth/profile",
+      payload,
+    );
+    if (!response.data.data) {
+      throw new Error(response.data.message || "Gagal memperbarui profil");
     }
     return response.data.data;
   },

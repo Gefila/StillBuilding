@@ -1,12 +1,14 @@
 import React from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { Image, Text, TouchableOpacity, View } from "react-native";
+import { useRouter } from "expo-router";
 import { useIsFocused } from "@react-navigation/native";
 import { useAuthStore } from "@/features/auth/store/useAuthStore";
 import { useCurrentUser } from "@/features/auth/hooks/useAuth";
 import { getStreakInfo } from "@/utils/streakHelpers";
 
 export default function ProfileHeader() {
+  const router = useRouter();
   const isFocused = useIsFocused();
   const storedUser = useAuthStore((state) => state.user);
   const { data: currentUser } = useCurrentUser({
@@ -61,6 +63,7 @@ export default function ProfileHeader() {
         {/* Compact Edit Profile Button */}
         <TouchableOpacity
           activeOpacity={0.8}
+          onPress={() => router.push("/profile/edit" as any)}
           className="px-3 py-1.5 bg-surface-subtle border border-border rounded-xl flex-row items-center gap-1"
         >
           <Ionicons name="create-outline" size={13} color="#18181b" />

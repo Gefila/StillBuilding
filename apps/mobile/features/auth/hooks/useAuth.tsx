@@ -1,10 +1,14 @@
 import { queryOptions, useMutation, useQuery } from "@tanstack/react-query";
 import { useRouter } from "expo-router";
 import { Toast } from "toastify-react-native";
-import { queryClient, QueryConfig } from "@/lib/reactQuery";
+import { MutationConfig, queryClient, QueryConfig } from "@/lib/reactQuery";
 import { authService } from "../service/authService";
 import { useAuthStore } from "../store/useAuthStore";
-import type { LoginDTO, RegisterDTO } from "../types/auth.types";
+import type {
+  LoginDTO,
+  RegisterDTO,
+  UpdateProfileDTO,
+} from "../types/auth.types";
 
 export const authKeys = {
   all: ["auth"] as const,
@@ -93,5 +97,51 @@ export const useCurrentUser = ({
     ...getCurrentUserQueryOptions(),
     enabled: isAuthenticated,
     ...queryConfig,
+  });
+};
+
+type UseUpdateProfileOptions = {
+  mutationConfig?: MutationConfig<typeof authService.updateProfile>;
+};
+
+export const useUpdateProfile = ({
+  mutationConfig = {},
+}: UseUpdateProfileOptions = {}) => {
+  const router = useRouter();
+  const setUser = useAuthStore((state) => state.setUser);
+
+  return useMutation({
+    mutationFn: (payload: UpdateProfileDTO) =>
+      authService.updateProfile(payload),
+    ...mutationConfig,
+    onSuccess: async (updatedUser, variables, onMutateResult, context) => {
+      // 1. Update query cache
+      queryClient.setQueryData(authKeys.me(), updatedUser);
+      queryClient.invalidateQueries({
+        queryKey: authKeys.me(),
+        exact: true,
+      });
+
+      // 2. Update local auth store (Zustand & SecureStore)
+      await setUser(updatedUser);
+
+      Toast.success("Profil berhasil diperbarui!");
+      router.back();
+
+      mutationConfig.onSuccess?.(
+        updatedUser,
+        variables,
+        onMutateResult,
+        context,
+      );
+    },
+    onError: (error: any, variables, onMutateResult, context) => {
+      const message =
+        error?.message ||
+        error?.error ||
+        "Gagal memperbarui profil. Silakan coba lagi.";
+      Toast.error(message);
+      mutationConfig.onError?.(error, variables, onMutateResult, context);
+    },
   });
 };
