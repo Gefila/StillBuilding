@@ -12,6 +12,7 @@ export default function ProfileLayout() {
       <Stack.Screen name="edit" options={{ headerShown: false }} />
       <Stack.Screen name="security" options={{ headerShown: false }} />
       <Stack.Screen name="support" options={{ headerShown: false }} />
+      <Stack.Screen name="about" options={{ headerShown: false }} />
     </Stack>
   );
 }

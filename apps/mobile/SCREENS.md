@@ -22,6 +22,7 @@ Dokumen ini berisi spesifikasi fungsional seluruh layar (_screens_) pada aplikas
 | `app/project/create.tsx`  | **Tambah Proyek**              | Form pembuatan project baru & pilihan warna/icon  | Modal Sheet        |
 | `app/project/edit.tsx`    | **Edit Proyek**                | Form pembaruan nama & deskripsi proyek            | Stack / Modal      |
 | `app/profile/support.tsx` | **Bantuan & Dukungan**         | Pusat FAQ, tips deep work, & kontak tim           | Stack Screen       |
+| `app/profile/about.tsx`   | **Tentang Aplikasi**           | Filosofi produk, tech stack, legal, & versi       | Stack Screen       |
 
 ---
 
@@ -201,3 +202,22 @@ Dokumen ini berisi spesifikasi fungsional seluruh layar (_screens_) pada aplikas
   - Tap pertanyaan FAQ ➡️ Expand / collapse jawaban terkait.
   - Tap kanal email ➡️ Membuka aplikasi mail klien dengan template subjek.
   - Tap "Kirim Masukan atau Lapor Bug" ➡️ Membuka `FeedbackModal`, mengisi kategori, subjek, detail pesan, lalu submit.
+
+---
+
+### ℹ️ Tentang Aplikasi (`app/profile/about.tsx`)
+
+- **Tujuan**: Menampilkan identitas resmi StillBuilding, nilai filosofi produk ("Langkah Semut" & mikro-tasking), transparansi stack teknologi monorepo, opsi pembaruan aplikasi, serta akses dokumen kebijakan privasi dan ketentuan layanan.
+- **Komponen Utama**:
+  - `ScreenHeader`: Header halaman dengan judul "Tentang Aplikasi" dan tombol kembali ke Profil.
+  - `AboutHeroCard`: Badge ikon kilat (`flash`), judul produk, versi rilis `v1.0.0 (Build 42)`, dan pernyataan misi.
+  - `CorePrinciplesCard`: 4 pilar inti filosofi kerja rendah friksi StillBuilding.
+  - `TechStackCard`: Rincian arsitektur teknologi frontend, state management, dan backend API.
+  - `LegalLinksCard`: Menu aksi periksa pembaruan, tautan repositori GitHub resmi, serta pembuka modal kebijakan privasi dan syarat ketentuan.
+  - `LegalModal`: Modal pembaca teks resmi Kebijakan Privasi & Syarat Ketentuan Layanan.
+- **Hooks & State**:
+  - State lokal: `isCheckingUpdate`, `legalModalType` (`privacy` | `terms` | `null`).
+- **Aksi Pengguna (_User Actions_)**:
+  - Tap "Periksa Pembaruan" ➡️ Memverifikasi integritas versi dan memicu Toast sukses.
+  - Tap "Kebijakan Privasi" / "Syarat & Ketentuan" ➡️ Membuka `LegalModal` dengan konten relevan.
+  - Tap "Repositori GitHub" ➡️ Membuka tautan repositori daring melalui peramban tersemat.

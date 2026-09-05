@@ -50,7 +50,12 @@ export default function Profile() {
       icon: "help-circle-outline",
       onPress: () => router.push("/profile/support" as any),
     },
-    { id: "7", title: "Tentang Aplikasi", icon: "information-circle-outline" },
+    {
+      id: "7",
+      title: "Tentang Aplikasi",
+      icon: "information-circle-outline",
+      onPress: () => router.push("/profile/about" as any),
+    },
   ];
 
   return (
