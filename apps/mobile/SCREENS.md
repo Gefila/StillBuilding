@@ -21,6 +21,7 @@ Dokumen ini berisi spesifikasi fungsional seluruh layar (_screens_) pada aplikas
 | `app/project/[id].tsx`    | **Detail Proyek**              | Info proyek, progres, & daftar task terkait       | Dynamic Stack      |
 | `app/project/create.tsx`  | **Tambah Proyek**              | Form pembuatan project baru & pilihan warna/icon  | Modal Sheet        |
 | `app/project/edit.tsx`    | **Edit Proyek**                | Form pembaruan nama & deskripsi proyek            | Stack / Modal      |
+| `app/profile/support.tsx` | **Bantuan & Dukungan**         | Pusat FAQ, tips deep work, & kontak tim           | Stack Screen       |
 
 ---
 
@@ -176,3 +177,27 @@ Dokumen ini berisi spesifikasi fungsional seluruh layar (_screens_) pada aplikas
   - `useAuthStore` / Supabase auth SDK.
 - **Aksi Pengguna (_User Actions_)**:
   - Submit form login ➡️ Mendapatkan Supabase JWT token, menyimpan ke `expo-secure-store`, dan mengganti rute ke `/(tabs)/home`.
+
+---
+
+### 💬 Bantuan & Dukungan (`app/profile/support.tsx`)
+
+- **Tujuan**: Pusat bantuan terpadu untuk solusi masalah, panduan teknik fokus, direktori tanya-jawab (FAQ), dan kanal komunikasi tim pengembang.
+- **Komponen Utama**:
+  - `ScreenHeader`: Header halaman dengan tombol kembali ke tab profil.
+  - `SearchBar`: Input pencarian real-time untuk menyaring pertanyaan FAQ secara dinamis.
+  - `CategoryFilterPills`: Filter kategori (Semua, Pomodoro, Blocker, Proyek & Tugas, Akun).
+  - `TipsDeepWorkCard`: Kartu wawasan cepat seputar penanganan distraksi dan pencatatan blocker.
+  - `SupportFAQCard`: Komponen accordion interaktif untuk tanya-jawab seputar fitur StillBuilding.
+  - `SupportContactCard`: Pilihan kanal email dukungan, tautan dokumentasi web, dan tombol pemicu form masukan.
+  - `FeedbackModal`: Modal form pengiriman laporan bug, saran fitur, atau pertanyaan akun dengan feedback haptic dan Toast konfirmasi.
+  - `SystemStatusBadge`: Indikator status layanan (online/normal) dan informasi versi aplikasi.
+- **Hooks & State**:
+  - `useCurrentUser()` & `useAuthStore` (Data profil dan email pelapor).
+  - State lokal: `searchQuery`, `selectedCategory`, `isFeedbackModalVisible`.
+- **Aksi Pengguna (_User Actions_)**:
+  - Mengetik di search bar ➡️ Memfilter daftar FAQ secara real-time.
+  - Tap salah satu pill kategori ➡️ Menyaring FAQ sesuai kategori terpilih.
+  - Tap pertanyaan FAQ ➡️ Expand / collapse jawaban terkait.
+  - Tap kanal email ➡️ Membuka aplikasi mail klien dengan template subjek.
+  - Tap "Kirim Masukan atau Lapor Bug" ➡️ Membuka `FeedbackModal`, mengisi kategori, subjek, detail pesan, lalu submit.

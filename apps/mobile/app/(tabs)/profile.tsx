@@ -36,10 +36,20 @@ export default function Profile() {
     { id: "3", title: "Notifikasi", icon: "notifications-outline" },
   ];
 
-  const appSettingsItems: { id: string; title: string; icon: IoniconName }[] = [
+  const appSettingsItems: {
+    id: string;
+    title: string;
+    icon: IoniconName;
+    onPress?: () => void;
+  }[] = [
     { id: "4", title: "Preferensi Pomodoro", icon: "timer-outline" },
     { id: "5", title: "Bahasa", icon: "language-outline" },
-    { id: "6", title: "Bantuan & Dukungan", icon: "help-circle-outline" },
+    {
+      id: "6",
+      title: "Bantuan & Dukungan",
+      icon: "help-circle-outline",
+      onPress: () => router.push("/profile/support" as any),
+    },
     { id: "7", title: "Tentang Aplikasi", icon: "information-circle-outline" },
   ];
 
