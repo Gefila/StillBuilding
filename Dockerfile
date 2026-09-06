@@ -3,13 +3,17 @@ FROM node:22-alpine AS deps
 RUN corepack enable && corepack prepare pnpm@9.0.0 --activate
 WORKDIR /app
 
+# Pastikan devDependencies (seperti tsc/typescript) tetap terinstall saat build
+# meskipun Coolify meng-inject NODE_ENV=production
+ENV NODE_ENV=development
+
 # Copy workspace config
 COPY package.json pnpm-workspace.yaml pnpm-lock.yaml ./
 COPY apps/api/package.json ./apps/api/
 COPY packages/types/package.json ./packages/types/
 
 # Install all workspace deps (production + dev for build)
-RUN pnpm install --frozen-lockfile
+RUN pnpm install --frozen-lockfile --prod=false
 
 # ── Stage 2: Build ──
 FROM deps AS builder
