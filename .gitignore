@@ -6,12 +6,16 @@ node_modules/
 # Env & Secrets
 .env
 .env.*
+!.env.example
 *.jks
 *.p8
 *.p12
 *.key
 *.mobileprovision
 *.pem
+
+# SSL Certificates (generated per-server)
+certbot/
 
 # Turbo & Tooling
 .turbo/

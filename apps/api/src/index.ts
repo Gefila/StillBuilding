@@ -16,6 +16,9 @@ import { AppError } from "./utils/AppError";
 const app = express();
 const port = process.env.PORT || 3000;
 
+// Trust Nginx reverse proxy (correct client IP in X-Forwarded-For)
+app.set("trust proxy", 1);
+
 app.use(helmet());
 app.use(
   cors({
@@ -26,7 +29,7 @@ app.use(
   }),
 );
 app.use(express.json({ limit: "10kb" }));
-app.use(morgan("dev"));
+app.use(morgan(process.env.NODE_ENV === "production" ? "combined" : "dev"));
 
 // Health check endpoint
 app.get("/", (_req, res) => {

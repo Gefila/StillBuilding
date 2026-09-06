@@ -1,0 +1,11 @@
+node_modules
+.git
+.turbo
+.vscode
+.expo
+apps/mobile
+*.md
+dist
+.env
+.env.*
+!.env.example
