@@ -1,11 +1,11 @@
-node_modules
-.git
-.turbo
-.vscode
-.expo
+**/node_modules
+**/.git
+**/.turbo
+**/.vscode
+**/.expo
+**/dist
 apps/mobile
 *.md
-dist
 .env
 .env.*
 !.env.example
