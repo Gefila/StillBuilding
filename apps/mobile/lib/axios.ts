@@ -12,7 +12,15 @@ interface CustomAxiosRequestConfig extends InternalAxiosRequestConfig {
   _retry?: boolean;
 }
 
-const baseURL = process.env.EXPO_PUBLIC_API_URL || "http://localhost:3000";
+const rawBaseURL = process.env.EXPO_PUBLIC_API_URL;
+
+if (!rawBaseURL) {
+  throw new Error(
+    "Missing EXPO_PUBLIC_API_URL. Pastikan file .env atau EAS Environment Variables sudah dikonfigurasi.",
+  );
+}
+
+const baseURL = rawBaseURL.replace(/\/$/, "");
 
 const api = create({
   baseURL,

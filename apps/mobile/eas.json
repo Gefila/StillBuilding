@@ -12,16 +12,10 @@
       "distribution": "internal",
       "android": {
         "buildType": "apk"
-      },
-      "env": {
-        "EXPO_PUBLIC_API_URL": "https://api.stillbuilding.gefila.dev/"
       }
     },
     "production": {
-      "autoIncrement": true,
-      "env": {
-        "EXPO_PUBLIC_API_URL": "https://api.stillbuilding.gefila.dev/"
-      }
+      "autoIncrement": true
     }
   },
   "submit": {
