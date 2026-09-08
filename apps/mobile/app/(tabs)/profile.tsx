@@ -1,12 +1,16 @@
-import React from "react";
-import { ScrollView, View } from "react-native";
+import React, { useCallback, useState } from "react";
+import { RefreshControl, ScrollView, View } from "react-native";
 import { useRouter } from "expo-router";
+import { useIsFocused } from "@react-navigation/native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ScreenHeader } from "@/components/ScreenHeader";
 import LogoutButton from "@/components/profile/LogoutButton";
 import { MenuButtonGroup } from "@/components/profile/MenuButtonGroup";
 import ProfileHeader from "@/components/profile/ProfileHeader";
 import ActivityHeatmapCard from "@/features/stats/components/ActivityHeatmapCard";
+import { useCurrentUser } from "@/features/auth/hooks/useAuth";
+import { useActivityHeatmap } from "@/features/stats/hooks/useStats";
+import { useAuthStore } from "@/features/auth/store/useAuthStore";
 import { Ionicons } from "@expo/vector-icons";
 
 type IoniconName = keyof typeof Ionicons.glyphMap;
@@ -14,6 +18,35 @@ type IoniconName = keyof typeof Ionicons.glyphMap;
 export default function Profile() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const isFocused = useIsFocused();
+  const [refreshing, setRefreshing] = useState(false);
+  const setUser = useAuthStore((state) => state.setUser);
+
+  const { refetch: refetchUser } = useCurrentUser({
+    queryConfig: {
+      subscribed: isFocused,
+    },
+  });
+
+  const { refetch: refetchHeatmap } = useActivityHeatmap({
+    weeks: 16,
+    queryConfig: {
+      subscribed: isFocused,
+    },
+  });
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      const userRes = await refetchUser();
+      if (userRes.data) {
+        setUser(userRes.data);
+      }
+      await refetchHeatmap();
+    } finally {
+      setRefreshing(false);
+    }
+  }, [refetchUser, refetchHeatmap, setUser]);
 
   const accountItems: {
     id: string;
@@ -66,6 +99,14 @@ export default function Profile() {
       <ScrollView
         className="flex-1 px-4 pt-2"
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor="#18181b"
+            colors={["#18181b"]}
+          />
+        }
       >
         {/* 1. Header */}
         <ScreenHeader

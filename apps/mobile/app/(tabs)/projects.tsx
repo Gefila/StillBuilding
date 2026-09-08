@@ -1,10 +1,15 @@
-import React from "react";
-import { ScrollView, View, ActivityIndicator, Text } from "react-native";
+import React, { useCallback, useState } from "react";
+import {
+  ActivityIndicator,
+  RefreshControl,
+  ScrollView,
+  Text,
+  View,
+} from "react-native";
 import { useRouter } from "expo-router";
 import { useIsFocused } from "@react-navigation/native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useGetProjects } from "@/features/project/hooks/useProject";
-import { useGetPomodoros } from "@/features/pomodoro/hooks/usePomodoro";
 import { ScreenHeader } from "@/components/ScreenHeader";
 import { Button } from "@/components/Button";
 import ProjectsStats from "@/features/project/components/ProjectsStats";
@@ -15,12 +20,22 @@ export default function Projects() {
   const isFocused = useIsFocused();
   const router = useRouter();
   const insets = useSafeAreaInsets();
+  const [refreshing, setRefreshing] = useState(false);
 
   const projectsQuery = useGetProjects({
     queryConfig: {
       subscribed: isFocused,
     },
   });
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await projectsQuery.refetch();
+    } finally {
+      setRefreshing(false);
+    }
+  }, [projectsQuery]);
 
   return (
     <View
@@ -30,6 +45,14 @@ export default function Projects() {
       <ScrollView
         className="flex-1 px-4 pt-2"
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor="#18181b"
+            colors={["#18181b"]}
+          />
+        }
       >
         {/* 1. Standard Screen Header */}
         <ScreenHeader

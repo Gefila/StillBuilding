@@ -1,5 +1,11 @@
-import React, { useState } from "react";
-import { ScrollView, Text, View, ActivityIndicator } from "react-native";
+import React, { useCallback, useState } from "react";
+import {
+  ActivityIndicator,
+  RefreshControl,
+  ScrollView,
+  Text,
+  View,
+} from "react-native";
 import { useLocalSearchParams, useRouter } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useGetProjectById } from "@/features/project/hooks/useProject";
@@ -15,13 +21,27 @@ export default function ProjectDetail() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const [activeTab, setActiveTab] = useState("tasks");
+  const [refreshing, setRefreshing] = useState(false);
 
-  const { data: projectData, isLoading } = useGetProjectById({
+  const {
+    data: projectData,
+    isLoading,
+    refetch,
+  } = useGetProjectById({
     id: id as string,
     queryConfig: {
       enabled: !!id,
     },
   });
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await refetch();
+    } finally {
+      setRefreshing(false);
+    }
+  }, [refetch]);
 
   if (isLoading) {
     return (
@@ -42,6 +62,14 @@ export default function ProjectDetail() {
       <ScrollView
         className="flex-1 px-4 pt-2"
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor="#18181b"
+            colors={["#18181b"]}
+          />
+        }
       >
         {/* 1. Header with back and edit action */}
         <ScreenHeader

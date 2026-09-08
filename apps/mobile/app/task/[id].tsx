@@ -1,7 +1,8 @@
-import React from "react";
+import React, { useCallback, useState } from "react";
 import {
   ActivityIndicator,
   Alert,
+  RefreshControl,
   ScrollView,
   Text,
   TouchableOpacity,
@@ -27,6 +28,7 @@ export default function TaskDetail() {
   const router = useRouter();
   const insets = useSafeAreaInsets();
   const { id } = useLocalSearchParams();
+  const [refreshing, setRefreshing] = useState(false);
 
   const taskQuery = useGetTaskById({
     id: id as string,
@@ -40,6 +42,15 @@ export default function TaskDetail() {
   const setActiveTaskMutation = useSetActiveTask();
 
   const task = taskQuery.data;
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await taskQuery.refetch();
+    } finally {
+      setRefreshing(false);
+    }
+  }, [taskQuery]);
 
   if (taskQuery.isLoading || !task) {
     return (
@@ -158,6 +169,14 @@ export default function TaskDetail() {
       <ScrollView
         className="flex-1 px-4 pt-1"
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor="#18181b"
+            colors={["#18181b"]}
+          />
+        }
       >
         {/* 1. Hero Card (Interactive Checkbox, Title, Status Selector, Metadata) */}
         <TaskHeaderHero

@@ -1,5 +1,12 @@
-import React, { useEffect, useRef, useState } from "react";
-import { Alert, ScrollView, Text, TouchableOpacity, View } from "react-native";
+import React, { useCallback, useEffect, useRef, useState } from "react";
+import {
+  Alert,
+  RefreshControl,
+  ScrollView,
+  Text,
+  TouchableOpacity,
+  View,
+} from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import { useIsFocused } from "@react-navigation/native";
@@ -20,17 +27,27 @@ export default function FocusTab() {
   const isFocused = useIsFocused();
   const insets = useSafeAreaInsets();
   const [taskPickerVisible, setTaskPickerVisible] = useState(false);
+  const [refreshing, setRefreshing] = useState(false);
   const hasInitializedFromDb = useRef(false);
 
   const { activeTask, setActiveTask, isActive, isPaused, pauseTimer } =
     usePomodoroStore();
   const setActiveTaskMutation = useSetActiveTask();
   const updateTaskMutation = useUpdateTask();
-  const { data: allTasks } = useGetTasks({
+  const { data: allTasks, refetch: refetchTasks } = useGetTasks({
     queryConfig: {
       subscribed: isFocused,
     },
   });
+
+  const onRefresh = useCallback(async () => {
+    setRefreshing(true);
+    try {
+      await refetchTasks();
+    } finally {
+      setRefreshing(false);
+    }
+  }, [refetchTasks]);
 
   // Default target focus to task with status "Active" once on initial load (if none is active in store)
   useEffect(() => {
@@ -147,6 +164,15 @@ export default function FocusTab() {
       <ScrollView
         className="flex-1 px-4 pt-2"
         showsVerticalScrollIndicator={false}
+        refreshControl={
+          <RefreshControl
+            refreshing={refreshing}
+            onRefresh={onRefresh}
+            tintColor="#18181b"
+            colors={["#18181b"]}
+            enabled={!isActive}
+          />
+        }
       >
         {/* 1. Header */}
         <ScreenHeader
