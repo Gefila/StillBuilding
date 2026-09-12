@@ -142,21 +142,21 @@ export default function ProjectBlockers({
               key={f.key}
               onPress={() => setFilter(f.key)}
               activeOpacity={0.8}
-              className={`flex-1 flex-row items-center justify-center py-1.5 rounded-lg border ${
+              className={`will-change-variable flex-1 flex-row items-center justify-center py-1.5 rounded-lg border ${
                 isActive
                   ? "bg-surface shadow-xs border-border/80"
                   : "bg-transparent border-transparent"
               }`}
             >
               <Text
-                className={`text-xs font-semibold ${
+                className={`will-change-variable text-xs font-semibold ${
                   isActive ? "text-foreground font-bold" : "text-muted"
                 }`}
               >
                 {f.label}
               </Text>
               <Text
-                className={`text-[10px] ml-1.5 px-1.5 py-0.2 rounded-full ${
+                className={`will-change-variable text-[10px] ml-1.5 px-1.5 py-0.2 rounded-full ${
                   isActive
                     ? "bg-surface-subtle text-foreground font-bold border border-border"
                     : "bg-surface/50 text-muted"
