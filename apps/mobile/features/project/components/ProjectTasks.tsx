@@ -16,8 +16,8 @@ export default function ProjectTasks({
       <Tasks
         tasks={tasks}
         title="Daftar Tugas Proyek"
-        projectName={project.name}
         projectId={project.id}
+        showProject={false}
       />
     </View>
   );

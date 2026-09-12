@@ -39,9 +39,11 @@ const getPriorityStyle = (priority?: Priority): PriorityStyle =>
 function TaskItemComponent({
   task,
   projectName,
+  showProject = true,
 }: {
   task: Task;
   projectName?: string;
+  showProject?: boolean;
 }) {
   const router = useRouter();
   const updateTaskMutation = useUpdateTask();
@@ -136,28 +138,29 @@ function TaskItemComponent({
 
         {/* Row 2: Project Badge (left) & Date Info (right) */}
         <View className="flex-row items-center justify-between gap-2 mt-1.5">
-          {currentProjectName ? (
-            <View className="flex-row items-center bg-surface-subtle px-2 py-0.5 rounded-full border border-border max-w-[58%]">
-              <Ionicons name="folder-outline" size={10} color="#71717a" />
-              <Text
-                className="text-[10px] font-semibold text-foreground ml-1"
-                numberOfLines={1}
-                ellipsizeMode="tail"
-              >
-                {currentProjectName}
-              </Text>
-            </View>
-          ) : (
-            <View className="flex-row items-center bg-surface-subtle px-2 py-0.5 rounded-full border border-border max-w-[58%]">
-              <Ionicons name="person-outline" size={10} color="#71717a" />
-              <Text
-                className="text-[10px] font-semibold text-muted ml-1"
-                numberOfLines={1}
-              >
-                Personal
-              </Text>
-            </View>
-          )}
+          {showProject &&
+            (currentProjectName ? (
+              <View className="flex-row items-center bg-surface-subtle px-2 py-0.5 rounded-full border border-border max-w-[58%]">
+                <Ionicons name="folder-outline" size={10} color="#71717a" />
+                <Text
+                  className="text-[10px] font-semibold text-foreground ml-1"
+                  numberOfLines={1}
+                  ellipsizeMode="tail"
+                >
+                  {currentProjectName}
+                </Text>
+              </View>
+            ) : (
+              <View className="flex-row items-center bg-surface-subtle px-2 py-0.5 rounded-full border border-border max-w-[58%]">
+                <Ionicons name="person-outline" size={10} color="#71717a" />
+                <Text
+                  className="text-[10px] font-semibold text-muted ml-1"
+                  numberOfLines={1}
+                >
+                  Personal
+                </Text>
+              </View>
+            ))}
 
           <View className="flex-row items-center shrink-0">
             <Ionicons name="time-outline" size={11} color="#a1a1aa" />
@@ -179,5 +182,6 @@ export const TaskItem = React.memo(
     prev.task.title === next.task.title &&
     prev.task.priority === next.task.priority &&
     prev.task.created_at === next.task.created_at &&
-    prev.projectName === next.projectName,
+    prev.projectName === next.projectName &&
+    prev.showProject === next.showProject,
 );

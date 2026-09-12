@@ -12,11 +12,13 @@ function TasksComponent({
   title = "Daftar Tugas",
   projectName,
   projectId,
+  showProject = !projectId,
 }: {
   tasks: Task[];
   title?: string;
   projectName?: string;
   projectId?: string;
+  showProject?: boolean;
 }) {
   const router = useRouter();
   const [activeFilter, setActiveFilter] = useState<FilterType>("all");
@@ -128,7 +130,12 @@ function TasksComponent({
       {/* Task Items List / Empty State */}
       {filteredTasks.length > 0 ? (
         filteredTasks.map((task) => (
-          <TaskItem key={task.id} task={task} projectName={projectName} />
+          <TaskItem
+            key={task.id}
+            task={task}
+            projectName={projectName}
+            showProject={showProject}
+          />
         ))
       ) : (
         <View className="bg-surface p-6 rounded-2xl border border-dashed border-border items-center justify-center my-2">
