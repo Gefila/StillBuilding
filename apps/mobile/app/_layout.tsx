@@ -9,17 +9,12 @@ import { SafeAreaProvider } from "react-native-safe-area-context";
 import { AppToast } from "@/components/Toast";
 import { useAuthStore } from "@/features/auth/store/useAuthStore";
 
+import * as SplashScreen from "expo-splash-screen";
+
+SplashScreen.preventAutoHideAsync().catch(() => {});
+
 function RootNavigator() {
   const isAuthenticated = useAuthStore((state) => state.isAuthenticated);
-  const isInitialized = useAuthStore((state) => state.isInitialized);
-
-  if (!isInitialized) {
-    return (
-      <View className="flex-1 bg-background items-center justify-center">
-        <ActivityIndicator size="large" color="#18181b" />
-      </View>
-    );
-  }
 
   return (
     <Stack screenOptions={{ headerShown: false }}>
@@ -58,10 +53,21 @@ function RootNavigator() {
 
 export default function RootLayout() {
   const initializeAuth = useAuthStore((state) => state.initializeAuth);
+  const isInitialized = useAuthStore((state) => state.isInitialized);
 
   useEffect(() => {
     initializeAuth();
   }, [initializeAuth]);
+
+  useEffect(() => {
+    if (isInitialized) {
+      SplashScreen.hideAsync().catch(() => {});
+    }
+  }, [isInitialized]);
+
+  if (!isInitialized) {
+    return null;
+  }
 
   return (
     <SafeAreaProvider>

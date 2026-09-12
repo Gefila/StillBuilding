@@ -1,8 +1,7 @@
 import React from "react";
 import { Ionicons } from "@expo/vector-icons";
 import { Image, Text, TouchableOpacity, View } from "react-native";
-import { useRouter } from "expo-router";
-import { useIsFocused } from "@react-navigation/native";
+import { useRouter, useIsFocused } from "expo-router";
 import { useAuthStore } from "@/features/auth/store/useAuthStore";
 import { useCurrentUser } from "@/features/auth/hooks/useAuth";
 import { getStreakInfo } from "@/utils/streakHelpers";

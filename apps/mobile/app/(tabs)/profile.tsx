@@ -1,7 +1,6 @@
 import React, { useCallback, useState } from "react";
 import { RefreshControl, ScrollView, View } from "react-native";
-import { useRouter } from "expo-router";
-import { useIsFocused } from "@react-navigation/native";
+import { useRouter, useIsFocused } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { ScreenHeader } from "@/components/ScreenHeader";
 import LogoutButton from "@/components/profile/LogoutButton";

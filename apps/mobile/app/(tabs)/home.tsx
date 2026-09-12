@@ -8,8 +8,7 @@ import {
   View,
 } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
-import { useRouter } from "expo-router";
-import { useIsFocused } from "@react-navigation/native";
+import { useRouter, useIsFocused } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useGetTasks } from "@/features/task/hooks/useTask";
 import { useGetTodayPomodoroStats } from "@/features/pomodoro/hooks/usePomodoro";

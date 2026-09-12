@@ -6,8 +6,7 @@ import {
   Text,
   View,
 } from "react-native";
-import { useRouter } from "expo-router";
-import { useIsFocused } from "@react-navigation/native";
+import { useRouter, useIsFocused } from "expo-router";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { useGetProjects } from "@/features/project/hooks/useProject";
 import { ScreenHeader } from "@/components/ScreenHeader";
