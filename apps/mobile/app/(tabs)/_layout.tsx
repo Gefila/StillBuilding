@@ -1,4 +1,5 @@
 import React from "react";
+import { PlatformPressable } from "expo-router/react-navigation";
 import { Tabs } from "expo-router";
 import { Ionicons } from "@expo/vector-icons";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
@@ -10,6 +11,9 @@ export default function TabLayout() {
     <Tabs
       screenOptions={{
         headerShown: false,
+        tabBarButton: (props) => (
+          <PlatformPressable {...props} pressColor="transparent" />
+        ),
         tabBarActiveTintColor: "#18181b",
         tabBarInactiveTintColor: "#a1a1aa",
         tabBarStyle: {

@@ -1,6 +1,6 @@
 import "../global.css";
 import React, { useEffect } from "react";
-import { ActivityIndicator, View } from "react-native";
+import { ActivityIndicator, LogBox, View } from "react-native";
 import { queryClient } from "@/lib/reactQuery";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Stack } from "expo-router";
@@ -10,6 +10,8 @@ import { AppToast } from "@/components/Toast";
 import { useAuthStore } from "@/features/auth/store/useAuthStore";
 
 import * as SplashScreen from "expo-splash-screen";
+
+LogBox.ignoreLogs(["InteractionManager has been deprecated"]);
 
 SplashScreen.preventAutoHideAsync().catch(() => {});
 
