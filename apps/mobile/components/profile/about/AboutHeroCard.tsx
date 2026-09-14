@@ -1,8 +1,18 @@
 import React from "react";
-import { Text, View } from "react-native";
+import { Platform, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import Constants from "expo-constants";
 
 export function AboutHeroCard() {
+  const version = Constants.expoConfig?.version || "1.0.0";
+  const buildNumber =
+    Platform.select({
+      ios: Constants.expoConfig?.ios?.buildNumber,
+      android: Constants.expoConfig?.android?.versionCode?.toString(),
+    }) ||
+    Constants.nativeBuildVersion ||
+    "1";
+
   return (
     <View className="mb-6 bg-surface border border-border rounded-2xl p-6 items-center shadow-xs">
       {/* Brand Icon */}
@@ -19,7 +29,7 @@ export function AboutHeroCard() {
       <View className="flex-row items-center mt-1.5 mb-3 bg-surface-subtle px-3 py-1 rounded-full border border-border">
         <View className="w-1.5 h-1.5 rounded-full bg-emerald-500 mr-2" />
         <Text className="text-xs font-semibold text-muted">
-          Versi 1.0.0 (Build 42) • Production
+          Versi {version} (Build {buildNumber}) • Production
         </Text>
       </View>
 

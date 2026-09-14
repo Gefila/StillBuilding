@@ -6,6 +6,8 @@ import axios, {
   create,
   isAxiosError,
 } from "axios";
+import Constants from "expo-constants";
+import { Platform } from "react-native";
 import { Toast } from "toastify-react-native";
 
 interface CustomAxiosRequestConfig extends InternalAxiosRequestConfig {
@@ -78,6 +80,10 @@ api.interceptors.request.use(async (config) => {
   if (token) {
     config.headers.Authorization = `Bearer ${token}`;
   }
+
+  config.headers["x-app-version"] = Constants.expoConfig?.version || "1.0.0";
+  config.headers["x-platform"] = Platform.OS;
+
   try {
     config.headers["x-timezone"] =
       Intl.DateTimeFormat().resolvedOptions().timeZone || "Asia/Jakarta";

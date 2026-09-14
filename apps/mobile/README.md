@@ -13,6 +13,7 @@ Untuk memastikan pengembangan tetap konsisten, terstruktur, dan mudah dipahami, 
 - 🔄 **[STATE_MANAGEMENT.md](./STATE_MANAGEMENT.md)**: Panduan manajemen server state (TanStack Query v5), client state (Zustand v5), serta integrasi API Axios dan Supabase Auth.
 - 🎨 **[DESIGN_SYSTEM.md](./DESIGN_SYSTEM.md)**: Standar styling NativeWind (Tailwind CSS), token warna semantik (`global.css`), tipografi, dan komponen UI atomik reusable.
 - 🧭 **[ROUTING.md](./ROUTING.md)**: Arsitektur navigasi berbasis berkas (_file-based routing_) Expo Router, hierarki stack/tab, route params, dan modal screens.
+- 🏷️ **[VERSIONING.md](./VERSIONING.md)**: Standar penomoran rilis SemVer, auto-increment EAS Build, prinsip backward-compatibility API, dan checklist rilis.
 
 ---
 

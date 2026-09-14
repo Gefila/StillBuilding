@@ -233,3 +233,29 @@ _Menyimpan dokumentasi dan detail kontekstual._
 - Integrasi Git Commit Hook (opsional untuk auto-complete micro-task).
 - Audio ambient focus (White noise / Rain sound) saat Pomodoro aktif.
 - Tab Catatan Proyek Khusus (Tabel `project_notes` mandiri + Export Markdown).
+
+---
+
+## 7. Kebijakan Versioning, Rilis, & Backward Compatibility
+
+_Memastikan kesinambungan pengalaman pengguna di aplikasi mobile tanpa terganggu oleh pembaruan sistem._
+
+### 7.1. Dua Lapisan Versi (Two-Tier Versioning)
+
+1. **Public Semantic Versioning (`MAJOR.MINOR.PATCH`)**:
+   - Dikonfigurasi di `apps/mobile/app.json` (`"version"`).
+   - **PATCH (`x.x.+1`)**: Perbaikan bug, pembenahan styling, dan hotfix tanpa penambahan fitur baru.
+   - **MINOR (`x.+1.0`)**: Penambahan fitur baru yang terlihat pengguna dan kompatibel ke belakang.
+   - **MAJOR (`+1.0.0`)**: Perombakan arsitektur besar, redesign menyeluruh, atau perubahan data/akun inti.
+   - Ditampilkan secara dinamis di UI pada halaman Profil > Tentang Aplikasi via `Constants.expoConfig?.version`.
+2. **Binary Build Identifier (`versionCode` & `buildNumber`)**:
+   - Dikelola secara otomatis oleh EAS Build via konfigurasi `"appVersionSource": "remote"` dan `"autoIncrement": true` di `apps/mobile/eas.json`.
+   - Menjamin nomor build unik yang strictly-increasing untuk Google Play Console dan App Store Connect pada setiap rilis produksi.
+
+### 7.2. Prinsip Kompatibilitas Backend (Backward-Compatibility First)
+
+- **Menghindari Force-Update Agresif**: Pengguna mobile tidak dipaksa memperbarui aplikasi seketika. Sistem backend dirancang untuk tetap melayani klien versi lawas.
+- **Perubahan Bersifat Aditif (Additive-Only Changes)**: Penambahan fitur di respons JSON backend tidak boleh menghapus atau mengubah tipe properti yang sudah ada.
+- **Nilai Default Skema Input (Zod)**: Semua kolom/properti baru pada endpoint mutasi (`POST`/`PUT`) di `packages/types` wajib bersifat opsional atau memiliki nilai default.
+- **Client Identity Tracking**: Aplikasi mobile mengirimkan header `x-app-version` dan `x-platform` pada setiap panggilan API via Axios interceptor, memungkinkan audit log dan analisis distribusi versi klien yang masih aktif di lapangan.
+- **Panduan Teknis Lengkap**: Rincian alur rilis, checklist rilis, dan contoh implementasi terdokumentasi di [`apps/mobile/VERSIONING.md`](./apps/mobile/VERSIONING.md).
