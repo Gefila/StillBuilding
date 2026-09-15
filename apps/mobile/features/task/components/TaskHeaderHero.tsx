@@ -213,10 +213,11 @@ export default function TaskHeaderHero({
         )}
 
         {/* Dates */}
-        <View className="flex-row items-center gap-3">
+        <View className="flex-col items-start gap-1">
           <View className="flex-row items-center">
             <Ionicons name="calendar-outline" size={12} color="#a1a1aa" />
             <Text className="text-[11px] text-muted font-medium ml-1">
+              {isDone ? "Dibuat: " : ""}
               {formatDateID(task.created_at)}
             </Text>
           </View>
@@ -243,7 +244,7 @@ export default function TaskHeaderHero({
         animationInTiming={250}
         animationOutTiming={200}
         useNativeDriver={true}
-        hideModalContentWhileAnimating={true}
+        useNativeDriverForBackdrop={true}
         backdropTransitionOutTiming={1}
         style={{ margin: 20, justifyContent: "center", alignItems: "center" }}
       >
