@@ -33,3 +33,4 @@ Detailed conventions are in [`.agents/rules/`](.agents/rules/):
 - [Mobile Architecture](.agents/rules/mobile-architecture.md) — directory layout, styling conventions
 - [Mobile UI Patterns](.agents/rules/mobile-ui-patterns.md) — `react-native-modal` quirks, animation gotchas
 - [State Management](.agents/rules/state-management.md) — TanStack Query hooks, Zustand stores, Pomodoro state
+- [Ponytail](.agents/rules/ponytail.md) — lazy senior dev mode, minimal code & YAGNI
