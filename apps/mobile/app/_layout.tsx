@@ -1,12 +1,13 @@
 import "../global.css";
 import React, { useEffect } from "react";
-import { ActivityIndicator, LogBox, View } from "react-native";
+import { LogBox } from "react-native";
 import { queryClient } from "@/lib/reactQuery";
 import { QueryClientProvider } from "@tanstack/react-query";
 import { Stack } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { AppToast } from "@/components/Toast";
+import { StreakCelebrationModal } from "@/components/tasks/StreakCelebrationModal";
 import { useAuthStore } from "@/features/auth/store/useAuthStore";
 
 import * as SplashScreen from "expo-splash-screen";
@@ -76,6 +77,7 @@ export default function RootLayout() {
       <StatusBar style="dark" />
       <QueryClientProvider client={queryClient}>
         <RootNavigator />
+        <StreakCelebrationModal />
         <AppToast />
       </QueryClientProvider>
     </SafeAreaProvider>

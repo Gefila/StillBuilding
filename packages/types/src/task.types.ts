@@ -23,6 +23,13 @@ export const updateTaskSchema = z.object({
 export type CreateTaskDTO = z.infer<typeof createTaskSchema>;
 export type UpdateTaskDTO = z.infer<typeof updateTaskSchema>;
 
+export interface StreakUpdateResult {
+  streakIncreased: boolean;
+  currentStreak: number;
+  longestStreak: number;
+  isNewRecord: boolean;
+}
+
 export interface Task {
   id: string;
   project_id: string;
@@ -35,4 +42,5 @@ export interface Task {
   updated_at?: string;
   project?: Project;
   pomodoro_sessions?: PomodoroSession[];
+  streak_update?: StreakUpdateResult | null;
 }

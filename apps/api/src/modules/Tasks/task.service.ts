@@ -5,14 +5,19 @@ import {
   getYesterdayLocalDateString,
 } from "../../utils/date.utils";
 import { sortTasks } from "../../utils/taskSorter";
-import type { CreateTaskDTO, Task, UpdateTaskDTO } from "./task.types";
+import type {
+  CreateTaskDTO,
+  StreakUpdateResult,
+  Task,
+  UpdateTaskDTO,
+} from "./task.types";
 
 const TABLE = "tasks";
 
 async function evaluateUserStreak(
   userId: string,
   timeZone = "Asia/Jakarta",
-): Promise<void> {
+): Promise<StreakUpdateResult | null> {
   try {
     const todayStr = getLocalDateString(timeZone, new Date());
     const yesterdayStr = getYesterdayLocalDateString(timeZone, new Date());
@@ -24,7 +29,7 @@ async function evaluateUserStreak(
       .single();
 
     if (profileError || !profile) {
-      return;
+      return null;
     }
 
     const lastStreakDate = profile.last_streak_date as string | null;
@@ -33,7 +38,12 @@ async function evaluateUserStreak(
 
     // Case 1: Already recorded today -> no-op
     if (lastStreakDate === todayStr) {
-      return;
+      return {
+        streakIncreased: false,
+        currentStreak,
+        longestStreak,
+        isNewRecord: false,
+      };
     }
 
     // Case 2: Consecutive streak from yesterday
@@ -44,6 +54,7 @@ async function evaluateUserStreak(
       currentStreak = 1;
     }
 
+    const isNewRecord = currentStreak > longestStreak;
     longestStreak = Math.max(longestStreak, currentStreak);
 
     await supabase
@@ -54,8 +65,16 @@ async function evaluateUserStreak(
         last_streak_date: todayStr,
       })
       .eq("id", userId);
+
+    return {
+      streakIncreased: true,
+      currentStreak,
+      longestStreak,
+      isNewRecord,
+    };
   } catch (err) {
     console.error("Failed to evaluate user streak:", err);
+    return null;
   }
 }
 
@@ -162,11 +181,15 @@ export const taskService = {
       throw new AppError(`Failed to create task: ${error.message}`, 500);
     }
 
+    let streakUpdate: StreakUpdateResult | null = null;
     if (task.status === "Done") {
-      await evaluateUserStreak(userId, timeZone);
+      streakUpdate = await evaluateUserStreak(userId, timeZone);
     }
 
-    return data as Task;
+    return {
+      ...(data as Task),
+      streak_update: streakUpdate,
+    };
   },
 
   async update(
@@ -233,12 +256,16 @@ export const taskService = {
       throw new AppError(`Task with id ${id} not found`, 404);
     }
 
+    let streakUpdate: StreakUpdateResult | null = null;
     // 4. Evaluasi streak harian jika status diubah menjadi "Done"
     if (task.status === "Done") {
-      await evaluateUserStreak(userId, timeZone);
+      streakUpdate = await evaluateUserStreak(userId, timeZone);
     }
 
-    return data as Task;
+    return {
+      ...(data as Task),
+      streak_update: streakUpdate,
+    };
   },
 
   async delete(id: string, userId: string): Promise<Task> {

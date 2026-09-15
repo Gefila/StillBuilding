@@ -10,6 +10,8 @@ import { authKeys } from "@/features/auth/hooks/useAuth";
 import { statsKeys } from "@/features/stats/hooks/statsKeys";
 import { getTaskByIdQueryKey, getTaskQueryKey } from "./taskKeys";
 import type { Project } from "@/features/project/types/project.types";
+import * as Haptics from "expo-haptics";
+import { useStreakCelebrationStore } from "../stores/useStreakCelebrationStore";
 
 export * from "./taskKeys";
 
@@ -307,6 +309,16 @@ export const useUpdateTask = ({
         });
       }
 
+      // 7. Check if streak increased and show celebration modal
+      if (data?.streak_update?.streakIncreased) {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        useStreakCelebrationStore.getState().showCelebration({
+          currentStreak: data.streak_update.currentStreak,
+          longestStreak: data.streak_update.longestStreak,
+          isNewRecord: data.streak_update.isNewRecord,
+        });
+      }
+
       mutationConfig.onSuccess?.(data, variables, onMutateResult, context);
     },
   });
@@ -370,6 +382,16 @@ export const useCreateTask = ({
         });
         queryClient.invalidateQueries({
           queryKey: statsKeys.all,
+        });
+      }
+
+      // Check if streak increased and show celebration modal
+      if (data?.streak_update?.streakIncreased) {
+        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        useStreakCelebrationStore.getState().showCelebration({
+          currentStreak: data.streak_update.currentStreak,
+          longestStreak: data.streak_update.longestStreak,
+          isNewRecord: data.streak_update.isNewRecord,
         });
       }
 
