@@ -9,7 +9,12 @@ export interface StreakCelebrationInfo {
 interface StreakCelebrationState {
   isVisible: boolean;
   streakInfo: StreakCelebrationInfo | null;
-  showCelebration: (info: StreakCelebrationInfo) => void;
+  onDismissCallback: (() => void) | null;
+  showCelebration: (
+    info: StreakCelebrationInfo,
+    onDismiss?: (() => void) | null,
+  ) => void;
+  setOnDismissCallback: (callback: (() => void) | null) => void;
   closeCelebration: () => void;
 }
 
@@ -17,10 +22,16 @@ export const useStreakCelebrationStore = create<StreakCelebrationState>(
   (set) => ({
     isVisible: false,
     streakInfo: null,
-    showCelebration: (info) =>
+    onDismissCallback: null,
+    showCelebration: (info, onDismiss = null) =>
       set({
         isVisible: true,
         streakInfo: info,
+        onDismissCallback: onDismiss,
+      }),
+    setOnDismissCallback: (callback) =>
+      set({
+        onDismissCallback: callback,
       }),
     closeCelebration: () =>
       set({

@@ -21,6 +21,7 @@ import {
 } from "../store/usePomodoroStore";
 import { useCreatePomodoro } from "../hooks/usePomodoro";
 import { useUpdateTask } from "@/features/task/hooks/useTask";
+import { useStreakCelebrationStore } from "@/features/task/stores/useStreakCelebrationStore";
 import QuickBlockerModal from "./QuickBlockerModal";
 
 const TABS: { key: PomodoroMode; label: string }[] = [
@@ -489,18 +490,33 @@ export default function PomodoroTimer({
                       Haptics.notificationAsync(
                         Haptics.NotificationFeedbackType.Success,
                       );
-                      updateTaskMutation.mutate({
-                        id: taskId,
-                        data: {
-                          status: "Done",
-                          completed_at: new Date().toISOString(),
+                      updateTaskMutation.mutate(
+                        {
+                          id: taskId,
+                          data: {
+                            status: "Done",
+                            completed_at: new Date().toISOString(),
+                          },
                         },
-                      });
+                        {
+                          onSuccess: (data) => {
+                            if (data?.streak_update?.streakIncreased) {
+                              useStreakCelebrationStore
+                                .getState()
+                                .setOnDismissCallback(() => {
+                                  onRequestOpenTaskPicker?.();
+                                });
+                            } else {
+                              onRequestOpenTaskPicker?.();
+                            }
+                          },
+                          onError: () => {
+                            onRequestOpenTaskPicker?.();
+                          },
+                        },
+                      );
                       setActiveTask(null);
                     }
-                    pendingActionOnModalHideRef.current = () => {
-                      onRequestOpenTaskPicker?.();
-                    };
                     setCompletionModalVisible(false);
                   }}
                   activeOpacity={0.8}

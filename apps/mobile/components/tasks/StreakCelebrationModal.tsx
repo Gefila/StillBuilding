@@ -26,6 +26,13 @@ export const StreakCelebrationModal: React.FC = () => {
     return `Momentum tak terhentikan! ${currentStreak} hari beruntun membuktikan dedikasi dan kerja kerasmu.`;
   }, [currentStreak]);
 
+  const onDismissCallback = useStreakCelebrationStore(
+    (state) => state.onDismissCallback,
+  );
+  const setOnDismissCallback = useStreakCelebrationStore(
+    (state) => state.setOnDismissCallback,
+  );
+
   const handleClose = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     closeCelebration();
@@ -40,6 +47,13 @@ export const StreakCelebrationModal: React.FC = () => {
       isVisible={isVisible}
       onBackdropPress={handleClose}
       onBackButtonPress={handleClose}
+      onModalHide={() => {
+        if (onDismissCallback) {
+          const cb = onDismissCallback;
+          setOnDismissCallback(null);
+          cb();
+        }
+      }}
       backdropOpacity={0.65}
       backdropColor="#000000"
       animationIn="zoomIn"

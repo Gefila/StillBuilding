@@ -21,6 +21,7 @@ import { Button } from "@/components/Button";
 import PomodoroTimer from "@/features/pomodoro/components/PomodoroTimer";
 import TaskPickerModal from "@/features/pomodoro/components/TaskPickerModal";
 import { usePomodoroStore } from "@/features/pomodoro/store/usePomodoroStore";
+import { useStreakCelebrationStore } from "@/features/task/stores/useStreakCelebrationStore";
 import type { Task } from "@/features/task/types/task.types";
 
 export default function FocusTab() {
@@ -140,13 +141,20 @@ export default function FocusTab() {
                 },
               },
               {
-                onSuccess: () => {
+                onSuccess: (data) => {
                   Haptics.notificationAsync(
                     Haptics.NotificationFeedbackType.Success,
                   );
                   setActiveTask(null);
-                  // Open task picker so user can pick their next target task
-                  setTaskPickerVisible(true);
+                  if (data?.streak_update?.streakIncreased) {
+                    useStreakCelebrationStore
+                      .getState()
+                      .setOnDismissCallback(() => {
+                        setTaskPickerVisible(true);
+                      });
+                  } else {
+                    setTaskPickerVisible(true);
+                  }
                 },
               },
             );
