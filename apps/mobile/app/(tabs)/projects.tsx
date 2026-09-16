@@ -63,7 +63,7 @@ export default function Projects() {
               size="sm"
               variant="primary"
               iconLeft={<Ionicons name="add" size={16} color="#ffffff" />}
-              onPress={() => router.push("/project/create")}
+              onPress={() => router.navigate("/project/create")}
             />
           }
         />

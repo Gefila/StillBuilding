@@ -84,7 +84,7 @@ export default function ProjectDetail() {
               iconLeft={
                 <Ionicons name="pencil-outline" size={14} color="#18181b" />
               }
-              onPress={() => router.push(`/project/edit?id=${id}`)}
+              onPress={() => router.navigate(`/project/edit?id=${id}`)}
             />
           }
         />

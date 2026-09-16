@@ -81,7 +81,7 @@ export const ProjectSelector = ({
           </View>
           {!hasNoProjects && !projectsQuery.isLoading && (
             <TouchableOpacity
-              onPress={() => router.push("/project/create")}
+              onPress={() => router.navigate("/project/create")}
               activeOpacity={0.7}
               className="flex-row items-center"
             >
@@ -115,7 +115,7 @@ export const ProjectSelector = ({
           </View>
           <TouchableOpacity
             activeOpacity={0.7}
-            onPress={() => router.push("/project/create")}
+            onPress={() => router.navigate("/project/create")}
             className="bg-foreground px-3 py-2 rounded-lg flex-row items-center shadow-xs"
           >
             <Ionicons name="add" size={14} color="#ffffff" />

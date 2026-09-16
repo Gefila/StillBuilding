@@ -81,7 +81,7 @@ function TaskItemComponent({
           ? "border-emerald-300 shadow-2xs"
           : "border-border shadow-xs"
       } ${isDone ? "opacity-60 bg-surface-subtle" : ""}`}
-      onPress={() => router.push(`/task/${task.id}`)}
+      onPress={() => router.navigate(`/task/${task.id}`)}
     >
       {/* Checkbox / Status Toggle */}
       <TouchableOpacity

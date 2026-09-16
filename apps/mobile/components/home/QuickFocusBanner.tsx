@@ -16,7 +16,7 @@ function QuickFocusBannerComponent({ activeTaskTitle }: QuickFocusBannerProps) {
   }
 
   const handlePress = () => {
-    router.push("/(tabs)/focus");
+    router.navigate("/(tabs)/focus");
   };
 
   return (

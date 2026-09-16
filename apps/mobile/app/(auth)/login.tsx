@@ -161,7 +161,7 @@ export default function LoginScreen() {
             <Text className="text-xs text-muted">Belum memiliki akun?</Text>
             <TouchableOpacity
               activeOpacity={0.7}
-              onPress={() => router.push("/(auth)/register" as any)}
+              onPress={() => router.navigate("/(auth)/register" as any)}
             >
               <Text className="text-xs font-bold text-foreground underline">
                 Daftar Sekarang

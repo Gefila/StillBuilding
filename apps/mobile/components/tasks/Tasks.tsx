@@ -60,9 +60,9 @@ function TasksComponent({
 
   const handleCreateTask = () => {
     if (projectId) {
-      router.push(`/task/create?projectId=${projectId}`);
+      router.navigate(`/task/create?projectId=${projectId}`);
     } else {
-      router.push("/task/create");
+      router.navigate("/task/create");
     }
   };
 

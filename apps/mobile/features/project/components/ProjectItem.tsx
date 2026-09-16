@@ -47,7 +47,7 @@ export default function ProjectItem({ project }: { project: Project }) {
   return (
     <TouchableOpacity
       activeOpacity={0.7}
-      onPress={() => router.push(`/project/${project.id}`)}
+      onPress={() => router.navigate(`/project/${project.id}`)}
       className="flex-col bg-surface p-3.5 border border-border rounded-2xl mb-2.5 shadow-2xs"
     >
       <View className="flex-row items-center gap-3">

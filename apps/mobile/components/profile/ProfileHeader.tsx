@@ -62,7 +62,7 @@ export default function ProfileHeader() {
         {/* Compact Edit Profile Button */}
         <TouchableOpacity
           activeOpacity={0.8}
-          onPress={() => router.push("/profile/edit" as any)}
+          onPress={() => router.navigate("/profile/edit" as any)}
           className="px-3 py-1.5 bg-surface-subtle border border-border rounded-xl flex-row items-center gap-1"
         >
           <Ionicons name="create-outline" size={13} color="#18181b" />

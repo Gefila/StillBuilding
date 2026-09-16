@@ -146,7 +146,7 @@ export default function Home() {
       {/* 5. Floating Action Button (FAB) for Create Task */}
       <TouchableOpacity
         activeOpacity={0.85}
-        onPress={() => router.push("/task/create")}
+        onPress={() => router.navigate("/task/create")}
         style={{
           position: "absolute",
           bottom: Math.max(insets.bottom + 16, 24),

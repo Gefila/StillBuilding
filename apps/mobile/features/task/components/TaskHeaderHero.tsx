@@ -181,7 +181,7 @@ export default function TaskHeaderHero({
           <TouchableOpacity
             activeOpacity={0.7}
             onPress={() =>
-              router.push(`/project/${task.project_id || task.project?.id}`)
+              router.navigate(`/project/${task.project_id || task.project?.id}`)
             }
             className="flex-row items-center bg-surface-subtle border border-border px-3 py-1.5 rounded-xl max-w-[65%]"
           >

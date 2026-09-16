@@ -57,13 +57,13 @@ export default function Profile() {
       id: "1",
       title: "Informasi Pribadi",
       icon: "person-outline",
-      onPress: () => router.push("/profile/edit" as any),
+      onPress: () => router.navigate("/profile/edit" as any),
     },
     {
       id: "2",
       title: "Keamanan & Kata Sandi",
       icon: "shield-checkmark-outline",
-      onPress: () => router.push("/profile/security" as any),
+      onPress: () => router.navigate("/profile/security" as any),
     },
     { id: "3", title: "Notifikasi", icon: "notifications-outline" },
   ];
@@ -80,13 +80,13 @@ export default function Profile() {
       id: "6",
       title: "Bantuan & Dukungan",
       icon: "help-circle-outline",
-      onPress: () => router.push("/profile/support" as any),
+      onPress: () => router.navigate("/profile/support" as any),
     },
     {
       id: "7",
       title: "Tentang Aplikasi",
       icon: "information-circle-outline",
-      onPress: () => router.push("/profile/about" as any),
+      onPress: () => router.navigate("/profile/about" as any),
     },
   ];
 

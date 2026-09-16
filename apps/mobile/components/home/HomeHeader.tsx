@@ -58,7 +58,7 @@ function HomeHeaderComponent({
 
         <TouchableOpacity
           activeOpacity={0.8}
-          onPress={() => router.push("/(tabs)/profile")}
+          onPress={() => router.navigate("/(tabs)/profile")}
           className="relative ml-3 self-start mt-1"
         >
           <Image

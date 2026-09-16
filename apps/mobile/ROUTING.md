@@ -178,11 +178,13 @@ export function TaskCard({ id, title }: { id: string; title: string }) {
   const router = useRouter();
 
   const handleOpenDetail = () => {
-    router.push(`/task/${id}`);
+    // navigate: pakai layar yang sudah ada di stack bila ada, cegah layar ganda
+    // saat kartu di-tap dua kali dengan cepat.
+    router.navigate(`/task/${id}`);
   };
 
   const handleOpenEdit = () => {
-    router.push({
+    router.navigate({
       pathname: "/task/edit",
       params: { id },
     });
@@ -226,10 +228,11 @@ export default function TaskDetailScreen() {
 
 ## 6. Metode Navigasi Umum
 
-| Aksi                              | Kode Expo Router                      | Keterangan                                                              |
-| :-------------------------------- | :------------------------------------ | :---------------------------------------------------------------------- |
-| **Pindah Halaman**                | `router.push('/task/123')`            | Menambahkan halaman baru ke history stack.                              |
-| **Ganti Halaman (Replace)**       | `router.replace('/(tabs)/home')`      | Mengganti rute aktif (cocok setelah login/logout agar tidak bisa back). |
-| **Kembali ke Halaman Sebelumnya** | `router.back()`                       | Menutup layar aktif dan kembali ke layar sebelumnya.                    |
-| **Buka Modal Form**               | `router.push('/task/create')`         | Membuka screen dalam mode modal overlay.                                |
-| **Navigasi Deklaratif**           | `<Link href="/pomodoro">Mulai</Link>` | Komponen link bawaan Expo Router untuk interaksi tombol sederhana.      |
+| Aksi                              | Kode Expo Router                      | Keterangan                                                                                                                        |
+| :-------------------------------- | :------------------------------------ | :-------------------------------------------------------------------------------------------------------------------------------- |
+| **Pindah Halaman**                | `router.navigate('/task/123')`        | Default untuk tap/klik: push layar baru **atau** kembali ke layar yang sudah ada di stack (mencegah layar ganda saat double tap). |
+| **Paksa Layar Baru (Stack)**      | `router.push('/task/123')`            | Selalu menambah layar baru ke history stack. Hindari untuk kartu/tombol tap — double tap cepat akan menumpuk dua layar identik.   |
+| **Ganti Halaman (Replace)**       | `router.replace('/(tabs)/home')`      | Mengganti rute aktif (cocok setelah login/logout agar tidak bisa back).                                                           |
+| **Kembali ke Halaman Sebelumnya** | `router.back()`                       | Menutup layar aktif dan kembali ke layar sebelumnya.                                                                              |
+| **Buka Modal Form**               | `router.navigate('/task/create')`     | Membuka screen dalam mode modal overlay (navigate agar modal tidak dobel).                                                        |
+| **Navigasi Deklaratif**           | `<Link href="/pomodoro">Mulai</Link>` | Komponen link bawaan Expo Router untuk interaksi tombol sederhana.                                                                |

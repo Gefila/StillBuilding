@@ -146,7 +146,7 @@ export default function TaskDetail() {
             <View className="flex-row items-center gap-1.5">
               {/* Edit Button */}
               <TouchableOpacity
-                onPress={() => router.push(`/task/edit?id=${task.id}`)}
+                onPress={() => router.navigate(`/task/edit?id=${task.id}`)}
                 hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
                 className="p-2 rounded-xl bg-surface border border-border items-center justify-center"
               >
@@ -200,7 +200,7 @@ export default function TaskDetail() {
               </Text>
             </View>
             <TouchableOpacity
-              onPress={() => router.push(`/task/edit?id=${task.id}`)}
+              onPress={() => router.navigate(`/task/edit?id=${task.id}`)}
               hitSlop={{ top: 6, bottom: 6, left: 6, right: 6 }}
             >
               <Text className="text-xs font-semibold text-primary">
@@ -216,7 +216,7 @@ export default function TaskDetail() {
           ) : (
             <TouchableOpacity
               activeOpacity={0.7}
-              onPress={() => router.push(`/task/edit?id=${task.id}`)}
+              onPress={() => router.navigate(`/task/edit?id=${task.id}`)}
               className="py-3 items-center justify-center border border-dashed border-border rounded-xl bg-surface-subtle"
             >
               <Ionicons name="add-circle-outline" size={18} color="#a1a1aa" />
