@@ -228,11 +228,19 @@ _Menyimpan dokumentasi dan detail kontekstual._
 - [x] Sistem Streak Harian Otomatis (`🔥` Streak Badge & Timezone-aware Calculation).
 - [x] Heatmap Aktivitas & Ritme Produktivitas (GitHub-Style Contribution Graph).
 
-### Versi 1.1 (Next Iteration)
+### Versi 1.1 (Deep Work & Ambient Audio Experience)
 
-- Integrasi Git Commit Hook (opsional untuk auto-complete micro-task).
-- Audio ambient focus (White noise / Rain sound) saat Pomodoro aktif.
-- Tab Catatan Proyek Khusus (Tabel `project_notes` mandiri + Export Markdown).
+- [x] **Background Audio & Playback Session**: Pemutaran looping ambient focus audio offline (Hujan Lembut, White Noise, Kafe Tenang, Ombak Laut) menggunakan `expo-audio` dengan izin background audio di Android & iOS.
+- [x] **Notifikasi Lokal Otomatis di Background**: Penjadwalan notifikasi penyelesaian sesi tepat waktu menggunakan `expo-notifications` saat layar HP mati/terkunci, dengan deep navigation langsung ke modal transisi fokus.
+- [x] **Modal Pemilih Suara & Kontrol Volume**: Antarmuka Bottom Sheet minimalis (`AmbientSoundModal`) untuk pemilihan sound track dan volume slider terintegrasi dengan Pomodoro.
+- [x] **Chime Bell Akhir Sesi**: Suara lonceng lembut (432Hz harmonic bell) otomatis saat sesi fokus 25 menit tuntas.
+- [x] **Transisi Fase Istirahat Otomatis**: Audio ambient otomatis hening saat jeda istirahat (*break*) dimulai untuk memberikan ruang istirahat yang tenang.
+
+### Versi 1.2 (Rencana Pengembangan Selanjutnya)
+
+- Integrasi Git Commit Hook (opsional untuk auto-complete micro-task via terminal).
+- Tab Catatan Proyek Khusus (Tabel `project_notes` mandiri + Export Markdown/Brag Document).
+- AI Smart Task Decomposition (Memecah task kompleks menjadi sub-task semut ≤25 menit).
 
 ---
 

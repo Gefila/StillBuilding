@@ -23,6 +23,10 @@ import { useCreatePomodoro } from "../hooks/usePomodoro";
 import { useUpdateTask } from "@/features/task/hooks/useTask";
 import { useStreakCelebrationStore } from "@/features/task/stores/useStreakCelebrationStore";
 import QuickBlockerModal from "./QuickBlockerModal";
+import AmbientSoundModal from "./AmbientSoundModal";
+import { ambientAudioService } from "../services/ambientAudioService";
+import { pomodoroNotificationService } from "../services/pomodoroNotificationService";
+import { useAmbientAudioStore } from "../store/useAmbientAudioStore";
 
 const TABS: { key: PomodoroMode; label: string }[] = [
   { key: "pomodoro", label: "Fokus" },
@@ -64,10 +68,13 @@ export default function PomodoroTimer({
   } = usePomodoroStore();
 
   const [blockerModalVisible, setBlockerModalVisible] = useState(false);
+  const [ambientModalVisible, setAmbientModalVisible] = useState(false);
   const [completionModalVisible, setCompletionModalVisible] = useState(false);
   const [lastCompletedMode, setLastCompletedMode] =
     useState<PomodoroMode>("pomodoro");
   const pendingActionOnModalHideRef = useRef<(() => void) | null>(null);
+
+  const { soundId, isPlaying } = useAmbientAudioStore();
 
   // Interval & Wall-Clock Countdown management
   useEffect(() => {
@@ -79,6 +86,10 @@ export default function PomodoroTimer({
         if (isFinished) {
           clearInterval(intervalId);
           Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+
+          ambientAudioService.pauseAmbient();
+          pomodoroNotificationService.cancelScheduledNotifications();
+          ambientAudioService.playCompletionChime();
 
           const result = advanceNextMode();
           setLastCompletedMode(result.finishedMode);
@@ -128,6 +139,10 @@ export default function PomodoroTimer({
           if (isFinished) {
             Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
 
+            ambientAudioService.pauseAmbient();
+            pomodoroNotificationService.cancelScheduledNotifications();
+            ambientAudioService.playCompletionChime();
+
             const result = advanceNextMode();
             setLastCompletedMode(result.finishedMode);
             setCompletionModalVisible(true);
@@ -166,17 +181,46 @@ export default function PomodoroTimer({
     createPomodoroMutation,
   ]);
 
-  const handleStart = () => {
+  const handleStart = async (explicitMode?: PomodoroMode) => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    const targetMode = explicitMode || mode;
     startTimer();
+    await pomodoroNotificationService.requestPermissions();
+    if (targetMode === "pomodoro") {
+      await pomodoroNotificationService.scheduleSessionCompleteNotification(
+        time,
+        activeTask?.title,
+      );
+      await ambientAudioService.playAmbient();
+    } else {
+      ambientAudioService.pauseAmbient();
+      await pomodoroNotificationService.scheduleSessionCompleteNotification(
+        time,
+        "Waktu istirahat selesai! Mari kembali ke sesi fokus.",
+      );
+    }
   };
 
-  const handlePauseResume = () => {
+  const handlePauseResume = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     if (isPaused) {
       resumeTimer();
+      if (mode === "pomodoro") {
+        await pomodoroNotificationService.scheduleSessionCompleteNotification(
+          time,
+          activeTask?.title,
+        );
+        await ambientAudioService.playAmbient();
+      } else {
+        await pomodoroNotificationService.scheduleSessionCompleteNotification(
+          time,
+          "Waktu istirahat selesai! Mari kembali ke sesi fokus.",
+        );
+      }
     } else {
       pauseTimer();
+      await pomodoroNotificationService.cancelScheduledNotifications();
+      ambientAudioService.pauseAmbient();
     }
   };
 
@@ -190,7 +234,11 @@ export default function PomodoroTimer({
         {
           text: "Reset Siklus",
           style: "destructive",
-          onPress: () => resetCycle(),
+          onPress: () => {
+            ambientAudioService.stopAmbient();
+            pomodoroNotificationService.cancelScheduledNotifications();
+            resetCycle();
+          },
         },
       ],
     );
@@ -203,7 +251,15 @@ export default function PomodoroTimer({
       "Apakah Anda yakin ingin mengatur ulang waktu sesi ini?",
       [
         { text: "Batal", style: "cancel" },
-        { text: "Reset", style: "destructive", onPress: () => stopTimer() },
+        {
+          text: "Reset",
+          style: "destructive",
+          onPress: () => {
+            ambientAudioService.stopAmbient();
+            pomodoroNotificationService.cancelScheduledNotifications();
+            stopTimer();
+          },
+        },
       ],
     );
   };
@@ -222,6 +278,8 @@ export default function PomodoroTimer({
           text: "Lewati",
           style: "default",
           onPress: () => {
+            ambientAudioService.pauseAmbient();
+            pomodoroNotificationService.cancelScheduledNotifications();
             advanceNextMode();
           },
         },
@@ -233,6 +291,8 @@ export default function PomodoroTimer({
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     if (isActive && !isPaused) {
       pauseTimer();
+      pomodoroNotificationService.cancelScheduledNotifications();
+      ambientAudioService.pauseAmbient();
     }
     setBlockerModalVisible(true);
   };
@@ -282,6 +342,16 @@ export default function PomodoroTimer({
             );
           })}
         </View>
+
+        {/* Ambient Audio Selector Button (100% Identical with Reset Button) */}
+        <TouchableOpacity
+          onPress={() => setAmbientModalVisible(true)}
+          activeOpacity={0.7}
+          accessibilityLabel="Pilih Audio Latar"
+          className="absolute left-0 p-2 rounded-xl bg-surface-subtle border border-border items-center justify-center shadow-2xs"
+        >
+          <Ionicons name="headset-outline" size={16} color="#71717a" />
+        </TouchableOpacity>
 
         <TouchableOpacity
           onPress={handleResetCycle}
@@ -468,7 +538,7 @@ export default function PomodoroTimer({
               <TouchableOpacity
                 onPress={() => {
                   pendingActionOnModalHideRef.current = () => {
-                    startTimer();
+                    handleStart("shortBreak");
                   };
                   setCompletionModalVisible(false);
                 }}
@@ -555,7 +625,7 @@ export default function PomodoroTimer({
               <TouchableOpacity
                 onPress={() => {
                   pendingActionOnModalHideRef.current = () => {
-                    startTimer();
+                    handleStart("pomodoro");
                   };
                   setCompletionModalVisible(false);
                 }}
@@ -579,6 +649,12 @@ export default function PomodoroTimer({
           )}
         </View>
       </Modal>
+
+      {/* Ambient Audio Selector Bottom Sheet */}
+      <AmbientSoundModal
+        visible={ambientModalVisible}
+        onClose={() => setAmbientModalVisible(false)}
+      />
     </View>
   );
 }

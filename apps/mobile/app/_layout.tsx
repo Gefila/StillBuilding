@@ -3,12 +3,17 @@ import React, { useEffect } from "react";
 import { LogBox } from "react-native";
 import { queryClient } from "@/lib/reactQuery";
 import { QueryClientProvider } from "@tanstack/react-query";
-import { Stack } from "expo-router";
+import { Stack, router } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { AppToast } from "@/components/Toast";
 import { StreakCelebrationModal } from "@/components/tasks/StreakCelebrationModal";
 import { useAuthStore } from "@/features/auth/store/useAuthStore";
+
+let Notifications: any = null;
+try {
+  Notifications = require("expo-notifications");
+} catch {}
 
 import * as SplashScreen from "expo-splash-screen";
 
@@ -67,6 +72,24 @@ export default function RootLayout() {
       SplashScreen.hideAsync().catch(() => {});
     }
   }, [isInitialized]);
+
+  useEffect(() => {
+    if (!Notifications?.addNotificationResponseReceivedListener) return;
+    try {
+      const subscription =
+        Notifications.addNotificationResponseReceivedListener((response: any) => {
+          try {
+            const data = response?.notification?.request?.content?.data;
+            if (data?.screen === "focus" || data?.type === "pomodoro_complete") {
+              router.navigate("/(tabs)/focus");
+            }
+          } catch (err) {
+            console.warn("Failed to handle notification response:", err);
+          }
+        });
+      return () => subscription?.remove();
+    } catch {}
+  }, []);
 
   if (!isInitialized) {
     return null;
