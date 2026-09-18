@@ -7,6 +7,8 @@ import { Stack, router } from "expo-router";
 import { StatusBar } from "expo-status-bar";
 import { SafeAreaProvider } from "react-native-safe-area-context";
 import { AppToast } from "@/components/Toast";
+import { NetworkBanner } from "@/components/NetworkBanner";
+import { setupNetworkMonitoring } from "@/lib/network/networkManager";
 import { StreakCelebrationModal } from "@/components/tasks/StreakCelebrationModal";
 import { useAuthStore } from "@/features/auth/store/useAuthStore";
 
@@ -77,18 +79,27 @@ export default function RootLayout() {
     if (!Notifications?.addNotificationResponseReceivedListener) return;
     try {
       const subscription =
-        Notifications.addNotificationResponseReceivedListener((response: any) => {
-          try {
-            const data = response?.notification?.request?.content?.data;
-            if (data?.screen === "focus" || data?.type === "pomodoro_complete") {
-              router.navigate("/(tabs)/focus");
+        Notifications.addNotificationResponseReceivedListener(
+          (response: any) => {
+            try {
+              const data = response?.notification?.request?.content?.data;
+              if (
+                data?.screen === "focus" ||
+                data?.type === "pomodoro_complete"
+              ) {
+                router.navigate("/(tabs)/focus");
+              }
+            } catch (err) {
+              console.warn("Failed to handle notification response:", err);
             }
-          } catch (err) {
-            console.warn("Failed to handle notification response:", err);
-          }
-        });
+          },
+        );
       return () => subscription?.remove();
     } catch {}
+  }, []);
+
+  useEffect(() => {
+    setupNetworkMonitoring();
   }, []);
 
   if (!isInitialized) {
@@ -100,6 +111,7 @@ export default function RootLayout() {
       <StatusBar style="dark" />
       <QueryClientProvider client={queryClient}>
         <RootNavigator />
+        <NetworkBanner />
         <StreakCelebrationModal />
         <AppToast />
       </QueryClientProvider>

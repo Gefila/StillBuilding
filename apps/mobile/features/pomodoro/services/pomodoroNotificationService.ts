@@ -28,7 +28,8 @@ class PomodoroNotificationService {
   private isInitialized = false;
 
   async init() {
-    if (this.isInitialized || !Notifications?.setNotificationChannelAsync) return;
+    if (this.isInitialized || !Notifications?.setNotificationChannelAsync)
+      return;
 
     try {
       if (Platform.OS === "android") {
@@ -101,7 +102,8 @@ class PomodoroNotificationService {
         trigger: {
           type: Notifications.SchedulableTriggerInputTypes?.TIME_INTERVAL,
           seconds: Math.max(1, Math.round(secondsRemaining)),
-          channelId: Platform.OS === "android" ? POMODORO_CHANNEL_ID : undefined,
+          channelId:
+            Platform.OS === "android" ? POMODORO_CHANNEL_ID : undefined,
         },
       });
 

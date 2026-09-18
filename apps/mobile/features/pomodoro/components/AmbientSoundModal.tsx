@@ -1,10 +1,5 @@
 import React from "react";
-import {
-  ScrollView,
-  Text,
-  TouchableOpacity,
-  View,
-} from "react-native";
+import { ScrollView, Text, TouchableOpacity, View } from "react-native";
 import Modal from "@/components/Modal";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
@@ -195,9 +190,7 @@ export default function AmbientSoundModal({
           onPress={onClose}
           className="w-full py-3.5 bg-foreground rounded-2xl items-center justify-center mt-2 shadow-xs"
         >
-          <Text className="text-background font-bold text-sm">
-            Selesai
-          </Text>
+          <Text className="text-background font-bold text-sm">Selesai</Text>
         </TouchableOpacity>
       </View>
     </Modal>

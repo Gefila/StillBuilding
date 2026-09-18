@@ -13,6 +13,7 @@ import { ScreenHeader } from "@/components/ScreenHeader";
 import { Button } from "@/components/Button";
 import ProjectsStats from "@/features/project/components/ProjectsStats";
 import ListProject from "@/features/project/components/ListProject";
+import { NetworkErrorPlaceholder } from "@/components/NetworkErrorPlaceholder";
 import { Ionicons } from "@expo/vector-icons";
 
 export default function Projects() {
@@ -81,6 +82,14 @@ export default function Projects() {
               Memuat daftar proyek...
             </Text>
           </View>
+        ) : projectsQuery.isError &&
+          (!projectsQuery.data || projectsQuery.data.length === 0) ? (
+          <NetworkErrorPlaceholder
+            title="Gagal Memuat Proyek"
+            message="Koneksi terputus atau server tidak dapat dijangkau. Periksa koneksi internet Anda dan coba lagi."
+            onRetry={projectsQuery.refetch}
+            isLoading={refreshing}
+          />
         ) : (
           <ListProject projects={projectsQuery.data || []} />
         )}

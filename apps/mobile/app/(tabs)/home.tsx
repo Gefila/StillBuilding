@@ -17,6 +17,7 @@ import DailySummaryCards from "@/components/home/DailySummaryCards";
 import QuickFocusBanner from "@/components/home/QuickFocusBanner";
 import ActivityHeatmapCard from "@/features/stats/components/ActivityHeatmapCard";
 import Tasks from "@/components/tasks/Tasks";
+import { NetworkErrorPlaceholder } from "@/components/NetworkErrorPlaceholder";
 import { useAuthStore } from "@/features/auth/store/useAuthStore";
 import { useCurrentUser } from "@/features/auth/hooks/useAuth";
 import type { Task } from "@/features/task/types/task.types";
@@ -46,6 +47,7 @@ export default function Home() {
   const {
     data: tasks,
     isLoading,
+    isError: isTasksError,
     refetch: refetchTasks,
   } = useGetTasks({
     queryConfig: {
@@ -65,7 +67,7 @@ export default function Home() {
   const onRefresh = useCallback(async () => {
     setRefreshing(true);
     try {
-      await Promise.all([
+      await Promise.allSettled([
         refetchTasks(),
         refetchPomodoroStats(),
         refetchCurrentUser(),
@@ -135,6 +137,13 @@ export default function Home() {
               Memuat daftar tugas...
             </Text>
           </View>
+        ) : isTasksError && taskList.length === 0 ? (
+          <NetworkErrorPlaceholder
+            title="Gagal Memuat Tugas"
+            message="Koneksi terputus atau server tidak dapat dijangkau. Periksa koneksi internet Anda dan coba lagi."
+            onRetry={refetchTasks}
+            isLoading={refreshing}
+          />
         ) : (
           <Tasks tasks={taskList} title="Tugas Hari Ini" />
         )}

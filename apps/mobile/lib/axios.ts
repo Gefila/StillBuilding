@@ -1,5 +1,6 @@
 import { useAuthStore } from "@/features/auth/store/useAuthStore";
 import type { ApiResponse } from "@/features/auth/types/auth.types";
+import { useNetworkStore } from "@/lib/network/useNetworkStore";
 import axios, {
   type AxiosError,
   type InternalAxiosRequestConfig,
@@ -95,6 +96,7 @@ api.interceptors.request.use(async (config) => {
 
 api.interceptors.response.use(
   (response) => {
+    useNetworkStore.getState().setApiReachable(true);
     return response;
   },
   async (error: AxiosError | Error) => {
@@ -108,6 +110,14 @@ api.interceptors.response.use(
           status: number;
           data: any;
         };
+
+        if (status >= 502 && status <= 504) {
+          useNetworkStore
+            .getState()
+            .setApiReachable(false, "server_unreachable");
+        } else {
+          useNetworkStore.getState().setApiReachable(true);
+        }
 
         if (status === 401) {
           const requestUrl = originalRequest?.url || "";
@@ -163,8 +173,17 @@ api.interceptors.response.use(
             });
         }
       } else {
+        const isTimeout =
+          error.code === "ECONNABORTED" ||
+          error.message?.toLowerCase().includes("timeout");
+        useNetworkStore
+          .getState()
+          .setApiReachable(false, isTimeout ? "timeout" : "server_unreachable");
         return Promise.reject({
-          message: error.message || "Masalah jaringan, silakan coba lagi.",
+          message: isTimeout
+            ? "Permintaan melebihi batas waktu (timeout). Periksa koneksi internet Anda."
+            : "Gagal terhubung ke server. Periksa koneksi internet Anda.",
+          isNetworkError: true,
         });
       }
     }
