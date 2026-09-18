@@ -236,11 +236,36 @@ _Menyimpan dokumentasi dan detail kontekstual._
 - [x] **Chime Bell Akhir Sesi**: Suara lonceng lembut (432Hz harmonic bell) otomatis saat sesi fokus 25 menit tuntas.
 - [x] **Transisi Fase Istirahat Otomatis**: Audio ambient otomatis hening saat jeda istirahat (*break*) dimulai untuk memberikan ruang istirahat yang tenang.
 
-### Versi 1.2 (Rencana Pengembangan Selanjutnya)
+### Versi 1.2 (Deep Flow & Momentum Booster)
 
-- Integrasi Git Commit Hook (opsional untuk auto-complete micro-task via terminal).
-- Tab Catatan Proyek Khusus (Tabel `project_notes` mandiri + Export Markdown/Brag Document).
-- AI Smart Task Decomposition (Memecah task kompleks menjadi sub-task semut ≤25 menit).
+- [ ] **Quick Brain Dump / Distraction Catcher**: Modal tangkapan cepat 1-tap di antarmuka Pomodoro untuk mencatat pikiran atau distraksi internal yang mendadak muncul (3 detik) ke dalam *Quick Inbox* tanpa memecah ritme fokus atau menghentikan timer.
+- [ ] **Preset Durasi Fokus Fleksibel**: Opsi preset durasi kerja tanpa konfigurasi rumit: *Quick Sprint* (15 menit untuk mengatasi rasa malas mulai), *Classic Pomodoro* (25 menit), dan *Deep Flow / Ultradian* (50 menit untuk sesi koding mendalam).
+- [ ] **Zen Desk Mode & Keep-Awake**: Tampilan layar penuh minimalis saat ponsel diletakkan di samping keyboard meja kerja, terintegrasi dengan `expo-keep-awake` agar layar tidak mati otomatis selama sesi Pomodoro aktif.
+- [ ] **Export Standup & Log Progres Markdown**: Tombol 1-klik untuk menyalin ringkasan tugas selesai dan kendala terpecahkan (*blockers resolved*) hari ini ke clipboard dalam format teks/Markdown bersih, siap ditempel ke laporan tim, standup harian, atau log portofolio.
+- [ ] **Morning Kickoff & Evening Shutdown Ritual**: Layar pembuka harian singkat (30 detik) saat pertama kali membuka aplikasi untuk memilih 1 tugas prioritas hari ini (*intention setting*), serta prompt penutupan opsional di malam hari untuk mencatat pencapaian dan menyiapkan langkah pertama esok hari (*Resume Anchor / Hemingway Bridge*).
+- [ ] **Focus Shield / Do Not Disturb Sync**: Integrasi otomatis dengan mode *Do Not Disturb* sistem operasi ponsel — DND aktif saat Pomodoro dimulai dan nonaktif saat sesi berakhir atau istirahat, dengan peringatan lembut jika pengguna meninggalkan aplikasi saat timer berjalan (*"Timer masih berjalan. Kembali fokus?"*).
+
+### Versi 1.3 (Habit Continuity & Advanced Insights)
+
+- [ ] **Streak Freeze & Grace Day**: Kuota perlindungan streak berkala (1–2 kali per bulan / opsi *Weekend Rest Mode*) agar momentum tidak runtuh akibat kondisi darurat, sakit, atau hari libur mendadak (*mencegah What-the-Hell effect*).
+- [ ] **Target Harian Realistis (*Daily Closure*)**: Target mikro harian opsional (misal: 3 tugas selesai atau 4 sesi fokus) dengan umpan balik visual kepuasan saat tercapai untuk memberikan rasa tuntas dan mencegah *burnout*.
+- [ ] **Weekly Retrospective / Review**: Halaman rekap mingguan otomatis berbasis data Supabase (total jam fokus, mikro-task tuntas, kendala terpecahkan, serta pola hari/jam paling produktif).
+- [ ] **Lock Screen Ongoing Timer & Live Activity**: Menampilkan sisa waktu sesi fokus langsung di layar kunci ponsel (Android Ongoing Notification / iOS Live Activity) sehingga pengguna dapat memantau waktu tanpa membuka kunci HP yang memicu distraksi.
+- [ ] **Task Tagging & Activity Breakdown Chart**: Tag kategori opsional 1-tap pada tugas atau sesi Pomodoro (`Coding`, `Debugging`, `Design/UI`, `Research`, `DevOps`, atau tag kustom) dengan visualisasi donut chart distribusi waktu kerja di dasbor mingguan untuk memberikan kesadaran ke mana energi kerja sebenarnya tercurah.
+- [ ] **Recurring Micro-Tasks (Tugas Berulang)**: Opsi pengulangan otomatis pada tugas rutin (*Harian / Senin–Jumat / Mingguan / Kustom*) sehingga kebiasaan teknis seperti *"Review PR pagi"*, *"Tulis test sebelum merge"*, atau *"Backup database tiap Jumat"* muncul kembali di daftar tugas tanpa harus dibuat ulang secara manual.
+- [ ] **Project Health Indicator (Lampu Proyek)**: Indikator visual otomatis di daftar proyek berdasarkan data aktivitas terakhir — 🟢 *Sehat* (aktivitas dalam 24 jam), 🟡 *Melambat* (tidak ada aktivitas 2–4 hari), 🔴 *Kritis* (≥5 hari tanpa aktivitas) — sebagai sinyal peringatan dini tanpa notifikasi agresif.
+
+### Versi 1.4 (Project Closure & Developer Experience)
+
+- [ ] **"Ship It!" Hall of Fame & Retrospective Card (Ala Strava)**: Kartu pencapaian visual saat status proyek diubah menjadi `Completed`, merangkum bukti kerja (*proof of work*): total jam fokus, akumulasi sesi Pomodoro, mikro-task tuntas, dan blocker yang berhasil ditaklukkan. Dilengkapi fitur 1-klik bagikan kartu ke media sosial/komunitas (*Build in Public*) serta tab galeri *Hall of Fame* sebagai trofi proyek yang sukses dituntaskan.
+- [ ] **Home Screen Heatmap Widget**: Widget ringkas di layar utama ponsel (iOS & Android) yang menampilkan grid kontribusi kotak-kotak hijau dan status proyek aktif, memberikan pengingat visual instan untuk menjaga ritme momentum kerja tanpa perlu membuka aplikasi terlebih dahulu.
+- [ ] **IDE Theme Palettes (Tema Khas Editor Kode)**: Kustomisasi palet warna aplikasi yang terinspirasi dari skema warna editor kode populer developer (*Catppuccin Mocha*, *Nord Minimal*, *Tokyo Night*, dan *Gruvbox Dark*) untuk memberikan kepuasan estetika personal yang menyatu dengan lingkungan koding harian.
+- [ ] **Estimasi vs Realita — Calibration Tracker**: Kolom estimasi opsional saat membuat tugas (*"Perkiraan: 2 sesi Pomodoro"*) yang dibandingkan otomatis dengan durasi aktual saat tugas selesai, menghasilkan metrik kalibrasi bulanan (*"Akurasi estimasi: 65% · Rata-rata underestimate 1.8×"*) untuk melatih kemampuan perencanaan scope kerja secara bertahap.
+- [ ] **Milestone & Checkpoint System (Penanda Fase Proyek)**: Pembagian proyek besar menjadi beberapa fase/milestone (misal: *"Fase 1: Setup & Slicing"*, *"Fase 2: API Integration"*, *"Fase 3: Deploy"*) dengan kumpulan micro-task masing-masing, disertai mini-celebration visual (animasi confetti ringan + ringkasan pencapaian) saat setiap milestone tuntas untuk memberikan rasa progres bertahap.
+
+### Versi 1.5 (Resilience & Infrastructure)
+
+- [ ] **Offline-First & Background Sync**: Penyimpanan data tugas, sesi Pomodoro, dan blocker log secara lokal terlebih dahulu (SQLite / MMKV) dengan sinkronisasi otomatis ke Supabase saat koneksi internet tersedia kembali, memastikan pengalaman kerja yang tidak terganggu oleh kondisi jaringan — *"always works, syncs when it can"*.
 
 ---
 
