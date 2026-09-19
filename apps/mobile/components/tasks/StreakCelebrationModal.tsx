@@ -138,7 +138,7 @@ export const StreakCelebrationModal: React.FC = () => {
           className="w-full py-3.5 bg-foreground rounded-2xl items-center flex-row justify-center gap-2"
         >
           <Text className="text-sm font-bold text-background">
-            Lanjutkan Kerja Keras
+            Mantap, Lanjut
           </Text>
           <Ionicons name="arrow-forward" size={16} color="#ffffff" />
         </TouchableOpacity>

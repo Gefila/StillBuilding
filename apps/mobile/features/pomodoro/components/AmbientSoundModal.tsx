@@ -106,14 +106,14 @@ export default function AmbientSoundModal({
                       key={stepVol}
                       activeOpacity={0.7}
                       onPress={() => handleVolumeChange(stepVol)}
-                      className={`flex-1 py-2 rounded-xl items-center border ${
+                      className={`will-change-variable flex-1 py-2 rounded-xl items-center border ${
                         isCurrent
                           ? "bg-foreground border-foreground"
                           : "bg-surface border-border"
                       }`}
                     >
                       <Text
-                        className={`text-xs font-bold ${
+                        className={`will-change-variable text-xs font-bold ${
                           isCurrent ? "text-background" : "text-foreground"
                         }`}
                       >
@@ -138,17 +138,17 @@ export default function AmbientSoundModal({
                   key={item.id}
                   activeOpacity={0.75}
                   onPress={() => handleSelectSound(item.id)}
-                  className={`p-4 rounded-2xl flex-row items-center border transition-all ${
+                  className={`will-change-variable p-4 rounded-2xl flex-row items-center border ${
                     isSelected
-                      ? "bg-surface-subtle border-foreground/30 shadow-xs"
+                      ? "bg-surface-subtle border-foreground"
                       : "bg-surface border-border"
                   }`}
                 >
                   <View
-                    className={`w-11 h-11 rounded-xl items-center justify-center mr-3.5 border ${
+                    className={`will-change-variable w-11 h-11 rounded-xl items-center justify-center mr-3.5 border ${
                       isSelected
-                        ? "bg-foreground border-foreground text-background"
-                        : "bg-surface-subtle border-border text-foreground"
+                        ? "bg-foreground border-foreground"
+                        : "bg-surface-subtle border-border"
                     }`}
                   >
                     <Ionicons
@@ -168,7 +168,7 @@ export default function AmbientSoundModal({
                   </View>
 
                   <View
-                    className={`w-6 h-6 rounded-full border items-center justify-center ${
+                    className={`will-change-variable w-6 h-6 rounded-full border items-center justify-center ${
                       isSelected
                         ? "bg-foreground border-foreground"
                         : "border-border bg-surface"
