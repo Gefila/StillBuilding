@@ -24,9 +24,11 @@ import { useUpdateTask } from "@/features/task/hooks/useTask";
 import { useStreakCelebrationStore } from "@/features/task/stores/useStreakCelebrationStore";
 import QuickBlockerModal from "./QuickBlockerModal";
 import AmbientSoundModal from "./AmbientSoundModal";
+import PresetChipSelector from "./PresetChipSelector";
 import { ambientAudioService } from "../services/ambientAudioService";
 import { pomodoroNotificationService } from "../services/pomodoroNotificationService";
 import { useAmbientAudioStore } from "../store/useAmbientAudioStore";
+import { usePomodoroPreferencesStore } from "../store/usePomodoroPreferencesStore";
 
 const TABS: { key: PomodoroMode; label: string }[] = [
   { key: "pomodoro", label: "Fokus" },
@@ -75,6 +77,18 @@ export default function PomodoroTimer({
   const pendingActionOnModalHideRef = useRef<(() => void) | null>(null);
 
   const { soundId, isPlaying } = useAmbientAudioStore();
+  const initializePreferences = usePomodoroPreferencesStore(
+    (state) => state.initializePreferences,
+  );
+  const syncWithPreferences = usePomodoroStore(
+    (state) => state.syncWithPreferences,
+  );
+
+  useEffect(() => {
+    initializePreferences().then(() => {
+      syncWithPreferences();
+    });
+  }, [initializePreferences, syncWithPreferences]);
 
   // Interval & Wall-Clock Countdown management
   useEffect(() => {
@@ -187,9 +201,11 @@ export default function PomodoroTimer({
     startTimer();
     await pomodoroNotificationService.requestPermissions();
     if (targetMode === "pomodoro") {
+      const focusMinutes = Math.round(total / 60);
       await pomodoroNotificationService.scheduleSessionCompleteNotification(
         time,
         activeTask?.title,
+        focusMinutes,
       );
       await ambientAudioService.playAmbient();
     } else {
@@ -206,9 +222,11 @@ export default function PomodoroTimer({
     if (isPaused) {
       resumeTimer();
       if (mode === "pomodoro") {
+        const focusMinutes = Math.round(total / 60);
         await pomodoroNotificationService.scheduleSessionCompleteNotification(
           time,
           activeTask?.title,
+          focusMinutes,
         );
         await ambientAudioService.playAmbient();
       } else {
@@ -423,6 +441,9 @@ export default function PomodoroTimer({
         </View>
       </View>
 
+      {/* Preset Duration Quick Selector (Only in Fokus Mode) */}
+      {mode === "pomodoro" && <PresetChipSelector />}
+
       {/* Control Buttons */}
       <View className="flex-row items-center gap-2 mt-4">
         {!isActive ? (
@@ -530,8 +551,8 @@ export default function PomodoroTimer({
                 Sesi Fokus Tuntas! 🎉
               </Text>
               <Text className="text-xs text-muted text-center mt-1 mb-5 leading-relaxed">
-                Kerja bagus! 25 menit fokus telah dicatat. Saatnya rehat
-                sejenak.
+                Kerja bagus! {Math.round(total / 60)} menit fokus telah dicatat.
+                Saatnya rehat sejenak.
               </Text>
 
               {/* Primary Action: Start Break */}

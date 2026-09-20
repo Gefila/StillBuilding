@@ -1,4 +1,6 @@
 import { create } from "zustand";
+import { usePomodoroPreferencesStore } from "./usePomodoroPreferencesStore";
+import type { FocusPresetKey } from "../types/pomodoroPreferences";
 
 export type PomodoroMode = "pomodoro" | "shortBreak" | "longBreak";
 
@@ -7,6 +9,18 @@ export const DURATIONS: Record<PomodoroMode, number> = {
   shortBreak: 5 * 60,
   longBreak: 15 * 60,
 };
+
+export function getPresetDurations(): Record<PomodoroMode, number> {
+  try {
+    const store = usePomodoroPreferencesStore.getState();
+    if (store && typeof store.getCurrentDurations === "function") {
+      return store.getCurrentDurations();
+    }
+    return DURATIONS;
+  } catch {
+    return DURATIONS;
+  }
+}
 
 export const COLORS: Record<PomodoroMode, string> = {
   pomodoro: "#18181b",
@@ -53,6 +67,8 @@ interface PomodoroState {
   // Actions
   setActiveTask: (task: ActiveTask | null) => void;
   setMode: (mode: PomodoroMode) => void;
+  applyPreset: (preset: FocusPresetKey) => void;
+  syncWithPreferences: () => void;
   startTimer: () => void;
   pauseTimer: () => void;
   resumeTimer: () => void;
@@ -86,7 +102,8 @@ export const usePomodoroStore = create<PomodoroState>((set, get) => ({
   setActiveTask: (task) => set({ activeTask: task }),
 
   setMode: (newMode) => {
-    const newTotal = DURATIONS[newMode];
+    const durations = getPresetDurations();
+    const newTotal = durations[newMode] || DURATIONS[newMode];
     set({
       mode: newMode,
       time: newTotal,
@@ -96,6 +113,37 @@ export const usePomodoroStore = create<PomodoroState>((set, get) => ({
       targetEndTime: null,
       cycleIndex: CYCLE.indexOf(newMode) >= 0 ? CYCLE.indexOf(newMode) : 0,
     });
+  },
+
+  applyPreset: (presetKey) => {
+    usePomodoroPreferencesStore.getState().setActivePreset(presetKey);
+    const durations = getPresetDurations();
+    const currentMode = get().mode;
+    const newTotal = durations[currentMode] || DURATIONS[currentMode];
+    set({
+      total: newTotal,
+      time: newTotal,
+      isActive: false,
+      isPaused: true,
+      startedAt: null,
+      targetEndTime: null,
+    });
+  },
+
+  syncWithPreferences: () => {
+    const { isActive, isPaused, mode } = get();
+    if (!isActive || isPaused) {
+      const durations = getPresetDurations();
+      const newTotal = durations[mode] || DURATIONS[mode];
+      set({
+        total: newTotal,
+        time: newTotal,
+        isActive: false,
+        isPaused: true,
+        startedAt: null,
+        targetEndTime: null,
+      });
+    }
   },
 
   startTimer: () => {
@@ -137,7 +185,8 @@ export const usePomodoroStore = create<PomodoroState>((set, get) => ({
   },
 
   resetCycle: () => {
-    const defaultTotal = DURATIONS.pomodoro;
+    const durations = getPresetDurations();
+    const defaultTotal = durations.pomodoro || DURATIONS.pomodoro;
     set({
       mode: "pomodoro",
       cycleIndex: 0,
@@ -200,7 +249,8 @@ export const usePomodoroStore = create<PomodoroState>((set, get) => ({
 
     const nextCycleIdx = (cycleIndex + 1) % CYCLE.length;
     const nextMode = CYCLE[nextCycleIdx];
-    const nextTotal = DURATIONS[nextMode];
+    const durations = getPresetDurations();
+    const nextTotal = durations[nextMode] || DURATIONS[nextMode];
 
     const updatedSessionsCount = finishedMode === "longBreak" ? 0 : newSessions;
 

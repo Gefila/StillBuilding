@@ -74,7 +74,12 @@ export default function Profile() {
     icon: IoniconName;
     onPress?: () => void;
   }[] = [
-    { id: "4", title: "Preferensi Pomodoro", icon: "timer-outline" },
+    {
+      id: "4",
+      title: "Preferensi Pomodoro",
+      icon: "timer-outline",
+      onPress: () => router.navigate("/profile/pomodoro" as any),
+    },
     { id: "5", title: "Bahasa", icon: "language-outline" },
     {
       id: "6",

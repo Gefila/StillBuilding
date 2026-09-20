@@ -74,6 +74,7 @@ class PomodoroNotificationService {
   async scheduleSessionCompleteNotification(
     secondsRemaining: number,
     taskTitle?: string,
+    focusMinutes?: number,
   ): Promise<string | null> {
     if (!Notifications?.scheduleNotificationAsync || secondsRemaining <= 0) {
       return null;
@@ -83,10 +84,11 @@ class PomodoroNotificationService {
       await this.init();
       await this.cancelScheduledNotifications();
 
+      const durationText = focusMinutes ? `${focusMinutes} menit` : "fokus";
       const title = "Sesi Fokus Selesai! 🎉";
       const body = taskTitle
-        ? `Luar biasa! Target "${taskTitle}" selesai 25 menit. Saatnya rehat sejenak.`
-        : "Luar biasa! Sesi fokus Anda telah selesai. Saatnya rehat sejenak.";
+        ? `Luar biasa! Target "${taskTitle}" selesai ${durationText}. Saatnya rehat sejenak.`
+        : `Luar biasa! Sesi ${durationText} telah selesai. Saatnya rehat sejenak.`;
 
       const id = await Notifications.scheduleNotificationAsync({
         content: {
