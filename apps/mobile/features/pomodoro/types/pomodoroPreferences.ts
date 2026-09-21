@@ -72,3 +72,5 @@ export const DEFAULT_CUSTOM_DURATIONS: CustomDurations = {
   shortBreakMinutes: 5,
   longBreakMinutes: 15,
 };
+
+export const DEFAULT_KEEP_AWAKE_IN_FOCUS_TAB = false;

@@ -25,10 +25,12 @@ import { useStreakCelebrationStore } from "@/features/task/stores/useStreakCeleb
 import QuickBlockerModal from "./QuickBlockerModal";
 import AmbientSoundModal from "./AmbientSoundModal";
 import PresetChipSelector from "./PresetChipSelector";
+import ZenDeskModal from "./ZenDeskModal";
 import { ambientAudioService } from "../services/ambientAudioService";
 import { pomodoroNotificationService } from "../services/pomodoroNotificationService";
 import { useAmbientAudioStore } from "../store/useAmbientAudioStore";
 import { usePomodoroPreferencesStore } from "../store/usePomodoroPreferencesStore";
+import { activateKeepAwakeAsync, deactivateKeepAwake } from "expo-keep-awake";
 
 const TABS: { key: PomodoroMode; label: string }[] = [
   { key: "pomodoro", label: "Fokus" },
@@ -71,6 +73,7 @@ export default function PomodoroTimer({
 
   const [blockerModalVisible, setBlockerModalVisible] = useState(false);
   const [ambientModalVisible, setAmbientModalVisible] = useState(false);
+  const [zenModalVisible, setZenModalVisible] = useState(false);
   const [completionModalVisible, setCompletionModalVisible] = useState(false);
   const [lastCompletedMode, setLastCompletedMode] =
     useState<PomodoroMode>("pomodoro");
@@ -79,6 +82,9 @@ export default function PomodoroTimer({
   const { soundId, isPlaying } = useAmbientAudioStore();
   const initializePreferences = usePomodoroPreferencesStore(
     (state) => state.initializePreferences,
+  );
+  const keepAwakeInFocusTab = usePomodoroPreferencesStore(
+    (state) => state.keepAwakeInFocusTab,
   );
   const syncWithPreferences = usePomodoroStore(
     (state) => state.syncWithPreferences,
@@ -89,6 +95,19 @@ export default function PomodoroTimer({
       syncWithPreferences();
     });
   }, [initializePreferences, syncWithPreferences]);
+
+  // Keep-Awake for regular Focus Tab (if enabled by user preferences)
+  useEffect(() => {
+    if (keepAwakeInFocusTab && isActive && !isPaused) {
+      activateKeepAwakeAsync("focus-tab").catch(() => {});
+    } else {
+      deactivateKeepAwake("focus-tab");
+    }
+
+    return () => {
+      deactivateKeepAwake("focus-tab");
+    };
+  }, [keepAwakeInFocusTab, isActive, isPaused]);
 
   // Interval & Wall-Clock Countdown management
   useEffect(() => {
@@ -485,6 +504,26 @@ export default function PomodoroTimer({
         )}
       </View>
 
+      {/* Zen Desk Mode Quick Launcher */}
+      <TouchableOpacity
+        onPress={() => {
+          Haptics.selectionAsync();
+          setZenModalVisible(true);
+        }}
+        activeOpacity={0.8}
+        className="flex-row items-center mt-3 px-3.5 py-1.5 rounded-xl bg-surface-subtle border border-border gap-1.5 shadow-2xs"
+      >
+        <Ionicons name="phone-landscape-outline" size={14} color="#18181b" />
+        <Text className="text-xs font-semibold text-foreground">
+          Zen Desk Mode
+        </Text>
+        <View className="bg-emerald-50 border border-emerald-200 px-1.5 py-0.2 rounded-md ml-0.5">
+          <Text className="text-[9px] font-bold text-emerald-700">
+            Landscape
+          </Text>
+        </View>
+      </TouchableOpacity>
+
       {/* Deep Work Actions: Blocker Logger Trigger */}
       {isActive && (
         <TouchableOpacity
@@ -675,6 +714,16 @@ export default function PomodoroTimer({
       <AmbientSoundModal
         visible={ambientModalVisible}
         onClose={() => setAmbientModalVisible(false)}
+      />
+
+      {/* Zen Desk Mode Fullscreen Landscape Overlay */}
+      <ZenDeskModal
+        visible={zenModalVisible}
+        onClose={() => setZenModalVisible(false)}
+        onOpenBlocker={handleOpenBlocker}
+        onStart={handleStart}
+        onPauseResume={handlePauseResume}
+        onRequestOpenTaskPicker={onRequestOpenTaskPicker}
       />
     </View>
   );

@@ -4,6 +4,7 @@ import {
   KeyboardAvoidingView,
   Platform,
   ScrollView,
+  Switch,
   Text,
   TextInput,
   TouchableOpacity,
@@ -29,11 +30,17 @@ export default function PomodoroPreferencesScreen() {
   const customDurations = usePomodoroPreferencesStore(
     (state) => state.customDurations,
   );
+  const keepAwakeInFocusTab = usePomodoroPreferencesStore(
+    (state) => state.keepAwakeInFocusTab,
+  );
   const setActivePreset = usePomodoroPreferencesStore(
     (state) => state.setActivePreset,
   );
   const setCustomDurations = usePomodoroPreferencesStore(
     (state) => state.setCustomDurations,
+  );
+  const setKeepAwakeInFocusTab = usePomodoroPreferencesStore(
+    (state) => state.setKeepAwakeInFocusTab,
   );
   const initializePreferences = usePomodoroPreferencesStore(
     (state) => state.initializePreferences,
@@ -404,6 +411,64 @@ export default function PomodoroPreferencesScreen() {
                   : "Simpan & Terapkan Durasi Kustom"}
               </Text>
             </TouchableOpacity>
+          </View>
+
+          {/* Section 3: Layar Meja & Keep-Awake */}
+          <View className="mb-6">
+            <Text className="text-xs font-semibold uppercase tracking-wider text-muted mb-3">
+              Layar Meja & Keep-Awake
+            </Text>
+
+            <View className="bg-surface border border-border rounded-2xl p-4 shadow-xs">
+              {/* Keep Awake in Focus Tab Toggle */}
+              <View className="flex-row items-center justify-between">
+                <View className="flex-1 mr-4">
+                  <View className="flex-row items-center gap-1.5">
+                    <Ionicons name="sunny-outline" size={16} color="#18181b" />
+                    <Text className="text-sm font-bold text-foreground">
+                      Keep-Awake di Tab Fokus
+                    </Text>
+                  </View>
+                  <Text className="text-xs text-muted mt-1 leading-relaxed">
+                    Mencegah layar HP mati otomatis saat timer sesi fokus sedang
+                    berjalan di layar biasa.
+                  </Text>
+                </View>
+                <Switch
+                  value={keepAwakeInFocusTab}
+                  onValueChange={(val) => {
+                    Haptics.selectionAsync();
+                    setKeepAwakeInFocusTab(val);
+                  }}
+                  trackColor={{ false: "#e4e4e7", true: "#18181b" }}
+                  thumbColor="#ffffff"
+                />
+              </View>
+
+              {/* Zen Desk Mode Explainer */}
+              <View className="mt-4 pt-3.5 border-t border-border/60 flex-row items-start gap-2.5">
+                <Ionicons
+                  name="phone-landscape-outline"
+                  size={15}
+                  color="#71717a"
+                  style={{ marginTop: 2 }}
+                />
+                <View className="flex-1">
+                  <Text className="text-xs font-semibold text-foreground">
+                    Zen Desk Mode (Layar Penuh Meja)
+                  </Text>
+                  <Text className="text-[11px] text-muted mt-0.5 leading-relaxed">
+                    Otomatis mengunci ke posisi mendatar (landscape),
+                    menyembunyikan status bar sistem, dan menjaga layar tetap
+                    menyala. Tekan tombol{" "}
+                    <Text className="font-semibold text-foreground">
+                      Zen Desk Mode
+                    </Text>{" "}
+                    di tab Fokus.
+                  </Text>
+                </View>
+              </View>
+            </View>
           </View>
 
           {/* Info Card */}

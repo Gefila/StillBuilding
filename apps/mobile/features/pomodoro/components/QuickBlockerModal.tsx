@@ -87,7 +87,13 @@ export default function QuickBlockerModal({
       backdropTransitionInTiming={300}
       backdropTransitionOutTiming={1}
       useNativeDriver={true}
-      hideModalContentWhileAnimating={true}
+      useNativeDriverForBackdrop={true}
+      supportedOrientations={[
+        "portrait",
+        "landscape",
+        "landscape-left",
+        "landscape-right",
+      ]}
       avoidKeyboard={Platform.OS === "ios"}
       style={{ margin: 0, justifyContent: "flex-end" }}
     >
