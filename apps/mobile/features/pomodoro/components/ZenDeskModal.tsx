@@ -1,5 +1,6 @@
 import React, { useEffect, useState } from "react";
 import {
+  Alert,
   Modal,
   Platform,
   StatusBar,
@@ -14,6 +15,7 @@ import { NavigationBar } from "expo-navigation-bar";
 import { activateKeepAwakeAsync, deactivateKeepAwake } from "expo-keep-awake";
 import * as Haptics from "expo-haptics";
 import {
+  CYCLE,
   MODE_LABELS,
   type PomodoroMode,
   usePomodoroStore,
@@ -195,6 +197,52 @@ export default function ZenDeskModal({
     );
   };
 
+  const nextMode = CYCLE[(cycleIndex + 1) % CYCLE.length];
+  const currentSessionNum = Math.min(4, Math.floor(cycleIndex / 2) + 1);
+  const cycleLabel =
+    mode === "pomodoro"
+      ? `Sesi ${currentSessionNum}/4`
+      : mode === "shortBreak"
+        ? `Rehat Singkat (${currentSessionNum}/3)`
+        : "Rehat Panjang";
+
+  const handleSkip = () => {
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    Alert.alert(
+      "Lewati Sesi",
+      `Apakah Anda yakin ingin melewati "${MODE_LABELS[mode]}" dan lanjut ke "${MODE_LABELS[nextMode]}"?`,
+      [
+        { text: "Batal", style: "cancel" },
+        {
+          text: "Lewati",
+          style: "default",
+          onPress: () => {
+            advanceNextMode();
+          },
+        },
+      ],
+    );
+  };
+
+  const handleConfirmMarkTaskComplete = () => {
+    if (!activeTask?.id) return;
+    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    Alert.alert(
+      "Tandai Selesai",
+      `Apakah Anda yakin ingin menandai tugas "${activeTask.title}" sebagai selesai?`,
+      [
+        { text: "Batal", style: "cancel" },
+        {
+          text: "Tandai Selesai",
+          style: "default",
+          onPress: () => {
+            handleMarkTaskComplete();
+          },
+        },
+      ],
+    );
+  };
+
   if (!visible) return null;
 
   return (
@@ -320,6 +368,37 @@ export default function ZenDeskModal({
               </Text>
             </View>
 
+            {/* Quick Mark Task Complete Button in Header */}
+            {activeTask && (
+              <TouchableOpacity
+                onPress={handleConfirmMarkTaskComplete}
+                activeOpacity={0.8}
+                disabled={updateTaskMutation.isPending}
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  backgroundColor: "rgba(16, 185, 129, 0.15)",
+                  borderWidth: 1,
+                  borderColor: "rgba(16, 185, 129, 0.35)",
+                  paddingHorizontal: 12,
+                  paddingVertical: 6,
+                  borderRadius: 12,
+                }}
+              >
+                <Ionicons
+                  name="checkmark-circle-outline"
+                  size={14}
+                  color="#10b981"
+                  style={{ marginRight: 4 }}
+                />
+                <Text
+                  style={{ fontSize: 12, fontWeight: "700", color: "#10b981" }}
+                >
+                  Selesai
+                </Text>
+              </TouchableOpacity>
+            )}
+
             <TouchableOpacity
               onPress={() => {
                 Haptics.selectionAsync();
@@ -424,36 +503,17 @@ export default function ZenDeskModal({
               }}
             />
           </View>
-        </View>
 
-        {/* 3. Bottom Row: Stats & Controls */}
-        <View
-          style={{
-            flexDirection: "row",
-            alignItems: "center",
-            justifyContent: "space-between",
-          }}
-        >
-          {/* Left: Cycle info */}
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 6 }}>
-            <Ionicons
-              name="repeat-outline"
-              size={14}
-              color={ZEN_THEME.textMuted}
-            />
-            <Text
-              style={{
-                color: ZEN_THEME.textMuted,
-                fontSize: 12,
-                fontWeight: "500",
-              }}
-            >
-              Siklus {cycleIndex + 1}/4 · {sessionsCount} sesi tuntas
-            </Text>
-          </View>
-
-          {/* Center: Play/Pause & Skip */}
-          <View style={{ flexDirection: "row", alignItems: "center", gap: 10 }}>
+          {/* Center Action Controls: Mulai, Lewati & Tugas Selesai */}
+          <View
+            style={{
+              flexDirection: "row",
+              alignItems: "center",
+              justifyContent: "center",
+              gap: 10,
+              marginTop: 22,
+            }}
+          >
             <TouchableOpacity
               onPress={() => {
                 if (!isActive) {
@@ -499,10 +559,7 @@ export default function ZenDeskModal({
             </TouchableOpacity>
 
             <TouchableOpacity
-              onPress={() => {
-                Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
-                advanceNextMode();
-              }}
+              onPress={handleSkip}
               activeOpacity={0.8}
               style={{
                 flexDirection: "row",
@@ -531,11 +588,62 @@ export default function ZenDeskModal({
                 Lewati
               </Text>
             </TouchableOpacity>
-          </View>
 
-          {/* Right: Quick Hint */}
-          <Text style={{ color: ZEN_THEME.textMuted, fontSize: 11 }}>
-            Mode Meja Aktif
+            {/* Mark Task Complete Button */}
+            {activeTask && (
+              <TouchableOpacity
+                onPress={handleConfirmMarkTaskComplete}
+                activeOpacity={0.8}
+                disabled={updateTaskMutation.isPending}
+                style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  paddingHorizontal: 16,
+                  paddingVertical: 9,
+                  borderRadius: 16,
+                  backgroundColor: "rgba(16, 185, 129, 0.15)",
+                  borderWidth: 1,
+                  borderColor: "rgba(16, 185, 129, 0.35)",
+                  gap: 6,
+                }}
+              >
+                <Ionicons name="checkmark-done" size={15} color="#10b981" />
+                <Text
+                  style={{
+                    fontSize: 12,
+                    fontWeight: "700",
+                    color: "#10b981",
+                  }}
+                >
+                  Tugas Selesai
+                </Text>
+              </TouchableOpacity>
+            )}
+          </View>
+        </View>
+
+        {/* 3. Bottom Row: Centered Cycle Status */}
+        <View
+          style={{
+            flexDirection: "row",
+            alignItems: "center",
+            justifyContent: "center",
+            gap: 6,
+          }}
+        >
+          <Ionicons
+            name="repeat-outline"
+            size={14}
+            color={ZEN_THEME.textMuted}
+          />
+          <Text
+            style={{
+              color: ZEN_THEME.textMuted,
+              fontSize: 12,
+              fontWeight: "500",
+            }}
+          >
+            {cycleLabel} · {sessionsCount}/4 fokus tuntas
           </Text>
         </View>
 
