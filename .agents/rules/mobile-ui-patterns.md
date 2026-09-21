@@ -21,3 +21,35 @@ When selecting an item from a modal triggers parent state changes or mutations, 
 ## Expo Router URL Hygiene
 
 - Avoid injecting/retaining temporary `id` query params into Expo Router URLs during internal modal interactions.
+
+## Dynamic Styling & CSS Variables (`will-change-variable`)
+
+In NativeWind v5 / `react-native-css`, utility classes like `shadow-*` (`shadow-xs`, `shadow-sm`, etc.) generate CSS variables internally.
+
+When an element toggles between having a variable class and not having one (e.g., in conditional selection states), `react-native-css` logs a warning and remounts the component along with its children:
+
+> `ReactNativeCss: className '...' added or removed a variable after the initial render. This causes the components state to be reset and all children be re-mounted. Use the className 'will-change-variable' to avoid this warning.`
+
+### Rule
+
+Always include `will-change-variable` in the element's base `className` whenever classes containing CSS variables (especially `shadow-*`) are added/removed conditionally:
+
+```tsx
+// ❌ WRONG: Causes component reset & remount on press/toggle
+<TouchableOpacity
+  className={`p-4 rounded-2xl border ${
+    isSelected
+      ? "bg-surface border-foreground shadow-xs"
+      : "bg-surface-subtle border-border"
+  }`}
+/>
+
+// ✅ CORRECT: will-change-variable in the static base class
+<TouchableOpacity
+  className={`p-4 rounded-2xl border will-change-variable ${
+    isSelected
+      ? "bg-surface border-foreground shadow-xs"
+      : "bg-surface-subtle border-border"
+  }`}
+/>
+```

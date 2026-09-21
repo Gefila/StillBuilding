@@ -172,7 +172,7 @@ export default function PomodoroPreferencesScreen() {
                     key={key}
                     onPress={() => handleSelectPreset(key)}
                     activeOpacity={0.8}
-                    className={`p-4 rounded-2xl border ${
+                    className={`p-4 rounded-2xl border will-change-variable ${
                       isSelected
                         ? "bg-surface border-foreground shadow-xs"
                         : "bg-surface-subtle border-border"
@@ -240,7 +240,7 @@ export default function PomodoroPreferencesScreen() {
               <TouchableOpacity
                 onPress={() => handleSelectPreset("custom")}
                 activeOpacity={0.8}
-                className={`p-4 rounded-2xl border ${
+                className={`p-4 rounded-2xl border will-change-variable ${
                   activePreset === "custom"
                     ? "bg-surface border-foreground shadow-xs"
                     : "bg-surface-subtle border-border"

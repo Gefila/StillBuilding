@@ -128,7 +128,7 @@ export default function PresetDurationModal({
                 key={key}
                 onPress={() => handleSelectPreset(key)}
                 activeOpacity={0.75}
-                className={`p-4 rounded-2xl border mb-2.5 ${
+                className={`p-4 rounded-2xl border mb-2.5 will-change-variable ${
                   isSelected
                     ? "bg-surface border-foreground shadow-xs"
                     : "bg-surface-subtle border-border"
@@ -192,7 +192,7 @@ export default function PresetDurationModal({
           <TouchableOpacity
             onPress={() => handleSelectPreset("custom")}
             activeOpacity={0.75}
-            className={`p-4 rounded-2xl border mb-4 ${
+            className={`p-4 rounded-2xl border mb-4 will-change-variable ${
               activePreset === "custom"
                 ? "bg-surface border-foreground shadow-xs"
                 : "bg-surface-subtle border-border"

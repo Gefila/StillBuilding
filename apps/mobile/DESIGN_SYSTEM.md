@@ -156,3 +156,37 @@ Gunakan konfigurasi berikut pada setiap komponen Modal untuk mencegah _backdrop 
   {/* Modal Content */}
 </Modal>
 ```
+
+---
+
+## 7. Dynamic Styling & Aturan `will-change-variable`
+
+Pada **NativeWind v5** / **`react-native-css`**, class utilitas bayangan seperti `shadow-*` (`shadow-xs`, `shadow-sm`, dll.) memanfaatkan CSS variables secara internal.
+
+Jika sebuah elemen menambahkan atau menghapus class bayangan / variabel CSS secara kondisional (misalnya pada item terseleksi vs tidak terseleksi), engine akan memunculkan pesan peringatan dan me-remount seluruh subtree komponen:
+
+> `ReactNativeCss: className '...' added or removed a variable after the initial render. This causes the components state to be reset and all children be re-mounted. Use the className 'will-change-variable' to avoid this warning.`
+
+### Solusi & Aturan:
+
+Selalu sertakan `will-change-variable` di dalam base `className` elemen ketika terdapat class variabel/bayangan kondisional:
+
+```tsx
+// ❌ HINDARI: Menyebabkan komponen re-mount saat ditekan/diubah statusnya
+<TouchableOpacity
+  className={`p-4 rounded-2xl border ${
+    isSelected
+      ? "bg-surface border-foreground shadow-xs"
+      : "bg-surface-subtle border-border"
+  }`}
+/>
+
+// ✅ GUNAKAN: Tambahkan 'will-change-variable' di base className
+<TouchableOpacity
+  className={`p-4 rounded-2xl border will-change-variable ${
+    isSelected
+      ? "bg-surface border-foreground shadow-xs"
+      : "bg-surface-subtle border-border"
+  }`}
+/>
+```

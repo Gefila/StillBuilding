@@ -341,7 +341,7 @@ export default function PomodoroTimer({
             return (
               <View
                 key={key}
-                className={`px-3.5 py-1.5 rounded-lg border ${
+                className={`px-3.5 py-1.5 rounded-lg border will-change-variable ${
                   isSelected
                     ? "bg-surface border-border shadow-xs"
                     : "bg-transparent border-transparent"

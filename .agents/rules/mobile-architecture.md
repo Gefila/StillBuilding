@@ -12,3 +12,4 @@
 
 - NativeWind v5 / Tailwind CSS v4
 - Use NativeWind utility classes with consistent spacing and design tokens
+- **Conditional Shadows / Variables**: If toggling `shadow-*` or dynamic variable classes conditionally, always add `will-change-variable` to the base `className` (see `mobile-ui-patterns.md`).
