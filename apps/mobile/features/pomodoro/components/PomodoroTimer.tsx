@@ -24,7 +24,6 @@ import { useUpdateTask } from "@/features/task/hooks/useTask";
 import { useStreakCelebrationStore } from "@/features/task/stores/useStreakCelebrationStore";
 import QuickBlockerModal from "./QuickBlockerModal";
 import AmbientSoundModal from "./AmbientSoundModal";
-import PresetChipSelector from "./PresetChipSelector";
 import ZenDeskModal from "./ZenDeskModal";
 import { ambientAudioService } from "../services/ambientAudioService";
 import { pomodoroNotificationService } from "../services/pomodoroNotificationService";
@@ -262,40 +261,47 @@ export default function PomodoroTimer({
   };
 
   const handleResetCycle = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
-    Alert.alert(
-      "Reset Siklus Pomodoro",
-      "Apakah Anda yakin ingin mengulang seluruh siklus Pomodoro dari awal (Sesi 1)?",
-      [
-        { text: "Batal", style: "cancel" },
-        {
-          text: "Reset Siklus",
-          style: "destructive",
-          onPress: () => {
-            ambientAudioService.stopAmbient();
-            pomodoroNotificationService.cancelScheduledNotifications();
-            resetCycle();
-          },
-        },
-      ],
-    );
+    ambientAudioService.stopAmbient();
+    pomodoroNotificationService.cancelScheduledNotifications();
+    resetCycle();
   };
 
   const handleStop = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Heavy);
+    if (time === total && (sessionsCount > 0 || cycleIndex > 0)) {
+      Alert.alert(
+        "Reset Siklus Pomodoro",
+        "Apakah Anda yakin ingin mengulang seluruh siklus Pomodoro dari awal (Sesi 1)?",
+        [
+          { text: "Batal", style: "cancel" },
+          {
+            text: "Reset Siklus",
+            style: "destructive",
+            onPress: handleResetCycle,
+          },
+        ],
+      );
+      return;
+    }
+
     Alert.alert(
       "Reset Timer",
-      "Apakah Anda yakin ingin mengatur ulang waktu sesi ini?",
+      "Pilih jenis reset yang ingin dilakukan:",
       [
         { text: "Batal", style: "cancel" },
         {
-          text: "Reset",
+          text: "Reset Sesi Ini",
           style: "destructive",
           onPress: () => {
             ambientAudioService.stopAmbient();
             pomodoroNotificationService.cancelScheduledNotifications();
             stopTimer();
           },
+        },
+        {
+          text: "Reset Seluruh Siklus",
+          style: "destructive",
+          onPress: handleResetCycle,
         },
       ],
     );
@@ -350,6 +356,8 @@ export default function PomodoroTimer({
         ? "#16a34a"
         : "#2563eb";
 
+  const canReset = sessionsCount > 0 || cycleIndex > 0 || time !== total;
+
   return (
     <View className="items-center w-full">
       {/* Mode Segmented Indicator & Reset Cycle Button */}
@@ -391,12 +399,15 @@ export default function PomodoroTimer({
         </TouchableOpacity>
 
         <TouchableOpacity
-          onPress={handleResetCycle}
+          onPress={() => {
+            Haptics.selectionAsync();
+            setZenModalVisible(true);
+          }}
           activeOpacity={0.7}
-          accessibilityLabel="Reset Siklus"
+          accessibilityLabel="Zen Desk Mode"
           className="absolute right-0 p-2 rounded-xl bg-surface-subtle border border-border items-center justify-center shadow-2xs"
         >
-          <Ionicons name="refresh-outline" size={16} color="#71717a" />
+          <Ionicons name="phone-landscape-outline" size={16} color="#71717a" />
         </TouchableOpacity>
       </View>
 
@@ -460,9 +471,6 @@ export default function PomodoroTimer({
         </View>
       </View>
 
-      {/* Preset Duration Quick Selector (Only in Fokus Mode) */}
-      {mode === "pomodoro" && <PresetChipSelector />}
-
       {/* Control Buttons */}
       <View className="flex-row items-center gap-2 mt-4">
         {!isActive ? (
@@ -473,6 +481,14 @@ export default function PomodoroTimer({
               variant="primary"
               onPress={handleStart}
             />
+            {canReset && (
+              <ControlButton
+                label="Reset"
+                icon="refresh-outline"
+                variant="outline"
+                onPress={handleStop}
+              />
+            )}
             <ControlButton
               label="Lewati"
               icon="play-skip-forward-outline"
@@ -504,25 +520,6 @@ export default function PomodoroTimer({
         )}
       </View>
 
-      {/* Zen Desk Mode Quick Launcher */}
-      <TouchableOpacity
-        onPress={() => {
-          Haptics.selectionAsync();
-          setZenModalVisible(true);
-        }}
-        activeOpacity={0.8}
-        className="flex-row items-center mt-3 px-3.5 py-1.5 rounded-xl bg-surface-subtle border border-border gap-1.5 shadow-2xs"
-      >
-        <Ionicons name="phone-landscape-outline" size={14} color="#18181b" />
-        <Text className="text-xs font-semibold text-foreground">
-          Zen Desk Mode
-        </Text>
-        <View className="bg-emerald-50 border border-emerald-200 px-1.5 py-0.2 rounded-md ml-0.5">
-          <Text className="text-[9px] font-bold text-emerald-700">
-            Landscape
-          </Text>
-        </View>
-      </TouchableOpacity>
 
       {/* Deep Work Actions: Blocker Logger Trigger */}
       {isActive && (

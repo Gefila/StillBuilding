@@ -9,7 +9,7 @@ import {
 } from "react-native";
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
-import { useIsFocused } from "expo-router";
+import { useIsFocused, useRouter } from "expo-router";
 import * as Haptics from "expo-haptics";
 import {
   useGetTasks,
@@ -25,6 +25,7 @@ import { useStreakCelebrationStore } from "@/features/task/stores/useStreakCeleb
 import type { Task } from "@/features/task/types/task.types";
 
 export default function FocusTab() {
+  const router = useRouter();
   const isFocused = useIsFocused();
   const insets = useSafeAreaInsets();
   const [taskPickerVisible, setTaskPickerVisible] = useState(false);
@@ -186,6 +187,19 @@ export default function FocusTab() {
         <ScreenHeader
           title="Sesi Fokus"
           subtitle="Tingkatkan konsentrasi melalui interval Pomodoro"
+          rightAction={
+            <TouchableOpacity
+              onPress={() => {
+                Haptics.selectionAsync();
+                router.navigate("/profile/pomodoro" as any);
+              }}
+              hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+              accessibilityLabel="Pengaturan Pomodoro"
+              className="p-2 rounded-xl bg-surface border border-border items-center justify-center shadow-2xs"
+            >
+              <Ionicons name="settings-outline" size={18} color="#18181b" />
+            </TouchableOpacity>
+          }
         />
 
         {/* 2. Target Task Selector Card */}
@@ -237,15 +251,12 @@ export default function FocusTab() {
           />
         </View>
 
-        <View style={{ height: Math.max(insets.bottom + 80, 90) }} />
+        <View style={{ height: activeTask ? 80 : 24 }} />
       </ScrollView>
 
       {/* Sticky Bottom Action (Mark Task Complete) */}
       {activeTask && (
-        <View
-          style={{ paddingBottom: Math.max(insets.bottom, 16) }}
-          className="px-4 pt-3 bg-surface border-t border-border shadow-md"
-        >
+        <View className="px-4 py-3 bg-surface border-t border-border shadow-md">
           <Button
             iconLeft={
               <Ionicons name="checkmark-circle" size={18} color="#ffffff" />
