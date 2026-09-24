@@ -1,6 +1,8 @@
 import React from "react";
 import { Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
+import type { ProjectCategory } from "@/features/project/types/project.types";
+import { getCategoryConfig } from "../constants/projectCategories";
 
 const STATUS_CONFIG: Record<
   "Active" | "On Hold" | "Completed",
@@ -33,6 +35,7 @@ interface ProjectPreviewCardProps {
   name?: string;
   description?: string;
   icon?: keyof typeof Ionicons.glyphMap;
+  category?: ProjectCategory;
   status?: "Active" | "On Hold" | "Completed";
 }
 
@@ -40,9 +43,11 @@ export default function ProjectPreviewCard({
   name,
   description,
   icon = "folder",
+  category = "coding",
   status = "Active",
 }: ProjectPreviewCardProps) {
   const statusInfo = STATUS_CONFIG[status] || STATUS_CONFIG.Active;
+  const categoryConfig = getCategoryConfig(category);
   const displayName = name?.trim() ? name : "Nama Proyek Baru";
   const displayDescription = description?.trim()
     ? description
@@ -92,15 +97,37 @@ export default function ProjectPreviewCard({
             </Text>
           </View>
 
-          <View
-            className={`flex-row items-center px-2 py-0.5 rounded-full border ${statusInfo.bg} ${statusInfo.border}`}
-          >
+          <View className="flex-col items-end gap-1">
             <View
-              className={`w-1.5 h-1.5 rounded-full mr-1 ${statusInfo.dot}`}
-            />
-            <Text className={`text-[10px] font-bold ${statusInfo.text}`}>
-              {statusInfo.label}
-            </Text>
+              className={`flex-row items-center px-2 py-0.5 rounded-full border ${statusInfo.bg} ${statusInfo.border}`}
+            >
+              <View
+                className={`w-1.5 h-1.5 rounded-full mr-1 ${statusInfo.dot}`}
+              />
+              <Text className={`text-[10px] font-bold ${statusInfo.text}`}>
+                {statusInfo.label}
+              </Text>
+            </View>
+            <View
+              style={{
+                backgroundColor: categoryConfig.bgColor,
+                borderColor: `${categoryConfig.color}33`,
+              }}
+              className="flex-row items-center px-1.5 py-0.5 rounded-full border"
+            >
+              <Ionicons
+                name={categoryConfig.icon}
+                size={10}
+                color={categoryConfig.color}
+                style={{ marginRight: 3 }}
+              />
+              <Text
+                style={{ color: categoryConfig.color }}
+                className="text-[10px] font-semibold"
+              >
+                {categoryConfig.label}
+              </Text>
+            </View>
           </View>
         </View>
 

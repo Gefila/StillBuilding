@@ -2,8 +2,10 @@ import React from "react";
 import { Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { Project } from "@/features/project/types/project.types";
+import { getCategoryConfig } from "../constants/projectCategories";
 
 export default function ProjectHeader({ project }: { project: Project }) {
+  const categoryConfig = getCategoryConfig(project.category);
   const tasks = project.tasks || [];
   const totalTasks = project.total_tasks ?? tasks.length;
   const doneTasks =
@@ -39,6 +41,26 @@ export default function ProjectHeader({ project }: { project: Project }) {
             <View className="bg-surface-subtle border border-border px-2 py-0.5 rounded-full">
               <Text className="text-foreground text-[10px] font-bold">
                 {project.status || "Active"}
+              </Text>
+            </View>
+            <View
+              style={{
+                backgroundColor: categoryConfig.bgColor,
+                borderColor: `${categoryConfig.color}33`,
+              }}
+              className="flex-row items-center px-2 py-0.5 rounded-full border"
+            >
+              <Ionicons
+                name={categoryConfig.icon}
+                size={11}
+                color={categoryConfig.color}
+                style={{ marginRight: 3 }}
+              />
+              <Text
+                style={{ color: categoryConfig.color }}
+                className="text-[10px] font-semibold"
+              >
+                {categoryConfig.label}
               </Text>
             </View>
           </View>

@@ -236,13 +236,11 @@ _Menyimpan dokumentasi dan detail kontekstual._
 - [x] **Chime Bell Akhir Sesi**: Suara lonceng lembut (432Hz harmonic bell) otomatis saat sesi fokus 25 menit tuntas.
 - [x] **Transisi Fase Istirahat Otomatis**: Audio ambient otomatis hening saat jeda istirahat (_break_) dimulai untuk memberikan ruang istirahat yang tenang.
 
-### Versi 1.2 (Desk Flow & Daily Rituals)
+### Versi 1.2 (Desk Flow & Project Categories)
 
 - [x] **Preset Durasi Fokus Fleksibel**: Opsi preset durasi kerja tanpa konfigurasi rumit: _Quick Sprint_ (15 menit untuk mengatasi rasa malas mulai), _Classic Pomodoro_ (25 menit), dan _Deep Flow / Ultradian_ (50 menit untuk sesi koding mendalam), serta opsi kustom dan quick switcher di layar timer.
 - [x] **Zen Desk Mode & Keep-Awake**: Tampilan layar penuh minimalis saat ponsel diletakkan di samping keyboard meja kerja, terintegrasi dengan `expo-keep-awake` agar layar tidak mati otomatis selama sesi Pomodoro aktif.
-- [ ] **Focus Shield / Do Not Disturb Sync**: Integrasi otomatis dengan mode _Do Not Disturb_ sistem operasi ponsel — DND aktif saat Pomodoro dimulai dan nonaktif saat sesi berakhir atau istirahat, dengan peringatan lembut jika pengguna meninggalkan aplikasi saat timer berjalan (_"Timer masih berjalan. Kembali fokus?"_).
-- [ ] **Morning Kickoff & Evening Shutdown Ritual**: Layar pembuka harian singkat (30 detik) saat pertama kali membuka aplikasi untuk memilih 1 tugas prioritas hari ini (_intention setting_), serta prompt penutupan opsional di malam hari untuk mencatat pencapaian dan menyiapkan langkah pertama esok hari (_Resume Anchor / Hemingway Bridge_).
-- [ ] **Export Standup & Log Progres Markdown**: Tombol 1-klik untuk menyalin ringkasan tugas selesai dan kendala terpecahkan (_blockers resolved_) hari ini ke clipboard dalam format teks/Markdown bersih, siap ditempel ke laporan tim, standup harian, atau log portofolio.
+- [x] **Kategori & Tipe Proyek Fleksibel (Project Categories)**: Pengelompokan proyek berdasarkan domain aktivitas (Koding/Side Project, Belajar/Kuliah, Pekerjaan, Olahraga/Kesehatan, Personal/Rutinitas) dengan chip selector 1-tap di form proyek yang otomatis menyetel ikon dan warna default, badge visual khas pada kartu proyek, serta tab filter kategori di daftar proyek untuk navigasi yang terorganisir.
 
 ### Versi 1.3 (Habit Engine & Project Health)
 

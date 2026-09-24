@@ -3,9 +3,11 @@ import { TouchableOpacity, Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import { Project } from "@/features/project/types/project.types";
+import { getCategoryConfig } from "../constants/projectCategories";
 
 export default function ProjectItem({ project }: { project: Project }) {
   const router = useRouter();
+  const categoryConfig = getCategoryConfig(project.category);
 
   const statusStyles: Record<
     "Active" | "On Hold" | "Completed",
@@ -71,13 +73,35 @@ export default function ProjectItem({ project }: { project: Project }) {
             </Text>
           ) : null}
         </View>
-        <View
-          className={`flex-row items-center px-2 py-0.5 rounded-full border ${badge.chip}`}
-        >
-          <View className={`w-1.5 h-1.5 rounded-full mr-1.5 ${badge.dot}`} />
-          <Text className={`text-[10px] font-bold ${badge.text}`}>
-            {badge.label}
-          </Text>
+        <View className="flex-col items-end gap-1">
+          <View
+            className={`flex-row items-center px-2 py-0.5 rounded-full border ${badge.chip}`}
+          >
+            <View className={`w-1.5 h-1.5 rounded-full mr-1.5 ${badge.dot}`} />
+            <Text className={`text-[10px] font-bold ${badge.text}`}>
+              {badge.label}
+            </Text>
+          </View>
+          <View
+            style={{
+              backgroundColor: categoryConfig.bgColor,
+              borderColor: `${categoryConfig.color}33`,
+            }}
+            className="flex-row items-center px-1.5 py-0.5 rounded-full border"
+          >
+            <Ionicons
+              name={categoryConfig.icon}
+              size={9}
+              color={categoryConfig.color}
+              style={{ marginRight: 3 }}
+            />
+            <Text
+              style={{ color: categoryConfig.color }}
+              className="text-[9px] font-semibold"
+            >
+              {categoryConfig.label}
+            </Text>
+          </View>
         </View>
       </View>
 

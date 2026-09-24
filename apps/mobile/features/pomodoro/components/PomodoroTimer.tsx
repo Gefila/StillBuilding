@@ -284,27 +284,23 @@ export default function PomodoroTimer({
       return;
     }
 
-    Alert.alert(
-      "Reset Timer",
-      "Pilih jenis reset yang ingin dilakukan:",
-      [
-        { text: "Batal", style: "cancel" },
-        {
-          text: "Reset Sesi Ini",
-          style: "destructive",
-          onPress: () => {
-            ambientAudioService.stopAmbient();
-            pomodoroNotificationService.cancelScheduledNotifications();
-            stopTimer();
-          },
+    Alert.alert("Reset Timer", "Pilih jenis reset yang ingin dilakukan:", [
+      { text: "Batal", style: "cancel" },
+      {
+        text: "Reset Sesi Ini",
+        style: "destructive",
+        onPress: () => {
+          ambientAudioService.stopAmbient();
+          pomodoroNotificationService.cancelScheduledNotifications();
+          stopTimer();
         },
-        {
-          text: "Reset Seluruh Siklus",
-          style: "destructive",
-          onPress: handleResetCycle,
-        },
-      ],
-    );
+      },
+      {
+        text: "Reset Seluruh Siklus",
+        style: "destructive",
+        onPress: handleResetCycle,
+      },
+    ]);
   };
 
   const nextMode = CYCLE[(cycleIndex + 1) % CYCLE.length];
@@ -519,7 +515,6 @@ export default function PomodoroTimer({
           </>
         )}
       </View>
-
 
       {/* Deep Work Actions: Blocker Logger Trigger */}
       {isActive && (
