@@ -20,7 +20,10 @@ import {
   type PomodoroMode,
   usePomodoroStore,
 } from "../store/usePomodoroStore";
+import { useCreatePomodoro } from "../hooks/usePomodoro";
 import { useUpdateTask } from "@/features/task/hooks/useTask";
+import { ambientAudioService } from "../services/ambientAudioService";
+import { pomodoroNotificationService } from "../services/pomodoroNotificationService";
 
 interface ZenDeskModalProps {
   visible: boolean;
@@ -77,6 +80,7 @@ export default function ZenDeskModal({
 }: ZenDeskModalProps) {
   const insets = useSafeAreaInsets();
   const updateTaskMutation = useUpdateTask();
+  const createPomodoroMutation = useCreatePomodoro();
 
   const {
     mode,
@@ -87,8 +91,13 @@ export default function ZenDeskModal({
     sessionsCount,
     cycleIndex,
     activeTask,
+    startedAt,
     setActiveTask,
     advanceNextMode,
+    stopTimer,
+    pauseTimer,
+    resumeTimer,
+    taskInitialRemaining,
   } = usePomodoroStore();
 
   const [transitionFinishedMode, setTransitionFinishedMode] =
@@ -174,10 +183,38 @@ export default function ZenDeskModal({
     await onStart(targetMode);
   };
 
-  const handleMarkTaskComplete = () => {
+  const handleMarkTaskComplete = async () => {
     if (!activeTask?.id) return;
     const taskId = activeTask.id;
     Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+
+    const startRemaining = taskInitialRemaining ?? total;
+    const elapsedSeconds = Math.max(0, startRemaining - time);
+    // Simpan riwayat jika timer berjalan sebelum selesai secara natural (bukan dari transitionFinishedMode)
+    if (!transitionFinishedMode && elapsedSeconds > 0 && mode === "pomodoro") {
+      try {
+        await createPomodoroMutation.mutateAsync({
+          task_id: taskId,
+          mode: "pomodoro",
+          duration: elapsedSeconds,
+          cycle_index: cycleIndex,
+          session_num: Math.floor(cycleIndex / 2) + 1,
+          started_at:
+            startedAt ||
+            new Date(Date.now() - elapsedSeconds * 1000).toISOString(),
+          ended_at: new Date().toISOString(),
+          completed: true,
+        });
+      } catch (err) {
+        console.error(
+          "Failed to save pomodoro session on early task completion in zen mode:",
+          err,
+        );
+      }
+      ambientAudioService.pauseAmbient();
+      pomodoroNotificationService.cancelScheduledNotifications();
+      pauseTimer();
+    }
 
     updateTaskMutation.mutate(
       {
@@ -227,19 +264,65 @@ export default function ZenDeskModal({
   const handleConfirmMarkTaskComplete = () => {
     if (!activeTask?.id) return;
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+
+    // Jeda timer & audio ambient seketika saat dialog konfirmasi muncul
+    const wasRunning = isActive && !isPaused;
+    if (wasRunning) {
+      ambientAudioService.pauseAmbient();
+      pomodoroNotificationService.cancelScheduledNotifications();
+      pauseTimer();
+    }
+
+    let actionTaken = false;
+    const handleCancel = async () => {
+      if (wasRunning) {
+        resumeTimer();
+        if (mode === "pomodoro") {
+          const focusMinutes = Math.round(total / 60);
+          await pomodoroNotificationService.scheduleSessionCompleteNotification(
+            time,
+            activeTask?.title,
+            focusMinutes,
+          );
+          await ambientAudioService.playAmbient();
+        } else {
+          await pomodoroNotificationService.scheduleSessionCompleteNotification(
+            time,
+            "Waktu istirahat selesai! Mari kembali ke sesi fokus.",
+          );
+        }
+      }
+    };
+
     Alert.alert(
       "Tandai Selesai",
       `Apakah Anda yakin ingin menandai tugas "${activeTask.title}" sebagai selesai?`,
       [
-        { text: "Batal", style: "cancel" },
+        {
+          text: "Batal",
+          style: "cancel",
+          onPress: () => {
+            actionTaken = true;
+            handleCancel();
+          },
+        },
         {
           text: "Tandai Selesai",
           style: "default",
           onPress: () => {
+            actionTaken = true;
             handleMarkTaskComplete();
           },
         },
       ],
+      {
+        cancelable: true,
+        onDismiss: () => {
+          if (!actionTaken) {
+            handleCancel();
+          }
+        },
+      },
     );
   };
 

@@ -52,3 +52,18 @@ export function formatLastSessionTime(dateString?: string): string {
   if (!time) return relativeDate;
   return `${relativeDate}, ${time}`;
 }
+
+export function formatSessionDuration(seconds?: number): string {
+  const s = Math.max(0, Math.round(seconds || 0));
+  if (s < 60) {
+    return `${s}d`;
+  }
+  const m = Math.floor(s / 60);
+  const remainingSec = s % 60;
+  if (m < 60) {
+    return remainingSec > 0 ? `${m}m ${remainingSec}d` : `${m}m`;
+  }
+  const h = Math.floor(m / 60);
+  const remainingMin = m % 60;
+  return remainingMin > 0 ? `${h}j ${remainingMin}m` : `${h}j`;
+}

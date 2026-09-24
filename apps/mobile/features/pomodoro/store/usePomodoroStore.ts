@@ -72,6 +72,7 @@ interface PomodoroState {
   activeTask: ActiveTask | null;
   startedAt: string | null;
   targetEndTime: number | null;
+  taskInitialRemaining: number | null;
 
   // Actions
   setActiveTask: (task: ActiveTask | null) => void;
@@ -107,8 +108,26 @@ export const usePomodoroStore = create<PomodoroState>((set, get) => ({
   activeTask: null,
   startedAt: null,
   targetEndTime: null,
+  taskInitialRemaining: null,
 
-  setActiveTask: (task) => set({ activeTask: task }),
+  setActiveTask: (task) => {
+    const { time, activeTask, isActive, isPaused } = get();
+    if (task && task.id !== activeTask?.id) {
+      set({
+        activeTask: task,
+        taskInitialRemaining: time,
+        startedAt: isActive && !isPaused ? new Date().toISOString() : null,
+      });
+    } else if (!task) {
+      set({
+        activeTask: null,
+        taskInitialRemaining: null,
+        startedAt: null,
+      });
+    } else {
+      set({ activeTask: task });
+    }
+  },
 
   setMode: (newMode) => {
     const durations = getPresetDurations();
@@ -120,6 +139,8 @@ export const usePomodoroStore = create<PomodoroState>((set, get) => ({
       isActive: false,
       isPaused: true,
       targetEndTime: null,
+      startedAt: null,
+      taskInitialRemaining: null,
       cycleIndex: CYCLE.indexOf(newMode) >= 0 ? CYCLE.indexOf(newMode) : 0,
     });
   },
@@ -136,6 +157,7 @@ export const usePomodoroStore = create<PomodoroState>((set, get) => ({
       isPaused: true,
       startedAt: null,
       targetEndTime: null,
+      taskInitialRemaining: null,
     });
   },
 
@@ -151,12 +173,20 @@ export const usePomodoroStore = create<PomodoroState>((set, get) => ({
         isPaused: true,
         startedAt: null,
         targetEndTime: null,
+        taskInitialRemaining: null,
       });
     }
   },
 
   startTimer: () => {
-    const { isActive, isPaused, startedAt, time } = get();
+    const {
+      isActive,
+      isPaused,
+      startedAt,
+      time,
+      activeTask,
+      taskInitialRemaining,
+    } = get();
     if (isActive && !isPaused) return;
 
     const now = Date.now();
@@ -165,6 +195,12 @@ export const usePomodoroStore = create<PomodoroState>((set, get) => ({
       isPaused: false,
       startedAt: startedAt || new Date(now).toISOString(),
       targetEndTime: now + time * 1000,
+      taskInitialRemaining:
+        taskInitialRemaining != null
+          ? taskInitialRemaining
+          : activeTask
+            ? time
+            : null,
     });
   },
 
@@ -173,12 +209,19 @@ export const usePomodoroStore = create<PomodoroState>((set, get) => ({
   },
 
   resumeTimer: () => {
-    const { time } = get();
+    const { time, startedAt, activeTask, taskInitialRemaining } = get();
     const now = Date.now();
     set({
       isPaused: false,
       isActive: true,
+      startedAt: startedAt || new Date(now).toISOString(),
       targetEndTime: now + time * 1000,
+      taskInitialRemaining:
+        taskInitialRemaining != null
+          ? taskInitialRemaining
+          : activeTask
+            ? time
+            : null,
     });
   },
 
@@ -190,6 +233,7 @@ export const usePomodoroStore = create<PomodoroState>((set, get) => ({
       time: total,
       startedAt: null,
       targetEndTime: null,
+      taskInitialRemaining: null,
     });
   },
 
@@ -206,6 +250,7 @@ export const usePomodoroStore = create<PomodoroState>((set, get) => ({
       isPaused: true,
       startedAt: null,
       targetEndTime: null,
+      taskInitialRemaining: null,
     });
   },
 
@@ -244,10 +289,12 @@ export const usePomodoroStore = create<PomodoroState>((set, get) => ({
   },
 
   advanceNextMode: () => {
-    const { mode, cycleIndex, sessionsCount, total } = get();
+    const { mode, cycleIndex, sessionsCount, total, taskInitialRemaining } =
+      get();
 
     const finishedMode = mode;
-    const finishedDuration = total;
+    const finishedDuration =
+      taskInitialRemaining != null ? Math.max(1, taskInitialRemaining) : total;
     const finishedCycleIndex = cycleIndex;
     const finishedSessionNum = Math.floor(cycleIndex / 2) + 1;
 
@@ -273,6 +320,7 @@ export const usePomodoroStore = create<PomodoroState>((set, get) => ({
       isPaused: true,
       startedAt: null,
       targetEndTime: null,
+      taskInitialRemaining: null,
     });
 
     return {

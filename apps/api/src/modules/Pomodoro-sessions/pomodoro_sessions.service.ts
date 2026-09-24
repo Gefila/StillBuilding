@@ -59,8 +59,7 @@ export const pomodoroSessionService = {
       }
       if (session.mode === "pomodoro" || !session.mode) {
         const rawDuration = session.duration || 0;
-        const mins =
-          rawDuration > 60 ? Math.round(rawDuration / 60) : rawDuration;
+        const mins = Math.round(rawDuration / 60);
         focusMinutes += mins;
       }
     }

@@ -2,9 +2,12 @@ import React, { useMemo, useState } from "react";
 import { Text, TouchableOpacity, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import type { PomodoroSession } from "@/features/pomodoro/types/pomodoro.types";
-import { formatLastSessionTime } from "@/utils/dateHelpers";
+import {
+  formatLastSessionTime,
+  formatSessionDuration,
+} from "@/utils/dateHelpers";
 import { Card } from "@/components/Card";
-import SessionItemRow, { getDurationMinutes } from "./SessionItemRow";
+import SessionItemRow from "./SessionItemRow";
 import EmptyFocusState from "./EmptyFocusState";
 
 interface TaskFocusStatsProps {
@@ -27,18 +30,14 @@ export default function TaskFocusStats({
     const focusSessions = sessions.filter(
       (s) => s.mode === "pomodoro" || !s.mode,
     );
-    const totalMinutes = focusSessions.reduce(
-      (sum, s) => sum + getDurationMinutes(s),
+    const totalSeconds = focusSessions.reduce(
+      (sum, s) => sum + (s.duration || 0),
       0,
     );
     const count = focusSessions.length;
 
     const formattedTime =
-      totalMinutes >= 60
-        ? `${Math.floor(totalMinutes / 60)}j ${
-            totalMinutes % 60 > 0 ? `${totalMinutes % 60}m` : ""
-          }`
-        : `${totalMinutes}m`;
+      totalSeconds === 0 ? "0m" : formatSessionDuration(totalSeconds);
 
     const sorted = [...sessions].sort(
       (a, b) =>

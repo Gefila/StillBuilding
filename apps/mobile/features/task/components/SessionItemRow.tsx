@@ -2,7 +2,11 @@ import React from "react";
 import { Text, View } from "react-native";
 import { Ionicons } from "@expo/vector-icons";
 import type { PomodoroSession } from "@/features/pomodoro/types/pomodoro.types";
-import { formatRelativeDate, formatTime } from "@/utils/dateHelpers";
+import {
+  formatRelativeDate,
+  formatSessionDuration,
+  formatTime,
+} from "@/utils/dateHelpers";
 
 interface SessionItemRowProps {
   session: PomodoroSession;
@@ -11,8 +15,7 @@ interface SessionItemRowProps {
 }
 
 export const getDurationMinutes = (session: PomodoroSession): number => {
-  const raw = session.duration || 25;
-  return raw > 60 ? Math.round(raw / 60) : raw;
+  return Math.round((session.duration || 0) / 60);
 };
 
 export default function SessionItemRow({
@@ -22,7 +25,7 @@ export default function SessionItemRow({
 }: SessionItemRowProps) {
   const sessionNum = total - index;
   const isBreak = session.mode === "shortBreak" || session.mode === "longBreak";
-  const durationMins = getDurationMinutes(session);
+  const durationLabel = formatSessionDuration(session.duration);
   const startTime = formatTime(session.started_at);
   const endTime = session.ended_at ? formatTime(session.ended_at) : "Sekarang";
   const dateLabel = formatRelativeDate(session.started_at);
@@ -71,7 +74,7 @@ export default function SessionItemRow({
 
       <View className="bg-surface border border-border px-2 py-1 rounded-lg shrink-0">
         <Text className="text-xs font-bold text-foreground">
-          {durationMins}m
+          {durationLabel}
         </Text>
       </View>
     </View>

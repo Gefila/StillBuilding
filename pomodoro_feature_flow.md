@@ -19,12 +19,12 @@ graph LR
 
 | Mode         | Label             | Durasi (dev) |  Durasi (prod)   | Warna             |
 | :----------- | :---------------- | :----------: | :--------------: | :---------------- |
-| `pomodoro`   | Deep Work         |  5 detik\*   | 25 menit (1500s) | `#18181b` (hitam) |
-| `shortBreak` | Istirahat Pendek  |  3 detik\*   |  5 menit (300s)  | `#16a34a` (hijau) |
-| `longBreak`  | Istirahat Panjang |  5 detik\*   | 15 menit (900s)  | `#2563eb` (biru)  |
+| `pomodoro`   | Deep Work         |  10 detik\*  | 25 menit (1500s) | `#18181b` (hitam) |
+| `shortBreak` | Istirahat Pendek  |  5 detik\*   |  5 menit (300s)  | `#16a34a` (hijau) |
+| `longBreak`  | Istirahat Panjang |  10 detik\*  | 15 menit (900s)  | `#2563eb` (biru)  |
 
 > [!NOTE]
-> \*Durasi saat ini dikonfigurasi pendek untuk mempermudah development & QA testing. Untuk produksi, ubah di [`usePomodoroStore.ts`](apps/mobile/features/pomodoro/store/usePomodoroStore.ts).
+> \*Durasi dev dikonfigurasi via `IS_TESTING_MODE` di [`pomodoroPreferences.ts`](apps/mobile/features/pomodoro/types/pomodoroPreferences.ts) untuk mempermudah QA testing. Untuk produksi, nilai diatur ke `false`.
 
 ---
 
@@ -41,17 +41,19 @@ graph LR
 
 ### Frontend
 
-| File                                                                                      | Fungsi                                                 |
-| :---------------------------------------------------------------------------------------- | :----------------------------------------------------- |
-| [`app/(tabs)/focus.tsx`](<apps/mobile/app/(tabs)/focus.tsx>)                              | Screen utama tab Fokus                                 |
-| [`PomodoroTimer.tsx`](apps/mobile/features/pomodoro/components/PomodoroTimer.tsx)         | Komponen timer circular + logika visualisasi & kontrol |
-| [`TaskPickerModal.tsx`](apps/mobile/features/pomodoro/components/TaskPickerModal.tsx)     | Modal bottom sheet pemilih tugas target                |
-| [`QuickBlockerModal.tsx`](apps/mobile/features/pomodoro/components/QuickBlockerModal.tsx) | Modal pencatatan hambatan saat sesi fokus              |
-| [`TaskSelector.tsx`](apps/mobile/features/pomodoro/components/TaskSelector.tsx)           | Dropdown selector proyek                               |
-| [`usePomodoroStore.ts`](apps/mobile/features/pomodoro/store/usePomodoroStore.ts)          | Zustand store (timer state, cycle, wall-clock actions) |
-| [`usePomodoro.ts`](apps/mobile/features/pomodoro/hooks/usePomodoro.ts)                    | TanStack Query hooks (CRUD API & invalidation)         |
-| [`pomodoroService.ts`](apps/mobile/features/pomodoro/services/pomodoroService.ts)         | Axios API caller                                       |
-| [`pomodoro.types.ts`](packages/types/src/pomodoro.types.ts)                               | Zod schema & TypeScript interface                      |
+| File                                                                                      | Fungsi                                                              |
+| :---------------------------------------------------------------------------------------- | :------------------------------------------------------------------ |
+| [`app/(tabs)/focus.tsx`](<apps/mobile/app/(tabs)/focus.tsx>)                              | Screen utama tab Fokus                                              |
+| [`PomodoroTimer.tsx`](apps/mobile/features/pomodoro/components/PomodoroTimer.tsx)         | Komponen timer circular + logika visualisasi & kontrol              |
+| [`ZenDeskModal.tsx`](apps/mobile/features/pomodoro/components/ZenDeskModal.tsx)           | Modal Zen Desk landscape AMOLED fullscreen dengan keep-awake        |
+| [`TaskPickerModal.tsx`](apps/mobile/features/pomodoro/components/TaskPickerModal.tsx)     | Modal bottom sheet pemilih tugas target                             |
+| [`QuickBlockerModal.tsx`](apps/mobile/features/pomodoro/components/QuickBlockerModal.tsx) | Modal pencatatan hambatan saat sesi fokus                           |
+| [`TaskSelector.tsx`](apps/mobile/features/pomodoro/components/TaskSelector.tsx)           | Dropdown selector proyek                                            |
+| [`usePomodoroStore.ts`](apps/mobile/features/pomodoro/store/usePomodoroStore.ts)          | Zustand store (timer state, cycle, wall-clock, multi-task tracking) |
+| [`usePomodoro.ts`](apps/mobile/features/pomodoro/hooks/usePomodoro.ts)                    | TanStack Query hooks (CRUD API & invalidation)                      |
+| [`pomodoroService.ts`](apps/mobile/features/pomodoro/services/pomodoroService.ts)         | Axios API caller                                                    |
+| [`dateHelpers.ts`](apps/mobile/utils/dateHelpers.ts)                                      | Formatter durasi sesi (`formatSessionDuration`: detik/menit)        |
+| [`pomodoro.types.ts`](packages/types/src/pomodoro.types.ts)                               | Zod schema & TypeScript interface                                   |
 
 ---
 
@@ -134,6 +136,7 @@ interface PomodoroState {
   activeTask: ActiveTask | null;
   startedAt: string | null; // ISO timestamp mulai
   targetEndTime: number | null; // Epoch timestamp (ms) target selesai (untuk akurasi background)
+  taskInitialRemaining: number | null; // Sisa detik countdown saat tugas mulai difokuskan (mencegah double counting antar-tugas)
 
   // Actions
   setActiveTask: (task: ActiveTask | null) => void;
@@ -234,11 +237,21 @@ sequenceDiagram
 
     Note over U,DB: === FASE 4: (Opsional) Tandai Tugas Selesai Saat Timer Berjalan ===
     U->>FT: Tap "Tandai Tugas Ini Selesai"
-    FT->>ZS: pauseTimer() (Timer dijeda agar waktu tidak terbuang saat memilih tugas)
-    FT->>API: PUT /tasks/:id { status: "Done" }
-    API->>DB: UPDATE tasks SET status='Done'
-    FT->>ZS: setActiveTask(null)
-    FT->>TP: Buka TaskPickerModal otomatis
+    FT->>ZS: pauseTimer() (Auto-pause seketika saat dialog konfirmasi muncul)
+    FT->>FT: Tampilkan dialog konfirmasi "Tandai Selesai"
+
+    alt User Memilih "Batal"
+        U->>FT: Tap "Batal" / Tutup Dialog
+        FT->>ZS: resumeTimer() (Timer, ambient audio & notifikasi otomatis lanjut)
+    else User Memilih "Tandai Selesai"
+        U->>FT: Tap "Tandai Selesai"
+        FT->>API: POST /pomodoro-sessions (Simpan durasi aktual: elapsedSeconds)
+        API->>DB: INSERT INTO pomodoro_sessions
+        FT->>API: PUT /tasks/:id { status: "Done" }
+        API->>DB: UPDATE tasks SET status='Done'
+        FT->>ZS: setActiveTask(null) (Sisa waktu countdown TETAP BERTAHAN, tidak di-reset)
+        FT->>TP: Buka TaskPickerModal otomatis untuk memilih tugas berikutnya
+    end
 ```
 
 ---
@@ -253,9 +266,12 @@ Screen utama yang meng-_orchestrate_ seluruh fitur Pomodoro:
 2. **Target Fokus Card** — Menampilkan tugas aktif atau prompt untuk memilih tugas. Tap untuk membuka `TaskPickerModal`.
 3. **PomodoroTimer** — Komponen timer circular utama (lihat 6.2).
 4. **Sticky Bottom Button** — Tombol "Tandai Tugas Ini Selesai" (muncul hanya jika ada `activeTask`). Ketika ditekan:
-   - Timer otomatis **dijeda (_paused_)** jika sedang aktif, sehingga waktu fokus tidak berkurang saat user sedang memilih tugas pengganti.
-   - Status tugas diupdate menjadi `Done` di database.
-   - `TaskPickerModal` **langsung dibuka otomatis** agar user bisa memilih tugas target berikutnya lalu melanjutkan (_resume_) timer.
+   - **Auto-Pause Seketika**: Timer & audio ambient langsung dijeda seketika begitu pop-up konfirmasi muncul, menjaga sisa waktu tetap akurat saat user membaca konfirmasi.
+   - **Batal / Dismiss**: Jika dibatalkan, timer, ambient audio, dan jadwal notifikasi otomatis berlanjut (_resume_).
+   - **Simpan Sesi Aktual**: Sesi Pomodoro langsung disimpan ke database dengan durasi kerja riil (`elapsedSeconds = startRemaining - time`).
+   - **Sisa Waktu Dipertahankan**: Timer **tidak di-reset**, melainkan tetap berada pada status dijeda dengan sisa waktu yang tersisa.
+   - **Pencegahan Double-Counting**: State `taskInitialRemaining` di-set ke sisa waktu saat tugas baru dipilih, sehingga tugas berikutnya hanya dicatat sisa durasinya.
+   - **TaskPickerModal Otomatis**: Bottom sheet langsung dibuka otomatis agar user dapat memilih tugas berikutnya dan menekan tombol **"Lanjutkan"**.
 5. **TaskPickerModal** — Bottom sheet untuk memilih/mengganti tugas target.
 
 > [!TIP]
@@ -293,28 +309,53 @@ Bottom sheet pemilih tugas:
 - Dikelompokkan per proyek dengan nama proyek sebagai label header.
 - User tap tugas → `onSelectTask(task)` → store di-update.
 
+### 6.5 ZenDeskModal ([`ZenDeskModal.tsx`](apps/mobile/features/pomodoro/components/ZenDeskModal.tsx))
+
+Modal mode fokus Zen landscape AMOLED deep black (`#09090b`):
+
+- **Immersive View**: Layar penuh tanpa gangguan status bar maupun navigation bar (didukung di iOS & Android).
+- **Keep-Awake**: Layar dijaga tetap menyala via `expo-keep-awake` agar visual timer dapat diletakkan di meja kerja (_desk companion_).
+- **Alur Penyelesaian Konsisten**: Dilengkapi tombol "Tandai Selesai" dengan logika auto-pause seketika, konfirmasi aman (resume otomatis saat dibatalkan), dan sisa waktu timer dipertahankan untuk tugas pengganti.
+
 ---
 
 ## 7. Data Flow & Aturan Penyimpanan Sesi
 
 ### 7.1 Kapan Sesi Disimpan ke Database?
 
-Sesi Pomodoro (baik `pomodoro`, `shortBreak`, maupun `longBreak`) disimpan ke tabel `pomodoro_sessions` ketika **semua kondisi berikut** terpenuhi:
+Sesi Pomodoro disimpan ke tabel `pomodoro_sessions` pada dua kondisi:
 
-```
-✅ activeTask?.id !== null       (ada tugas yang terpilih)
-✅ Timer selesai 100% penuh      (Strict Pomodoro: durasi tuntas, bukan di-reset manual)
-```
+1. **Kondisi A: Timer Selesai Alami 100% (`time === 0`)**
+   - Terjadi saat countdown mencapai `00:00` pada mode apapun (`pomodoro`, `shortBreak`, `longBreak`).
+   - Jika ada `activeTask`, durasi yang dicatat adalah alokasi kerja untuk tugas tersebut: `finishedDuration = taskInitialRemaining ?? total`.
+   - Mode siklus otomatis berpindah via `advanceNextMode()`.
+
+2. **Kondisi B: Tugas Ditandai Selesai Lebih Awal Saat Timer Aktif**
+   - User menyelesaikan tugas sebelum countdown habis (`elapsedSeconds > 0` dan `mode === "pomodoro"`).
+   - Durasi yang disimpan adalah durasi aktual yang baru saja dikerjakan: `elapsedSeconds = (taskInitialRemaining ?? total) - time`.
+   - Timer **tidak di-reset**, melainkan **dijeda (_paused_)** pada sisa waktu yang ada.
+   - Sisa waktu interval Pomodoro tersebut dapat dilanjutkan untuk tugas berikutnya tanpa kehilangan waktu fokus.
 
 ### 7.2 Perilaku Skenario Khusus
 
-| Skenario                                  | Tindakan Sistem                                          | Alasan                                                     |
-| :---------------------------------------- | :------------------------------------------------------- | :--------------------------------------------------------- |
-| **Sesi Fokus (_Deep Work_)**              | Disimpan ke DB dengan `mode: "pomodoro"`                 | Mencatat durasi fokus produktif per tugas/proyek.          |
-| **Sesi Istirahat (_Short / Long Break_)** | Disimpan ke DB dengan `mode: "shortBreak" / "longBreak"` | Mencatat rasio waktu istirahat dan pemulihan energi user.  |
-| **Fokus Tanpa Tugas (_Freeform Focus_)**  | Timer berjalan lokal, **tidak disimpan ke DB**           | Menjaga integritas data relasi project & task di Supabase. |
-| **Reset / Batal di Tengah Jalan**         | Timer di-reset, sesi **di-discard** (Strict Pomodoro)    | Mencegah data semu / parsial yang tidak tuntas.            |
-| **Selesaikan Tugas saat Timer Aktif**     | Task di-set `Done`, modal picker tugas dibuka            | Memungkinkan multi-tasking dalam 1 blok fokus 25 menit.    |
+| Skenario                                               | Tindakan Sistem                                                                            | Alasan                                                                          |
+| :----------------------------------------------------- | :----------------------------------------------------------------------------------------- | :------------------------------------------------------------------------------ |
+| **Sesi Fokus (_Deep Work_) Tuntas**                    | Disimpan ke DB dengan `mode: "pomodoro"`                                                   | Mencatat durasi fokus produktif per tugas/proyek.                               |
+| **Sesi Istirahat (_Short / Long Break_)**              | Disimpan ke DB dengan `mode: "shortBreak" / "longBreak"` saat tuntas                       | Mencatat rasio waktu istirahat dan pemulihan energi user.                       |
+| **Fokus Tanpa Tugas (_Freeform Focus_)**               | Timer berjalan lokal, **tidak disimpan ke DB**                                             | Menjaga integritas data relasi project & task di Supabase.                      |
+| **Reset Manual di Tengah Jalan**                       | Timer di-reset, sesi berjalan **di-discard**                                               | Sesi sengaja dibatalkan / diulang penuh dari awal oleh user.                    |
+| **Selesaikan Tugas Lebih Awal**                        | Sesi disimpan dengan durasi aktual (`elapsedSeconds`), task `Done`, timer dijeda (_pause_) | Memberi kredit waktu riil yang telah dikerjakan; sisa waktu dipakai tugas baru. |
+| **Multi-Tasking dalam 1 Interval (_Shared Interval_)** | Dilacak via `taskInitialRemaining` di Zustand                                              | Mencegah _double counting_ (misal 25 menit dibagi Task A 10m & Task B 15m).     |
+
+### 7.3 Format Tampilan Durasi Sesi
+
+Untuk memastikan durasi fokus ditampilkan secara akurat di seluruh antarmuka (Card riwayat tugas, Badge statistik, dan Ringkasan proyek):
+
+- Menggunakan helper `formatSessionDuration(seconds)` di [`dateHelpers.ts`](apps/mobile/utils/dateHelpers.ts):
+  - **Durasi < 60 detik**: Ditampilkan dalam format detik, contoh: `30d` (memperbaiki bug visual sebelumnya yang keliru menampilkan `30m`).
+  - **Durasi > 60 detik (dengan sisa detik)**: Ditampilkan format kombinasi, contoh: `1m 30d`.
+  - **Durasi tepat menit**: Ditampilkan format menit, contoh: `25m`.
+- Sinkronisasi di backend: Service backend (`pomodoro_sessions.service.ts` dan `stats.service.ts`) menghitung total menit fokus secara presisi dengan pembulatan `Math.round(rawDuration / 60)`.
 
 ---
 

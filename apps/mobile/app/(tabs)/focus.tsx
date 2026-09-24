@@ -21,6 +21,9 @@ import { Button } from "@/components/Button";
 import PomodoroTimer from "@/features/pomodoro/components/PomodoroTimer";
 import TaskPickerModal from "@/features/pomodoro/components/TaskPickerModal";
 import { usePomodoroStore } from "@/features/pomodoro/store/usePomodoroStore";
+import { useCreatePomodoro } from "@/features/pomodoro/hooks/usePomodoro";
+import { ambientAudioService } from "@/features/pomodoro/services/ambientAudioService";
+import { pomodoroNotificationService } from "@/features/pomodoro/services/pomodoroNotificationService";
 import { useStreakCelebrationStore } from "@/features/task/stores/useStreakCelebrationStore";
 import type { Task } from "@/features/task/types/task.types";
 
@@ -30,12 +33,26 @@ export default function FocusTab() {
   const insets = useSafeAreaInsets();
   const [taskPickerVisible, setTaskPickerVisible] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
+  const [isCompletingTask, setIsCompletingTask] = useState(false);
   const hasInitializedFromDb = useRef(false);
 
-  const { activeTask, setActiveTask, isActive, isPaused, pauseTimer } =
-    usePomodoroStore();
+  const {
+    activeTask,
+    setActiveTask,
+    isActive,
+    isPaused,
+    mode,
+    time,
+    total,
+    startedAt,
+    cycleIndex,
+    pauseTimer,
+    resumeTimer,
+    taskInitialRemaining,
+  } = usePomodoroStore();
   const setActiveTaskMutation = useSetActiveTask();
   const updateTaskMutation = useUpdateTask();
+  const createPomodoroMutation = useCreatePomodoro();
   const { data: allTasks, refetch: refetchTasks } = useGetTasks({
     queryConfig: {
       subscribed: isFocused,
@@ -69,15 +86,51 @@ export default function FocusTab() {
     }
   }, [allTasks, activeTask, setActiveTask]);
 
-  // Sync if current activeTask in store was marked Done in DB
+  // Sync if current activeTask in store was marked Done in DB (e.g. from task list or detail screen)
   useEffect(() => {
     if (activeTask && allTasks) {
       const matchingTask = allTasks.find((t) => t.id === activeTask.id);
       if (matchingTask && matchingTask.status === "Done") {
+        const taskId = activeTask.id;
+        const startRemaining = taskInitialRemaining ?? total;
+        const elapsedSeconds = Math.max(0, startRemaining - time);
+        if (elapsedSeconds > 0 && mode === "pomodoro") {
+          createPomodoroMutation
+            .mutateAsync({
+              task_id: taskId,
+              mode: "pomodoro",
+              duration: elapsedSeconds,
+              cycle_index: cycleIndex,
+              session_num: Math.floor(cycleIndex / 2) + 1,
+              started_at:
+                startedAt ||
+                new Date(Date.now() - elapsedSeconds * 1000).toISOString(),
+              ended_at: new Date().toISOString(),
+              completed: true,
+            })
+            .catch((err) => {
+              console.error("Gagal auto-save sesi pomodoro:", err);
+            });
+          ambientAudioService.pauseAmbient();
+          pomodoroNotificationService.cancelScheduledNotifications();
+          pauseTimer();
+        }
         setActiveTask(null);
       }
     }
-  }, [allTasks, activeTask, setActiveTask]);
+  }, [
+    allTasks,
+    activeTask,
+    setActiveTask,
+    total,
+    time,
+    taskInitialRemaining,
+    mode,
+    cycleIndex,
+    startedAt,
+    createPomodoroMutation,
+    pauseTimer,
+  ]);
 
   const handleSelectTask = (task: Task | null) => {
     hasInitializedFromDb.current = true;
@@ -115,53 +168,129 @@ export default function FocusTab() {
   };
 
   const handleMarkTaskComplete = () => {
-    if (!activeTask?.id) return;
+    if (!activeTask?.id || isCompletingTask) return;
+
+    // Jeda timer & audio ambient seketika saat dialog konfirmasi muncul
+    const wasRunning = isActive && !isPaused;
+    if (wasRunning) {
+      ambientAudioService.pauseAmbient();
+      pomodoroNotificationService.cancelScheduledNotifications();
+      pauseTimer();
+    }
+
+    let actionTaken = false;
+    const handleCancel = async () => {
+      if (wasRunning) {
+        resumeTimer();
+        if (mode === "pomodoro") {
+          const focusMinutes = Math.round(total / 60);
+          await pomodoroNotificationService.scheduleSessionCompleteNotification(
+            time,
+            activeTask?.title,
+            focusMinutes,
+          );
+          await ambientAudioService.playAmbient();
+        } else {
+          await pomodoroNotificationService.scheduleSessionCompleteNotification(
+            time,
+            "Waktu istirahat selesai! Mari kembali ke sesi fokus.",
+          );
+        }
+      }
+    };
 
     Alert.alert(
       "Tandai Selesai",
       `Apakah Anda yakin ingin menandai tugas "${activeTask.title}" sebagai selesai?`,
       [
-        { text: "Batal", style: "cancel" },
+        {
+          text: "Batal",
+          style: "cancel",
+          onPress: () => {
+            actionTaken = true;
+            handleCancel();
+          },
+        },
         {
           text: "Tandai Selesai",
           style: "default",
-          onPress: () => {
+          onPress: async () => {
+            actionTaken = true;
+            setIsCompletingTask(true);
             const taskId = activeTask.id;
+            const startRemaining = taskInitialRemaining ?? total;
+            const elapsedSeconds = Math.max(0, startRemaining - time);
 
-            // Pause running timer so user doesn't lose focus time while selecting next task
-            if (isActive && !isPaused) {
+            try {
+              // 1. Simpan riwayat sesi Pomodoro jika waktu fokus sudah berjalan
+              if (elapsedSeconds > 0 && mode === "pomodoro") {
+                try {
+                  await createPomodoroMutation.mutateAsync({
+                    task_id: taskId,
+                    mode: "pomodoro",
+                    duration: elapsedSeconds,
+                    cycle_index: cycleIndex,
+                    session_num: Math.floor(cycleIndex / 2) + 1,
+                    started_at:
+                      startedAt ||
+                      new Date(
+                        Date.now() - elapsedSeconds * 1000,
+                      ).toISOString(),
+                    ended_at: new Date().toISOString(),
+                    completed: true,
+                  });
+                } catch (err) {
+                  console.error(
+                    "Gagal menyimpan sesi pomodoro saat tugas diselesaikan lebih awal:",
+                    err,
+                  );
+                }
+              }
+
+              // 2. Pause timer dan audio ambient (waktu tidak direset)
+              ambientAudioService.pauseAmbient();
+              pomodoroNotificationService.cancelScheduledNotifications();
               pauseTimer();
-            }
 
-            updateTaskMutation.mutate(
-              {
+              // 3. Update status tugas menjadi 'Done'
+              const updatedData = await updateTaskMutation.mutateAsync({
                 id: taskId,
                 data: {
                   status: "Done",
                   completed_at: new Date().toISOString(),
                 },
-              },
-              {
-                onSuccess: (data) => {
-                  Haptics.notificationAsync(
-                    Haptics.NotificationFeedbackType.Success,
-                  );
-                  setActiveTask(null);
-                  if (data?.streak_update?.streakIncreased) {
-                    useStreakCelebrationStore
-                      .getState()
-                      .setOnDismissCallback(() => {
-                        setTaskPickerVisible(true);
-                      });
-                  } else {
+              });
+
+              Haptics.notificationAsync(
+                Haptics.NotificationFeedbackType.Success,
+              );
+              setActiveTask(null);
+
+              if (updatedData?.streak_update?.streakIncreased) {
+                useStreakCelebrationStore
+                  .getState()
+                  .setOnDismissCallback(() => {
                     setTaskPickerVisible(true);
-                  }
-                },
-              },
-            );
+                  });
+              } else {
+                setTaskPickerVisible(true);
+              }
+            } catch (err) {
+              console.error("Gagal menyelesaikan tugas:", err);
+            } finally {
+              setIsCompletingTask(false);
+            }
           },
         },
       ],
+      {
+        cancelable: true,
+        onDismiss: () => {
+          if (!actionTaken) {
+            handleCancel();
+          }
+        },
+      },
     );
   };
 
@@ -263,7 +392,7 @@ export default function FocusTab() {
             }
             label="Tandai Tugas Ini Selesai"
             variant="primary"
-            isLoading={updateTaskMutation.isPending}
+            isLoading={updateTaskMutation.isPending || isCompletingTask}
             onPress={handleMarkTaskComplete}
           />
         </View>

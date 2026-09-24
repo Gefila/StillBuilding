@@ -4,12 +4,14 @@ import { Ionicons } from "@expo/vector-icons";
 import { useRouter } from "expo-router";
 import type { Project } from "../types/project.types";
 import type { Task } from "@/features/task/types/task.types";
-import { formatLastSessionTime } from "@/utils/dateHelpers";
+import {
+  formatLastSessionTime,
+  formatSessionDuration,
+} from "@/utils/dateHelpers";
 import { usePomodoroStore } from "@/features/pomodoro/store/usePomodoroStore";
 import { useSetActiveTask } from "@/features/task/hooks/useTask";
 import ProjectSessionRow, {
   type ProjectSessionItem,
-  getSessionDurationMinutes,
 } from "./ProjectSessionRow";
 
 interface ProjectPomodoroProps {
@@ -51,18 +53,14 @@ export default function ProjectPomodoro({ project }: ProjectPomodoroProps) {
     const focusSessions = sorted.filter(
       (s) => s.mode === "pomodoro" || !s.mode,
     );
-    const totalMinutes = focusSessions.reduce(
-      (sum, s) => sum + getSessionDurationMinutes(s),
+    const totalSeconds = focusSessions.reduce(
+      (sum, s) => sum + (s.duration || 0),
       0,
     );
     const count = focusSessions.length;
 
     const formattedTime =
-      totalMinutes >= 60
-        ? `${Math.floor(totalMinutes / 60)}j ${
-            totalMinutes % 60 > 0 ? `${totalMinutes % 60}m` : ""
-          }`
-        : `${totalMinutes}m`;
+      totalSeconds === 0 ? "0m" : formatSessionDuration(totalSeconds);
 
     const latest = sorted[0];
     const lastSession = latest

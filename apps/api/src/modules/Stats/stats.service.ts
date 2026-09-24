@@ -136,8 +136,7 @@ export const statsService = {
         if (entry) {
           entry.pomodoro_sessions += 1;
           const rawDuration = session.duration || 0;
-          const mins =
-            rawDuration > 60 ? Math.round(rawDuration / 60) : rawDuration;
+          const mins = Math.round(rawDuration / 60);
           entry.focus_minutes += mins;
         }
       }
