@@ -25,6 +25,10 @@ import { useCreatePomodoro } from "@/features/pomodoro/hooks/usePomodoro";
 import { ambientAudioService } from "@/features/pomodoro/services/ambientAudioService";
 import { pomodoroNotificationService } from "@/features/pomodoro/services/pomodoroNotificationService";
 import { useStreakCelebrationStore } from "@/features/task/stores/useStreakCelebrationStore";
+import {
+  TaskCompletionSummaryModal,
+  type TaskCompletionSummaryData,
+} from "@/features/pomodoro/components/TaskCompletionSummaryModal";
 import type { Task } from "@/features/task/types/task.types";
 
 export default function FocusTab() {
@@ -34,6 +38,9 @@ export default function FocusTab() {
   const [taskPickerVisible, setTaskPickerVisible] = useState(false);
   const [refreshing, setRefreshing] = useState(false);
   const [isCompletingTask, setIsCompletingTask] = useState(false);
+  const [summaryModalVisible, setSummaryModalVisible] = useState(false);
+  const [summaryData, setSummaryData] =
+    useState<TaskCompletionSummaryData | null>(null);
   const hasInitializedFromDb = useRef(false);
 
   const {
@@ -264,16 +271,27 @@ export default function FocusTab() {
               Haptics.notificationAsync(
                 Haptics.NotificationFeedbackType.Success,
               );
+
+              const summary: TaskCompletionSummaryData = {
+                taskTitle: activeTask.title,
+                projectName: activeTask.projectName,
+                elapsedSeconds,
+                remainingSeconds: time,
+                mode,
+                sessionNum: Math.floor(cycleIndex / 2) + 1,
+                streakIncreased: !!updatedData?.streak_update?.streakIncreased,
+              };
+              setSummaryData(summary);
               setActiveTask(null);
 
               if (updatedData?.streak_update?.streakIncreased) {
                 useStreakCelebrationStore
                   .getState()
                   .setOnDismissCallback(() => {
-                    setTaskPickerVisible(true);
+                    setSummaryModalVisible(true);
                   });
               } else {
-                setTaskPickerVisible(true);
+                setSummaryModalVisible(true);
               }
             } catch (err) {
               console.error("Gagal menyelesaikan tugas:", err);
@@ -404,6 +422,14 @@ export default function FocusTab() {
         onClose={() => setTaskPickerVisible(false)}
         onSelectTask={handleSelectTask}
         selectedTaskId={activeTask?.id}
+      />
+
+      {/* Task Completion Summary Modal */}
+      <TaskCompletionSummaryModal
+        visible={summaryModalVisible}
+        data={summaryData}
+        onClose={() => setSummaryModalVisible(false)}
+        onPickNextTask={() => setTaskPickerVisible(true)}
       />
     </View>
   );

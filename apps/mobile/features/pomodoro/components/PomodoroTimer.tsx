@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useCallback, useEffect, useRef, useState } from "react";
 import {
   Alert,
   AppState,
@@ -108,7 +108,69 @@ export default function PomodoroTimer({
     };
   }, [keepAwakeInFocusTab, isActive, isPaused]);
 
-  // Interval & Wall-Clock Countdown management
+  const latestRef = useRef({
+    activeTask,
+    startedAt,
+    advanceNextMode,
+    createPomodoroMutation,
+  });
+
+  useEffect(() => {
+    latestRef.current = {
+      activeTask,
+      startedAt,
+      advanceNextMode,
+      createPomodoroMutation,
+    };
+  });
+
+  const isCompletingRef = useRef(false);
+
+  const handleSessionComplete = useCallback(async () => {
+    if (isCompletingRef.current) return;
+    isCompletingRef.current = true;
+
+    try {
+      Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+
+      ambientAudioService.pauseAmbient();
+      pomodoroNotificationService.cancelScheduledNotifications();
+      ambientAudioService.playCompletionChime();
+
+      const {
+        advanceNextMode: advance,
+        activeTask: task,
+        startedAt: start,
+        createPomodoroMutation: mutation,
+      } = latestRef.current;
+
+      const result = advance();
+      setLastCompletedMode(result.finishedMode);
+      setCompletionModalVisible(true);
+
+      // Save to database if a task is attached (for pomodoro, shortBreak, and longBreak)
+      if (task?.id) {
+        try {
+          await mutation.mutateAsync({
+            task_id: task.id,
+            mode: result.finishedMode,
+            duration: result.finishedDuration,
+            cycle_index: result.finishedCycleIndex,
+            session_num: result.finishedSessionNum,
+            started_at: start || new Date().toISOString(),
+            ended_at: new Date().toISOString(),
+            completed: true,
+          });
+        } catch (err) {
+          console.error("Failed to save pomodoro session:", err);
+        }
+      }
+    } finally {
+      isCompletingRef.current = false;
+    }
+  }, []);
+
+  // Interval & Wall-Clock Countdown management (runs at 500ms to eliminate skip/jitter)
   useEffect(() => {
     let intervalId: any = null;
 
@@ -116,84 +178,29 @@ export default function PomodoroTimer({
       intervalId = setInterval(async () => {
         const { isFinished } = tick();
         if (isFinished) {
-          clearInterval(intervalId);
-          Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-
-          ambientAudioService.pauseAmbient();
-          pomodoroNotificationService.cancelScheduledNotifications();
-          ambientAudioService.playCompletionChime();
-
-          const result = advanceNextMode();
-          setLastCompletedMode(result.finishedMode);
-          setCompletionModalVisible(true);
-
-          // Save to database if a task is attached (for pomodoro, shortBreak, and longBreak)
-          if (activeTask?.id) {
-            try {
-              await createPomodoroMutation.mutateAsync({
-                task_id: activeTask.id,
-                mode: result.finishedMode,
-                duration: result.finishedDuration,
-                cycle_index: result.finishedCycleIndex,
-                session_num: result.finishedSessionNum,
-                started_at: startedAt || new Date().toISOString(),
-                ended_at: new Date().toISOString(),
-                completed: true,
-              });
-            } catch (err) {
-              console.error("Failed to save pomodoro session:", err);
-            }
-          }
+          if (intervalId) clearInterval(intervalId);
+          await handleSessionComplete();
         }
-      }, 1000);
+      }, 500);
     }
 
     return () => {
       if (intervalId) clearInterval(intervalId);
     };
-  }, [
-    isActive,
-    isPaused,
-    tick,
-    advanceNextMode,
-    activeTask,
-    startedAt,
-    createPomodoroMutation,
-  ]);
+  }, [isActive, isPaused, tick, handleSessionComplete]);
 
   // AppState Listener: Resync accurate time when app comes back to foreground
   useEffect(() => {
     const subscription = AppState.addEventListener(
       "change",
       async (nextAppState: AppStateStatus) => {
-        if (nextAppState === "active" && isActive && !isPaused) {
-          const { isFinished } = recalcTime();
-          if (isFinished) {
-            Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
-
-            ambientAudioService.pauseAmbient();
-            pomodoroNotificationService.cancelScheduledNotifications();
-            ambientAudioService.playCompletionChime();
-
-            const result = advanceNextMode();
-            setLastCompletedMode(result.finishedMode);
-            setCompletionModalVisible(true);
-
-            if (activeTask?.id) {
-              try {
-                await createPomodoroMutation.mutateAsync({
-                  task_id: activeTask.id,
-                  mode: result.finishedMode,
-                  duration: result.finishedDuration,
-                  cycle_index: result.finishedCycleIndex,
-                  session_num: result.finishedSessionNum,
-                  started_at: startedAt || new Date().toISOString(),
-                  ended_at: new Date().toISOString(),
-                  completed: true,
-                });
-              } catch (err) {
-                console.error("Failed to save pomodoro session:", err);
-              }
+        if (nextAppState === "active") {
+          const { isActive: running, isPaused: paused } =
+            usePomodoroStore.getState();
+          if (running && !paused) {
+            const { isFinished } = recalcTime();
+            if (isFinished) {
+              await handleSessionComplete();
             }
           }
         }
@@ -203,17 +210,10 @@ export default function PomodoroTimer({
     return () => {
       subscription.remove();
     };
-  }, [
-    isActive,
-    isPaused,
-    recalcTime,
-    advanceNextMode,
-    activeTask,
-    startedAt,
-    createPomodoroMutation,
-  ]);
+  }, [recalcTime, handleSessionComplete]);
 
   const handleStart = async (explicitMode?: PomodoroMode) => {
+    isCompletingRef.current = false;
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
     const targetMode = explicitMode || mode;
     startTimer();
@@ -238,6 +238,7 @@ export default function PomodoroTimer({
   const handlePauseResume = async () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
     if (isPaused) {
+      isCompletingRef.current = false;
       resumeTimer();
       if (mode === "pomodoro") {
         const focusMinutes = Math.round(total / 60);

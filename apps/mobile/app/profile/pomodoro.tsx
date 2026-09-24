@@ -14,6 +14,7 @@ import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import { ScreenHeader } from "@/components/ScreenHeader";
+import { Toast } from "@/components/Toast";
 import { usePomodoroPreferencesStore } from "@/features/pomodoro/store/usePomodoroPreferencesStore";
 import { usePomodoroStore } from "@/features/pomodoro/store/usePomodoroStore";
 import {
@@ -83,6 +84,12 @@ export default function PomodoroPreferencesScreen() {
     Haptics.selectionAsync();
     await setActivePreset(presetKey);
     syncWithPreferences();
+    if (presetKey !== "custom") {
+      const config = PRESET_CONFIGS[presetKey];
+      Toast.success(`Preset ${config.label} (${config.shortLabel}) aktif`);
+    } else {
+      Toast.info("Durasi Kustom aktif. Sesuaikan durasi di bawah jika perlu.");
+    }
   };
 
   const handleSaveCustom = async () => {
@@ -124,9 +131,8 @@ export default function PomodoroPreferencesScreen() {
       });
       await setActivePreset("custom");
       syncWithPreferences();
-      Alert.alert(
-        "Preferensi Tersimpan",
-        `Durasi kustom (${focus}m / ${shortBreak}m / ${longBreak}m) berhasil diterapkan.`,
+      Toast.success(
+        `Durasi kustom (${focus}m / ${shortBreak}m / ${longBreak}m) berhasil diterapkan`,
       );
     } finally {
       setIsSavingCustom(false);
@@ -165,9 +171,14 @@ export default function PomodoroPreferencesScreen() {
 
           {/* Curated Presets Section */}
           <View className="mt-2 mb-4">
-            <Text className="text-xs uppercase font-bold text-muted tracking-wider mb-2.5">
-              Preset Ritme Kerja
-            </Text>
+            <View className="flex-row items-center justify-between mb-2.5">
+              <Text className="text-xs uppercase font-bold text-muted tracking-wider">
+                Preset Ritme Kerja
+              </Text>
+              <Text className="text-[11px] text-muted font-medium">
+                Pilih untuk langsung menerapkan
+              </Text>
+            </View>
 
             <View className="gap-2.5">
               {curatedPresets.map(({ key, icon }) => {
@@ -317,13 +328,28 @@ export default function PomodoroPreferencesScreen() {
             </View>
           </View>
 
-          {/* Custom Duration Form Section (Inlined) */}
-          <View className="bg-surface rounded-2xl border border-border p-4 mb-4">
-            <View className="flex-row items-center gap-2 mb-3">
-              <Ionicons name="pencil-outline" size={16} color="#18181b" />
-              <Text className="text-sm font-bold text-foreground">
-                Atur Nilai Durasi Kustom
-              </Text>
+          {/* Custom Duration Form Section */}
+          <View
+            className={`bg-surface rounded-2xl border p-4 mb-4 ${
+              activePreset === "custom"
+                ? "border-foreground shadow-xs"
+                : "border-border"
+            }`}
+          >
+            <View className="flex-row items-center justify-between mb-3">
+              <View className="flex-row items-center gap-2">
+                <Ionicons name="pencil-outline" size={16} color="#18181b" />
+                <Text className="text-sm font-bold text-foreground">
+                  Atur Nilai Durasi Kustom
+                </Text>
+              </View>
+              {activePreset !== "custom" && (
+                <View className="px-2 py-0.5 rounded-md bg-surface-subtle border border-border">
+                  <Text className="text-[10px] text-muted font-medium">
+                    Tidak Aktif
+                  </Text>
+                </View>
+              )}
             </View>
 
             <View className="gap-3">
@@ -408,7 +434,9 @@ export default function PomodoroPreferencesScreen() {
               <Text className="text-xs font-bold text-background">
                 {isSavingCustom
                   ? "Menyimpan..."
-                  : "Simpan & Terapkan Durasi Kustom"}
+                  : activePreset === "custom"
+                    ? "Simpan Durasi Kustom"
+                    : "Terapkan Sebagai Durasi Kustom"}
               </Text>
             </TouchableOpacity>
           </View>

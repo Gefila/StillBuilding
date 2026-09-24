@@ -41,19 +41,20 @@ graph LR
 
 ### Frontend
 
-| File                                                                                      | Fungsi                                                              |
-| :---------------------------------------------------------------------------------------- | :------------------------------------------------------------------ |
-| [`app/(tabs)/focus.tsx`](<apps/mobile/app/(tabs)/focus.tsx>)                              | Screen utama tab Fokus                                              |
-| [`PomodoroTimer.tsx`](apps/mobile/features/pomodoro/components/PomodoroTimer.tsx)         | Komponen timer circular + logika visualisasi & kontrol              |
-| [`ZenDeskModal.tsx`](apps/mobile/features/pomodoro/components/ZenDeskModal.tsx)           | Modal Zen Desk landscape AMOLED fullscreen dengan keep-awake        |
-| [`TaskPickerModal.tsx`](apps/mobile/features/pomodoro/components/TaskPickerModal.tsx)     | Modal bottom sheet pemilih tugas target                             |
-| [`QuickBlockerModal.tsx`](apps/mobile/features/pomodoro/components/QuickBlockerModal.tsx) | Modal pencatatan hambatan saat sesi fokus                           |
-| [`TaskSelector.tsx`](apps/mobile/features/pomodoro/components/TaskSelector.tsx)           | Dropdown selector proyek                                            |
-| [`usePomodoroStore.ts`](apps/mobile/features/pomodoro/store/usePomodoroStore.ts)          | Zustand store (timer state, cycle, wall-clock, multi-task tracking) |
-| [`usePomodoro.ts`](apps/mobile/features/pomodoro/hooks/usePomodoro.ts)                    | TanStack Query hooks (CRUD API & invalidation)                      |
-| [`pomodoroService.ts`](apps/mobile/features/pomodoro/services/pomodoroService.ts)         | Axios API caller                                                    |
-| [`dateHelpers.ts`](apps/mobile/utils/dateHelpers.ts)                                      | Formatter durasi sesi (`formatSessionDuration`: detik/menit)        |
-| [`pomodoro.types.ts`](packages/types/src/pomodoro.types.ts)                               | Zod schema & TypeScript interface                                   |
+| File                                                                                                        | Fungsi                                                              |
+| :---------------------------------------------------------------------------------------------------------- | :------------------------------------------------------------------ |
+| [`app/(tabs)/focus.tsx`](<apps/mobile/app/(tabs)/focus.tsx>)                                                | Screen utama tab Fokus                                              |
+| [`PomodoroTimer.tsx`](apps/mobile/features/pomodoro/components/PomodoroTimer.tsx)                           | Komponen timer circular + logika visualisasi & kontrol              |
+| [`TaskCompletionSummaryModal.tsx`](apps/mobile/features/pomodoro/components/TaskCompletionSummaryModal.tsx) | Modal alert/summary riwayat & sisa waktu setelah tugas selesai      |
+| [`ZenDeskModal.tsx`](apps/mobile/features/pomodoro/components/ZenDeskModal.tsx)                             | Modal Zen Desk landscape AMOLED fullscreen dengan keep-awake        |
+| [`TaskPickerModal.tsx`](apps/mobile/features/pomodoro/components/TaskPickerModal.tsx)                       | Modal bottom sheet pemilih tugas target                             |
+| [`QuickBlockerModal.tsx`](apps/mobile/features/pomodoro/components/QuickBlockerModal.tsx)                   | Modal pencatatan hambatan saat sesi fokus                           |
+| [`TaskSelector.tsx`](apps/mobile/features/pomodoro/components/TaskSelector.tsx)                             | Dropdown selector proyek                                            |
+| [`usePomodoroStore.ts`](apps/mobile/features/pomodoro/store/usePomodoroStore.ts)                            | Zustand store (timer state, cycle, wall-clock, multi-task tracking) |
+| [`usePomodoro.ts`](apps/mobile/features/pomodoro/hooks/usePomodoro.ts)                                      | TanStack Query hooks (CRUD API & invalidation)                      |
+| [`pomodoroService.ts`](apps/mobile/features/pomodoro/services/pomodoroService.ts)                           | Axios API caller                                                    |
+| [`dateHelpers.ts`](apps/mobile/utils/dateHelpers.ts)                                                        | Formatter durasi sesi (`formatSessionDuration`: detik/menit)        |
+| [`pomodoro.types.ts`](packages/types/src/pomodoro.types.ts)                                                 | Zod schema & TypeScript interface                                   |
 
 ---
 
@@ -271,7 +272,8 @@ Screen utama yang meng-_orchestrate_ seluruh fitur Pomodoro:
    - **Simpan Sesi Aktual**: Sesi Pomodoro langsung disimpan ke database dengan durasi kerja riil (`elapsedSeconds = startRemaining - time`).
    - **Sisa Waktu Dipertahankan**: Timer **tidak di-reset**, melainkan tetap berada pada status dijeda dengan sisa waktu yang tersisa.
    - **Pencegahan Double-Counting**: State `taskInitialRemaining` di-set ke sisa waktu saat tugas baru dipilih, sehingga tugas berikutnya hanya dicatat sisa durasinya.
-   - **TaskPickerModal Otomatis**: Bottom sheet langsung dibuka otomatis agar user dapat memilih tugas berikutnya dan menekan tombol **"Lanjutkan"**.
+   - **Task Completion Summary Modal**: Muncul otomatis menampilkan kartu ringkasan hasil kerja (nama tugas, waktu fokus riil, dan sisa waktu interval yang masih ada).
+   - **Pilih Tugas Berikutnya**: Dari modal ringkasan, user dapat langsung menekan "Pilih Tugas Berikutnya" untuk membuka `TaskPickerModal` dan melanjutkan sisa waktu sesi fokus.
 5. **TaskPickerModal** — Bottom sheet untuk memilih/mengganti tugas target.
 
 > [!TIP]
@@ -405,7 +407,8 @@ Pada lingkungan React Native / Expo, proses `setInterval` akan mengalami throttl
 
 1. **Wall-Clock Calculation**:
    - Saat timer dimulai, catat `targetEndTime = Date.now() + time * 1000`.
-   - Perhitungan sisa waktu selalu menggunakan `Math.max(0, Math.round((targetEndTime - Date.now()) / 1000))`.
+   - Perhitungan sisa waktu selalu menggunakan `Math.max(0, Math.ceil((targetEndTime - Date.now()) / 1000))` untuk mencegah skipping detik akibat window drift `Math.round`.
+   - `setInterval` dijalankan dengan sampling 500ms (oversampling) dan state store hanya di-_set_ ketika nilai integer detik berubah (`remaining !== time`) agar render tetap 1x per detik tanpa stutter.
 2. **AppState Listener**:
    - Tambahkan listener `AppState.addEventListener('change', ...)` pada komponen timer.
    - Saat app kembali berstatus `active` (foreground), panggil `recalcTime()` untuk langsung merefleksikan sisa waktu yang benar.

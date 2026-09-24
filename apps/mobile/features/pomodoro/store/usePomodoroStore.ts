@@ -205,6 +205,15 @@ export const usePomodoroStore = create<PomodoroState>((set, get) => ({
   },
 
   pauseTimer: () => {
+    const { targetEndTime, isActive, isPaused } = get();
+    if (isActive && !isPaused && targetEndTime) {
+      const remaining = Math.max(
+        0,
+        Math.ceil((targetEndTime - Date.now()) / 1000),
+      );
+      set({ isPaused: true, targetEndTime: null, time: remaining });
+      return;
+    }
     set({ isPaused: true, targetEndTime: null });
   },
 
@@ -260,9 +269,11 @@ export const usePomodoroStore = create<PomodoroState>((set, get) => ({
 
     const remaining = Math.max(
       0,
-      Math.round((targetEndTime - Date.now()) / 1000),
+      Math.ceil((targetEndTime - Date.now()) / 1000),
     );
-    set({ time: remaining });
+    if (remaining !== get().time) {
+      set({ time: remaining });
+    }
     return { isFinished: remaining <= 0 };
   },
 
@@ -273,9 +284,11 @@ export const usePomodoroStore = create<PomodoroState>((set, get) => ({
     if (targetEndTime) {
       const remaining = Math.max(
         0,
-        Math.round((targetEndTime - Date.now()) / 1000),
+        Math.ceil((targetEndTime - Date.now()) / 1000),
       );
-      set({ time: remaining });
+      if (remaining !== time) {
+        set({ time: remaining });
+      }
       return { isFinished: remaining <= 0 };
     }
 

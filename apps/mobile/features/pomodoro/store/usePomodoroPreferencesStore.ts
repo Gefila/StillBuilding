@@ -45,7 +45,7 @@ interface PomodoroPreferencesState {
   setActivePreset: (preset: FocusPresetKey) => Promise<void>;
   setCustomDurations: (durations: CustomDurations) => Promise<void>;
   setKeepAwakeInFocusTab: (enabled: boolean) => Promise<void>;
-  initializePreferences: () => Promise<void>;
+  initializePreferences: (force?: boolean) => Promise<void>;
   getCurrentDurations: () => PresetDurations;
 }
 
@@ -57,7 +57,7 @@ export const usePomodoroPreferencesStore = create<PomodoroPreferencesState>(
     isInitialized: false,
 
     setActivePreset: async (preset: FocusPresetKey) => {
-      set({ activePreset: preset });
+      set({ activePreset: preset, isInitialized: true });
       try {
         await SecureStore.setItemAsync(PRESET_KEY, preset);
       } catch (error) {
@@ -66,7 +66,7 @@ export const usePomodoroPreferencesStore = create<PomodoroPreferencesState>(
     },
 
     setCustomDurations: async (durations: CustomDurations) => {
-      set({ customDurations: durations });
+      set({ customDurations: durations, isInitialized: true });
       try {
         await SecureStore.setItemAsync(
           CUSTOM_DURATIONS_KEY,
@@ -92,7 +92,8 @@ export const usePomodoroPreferencesStore = create<PomodoroPreferencesState>(
       }
     },
 
-    initializePreferences: async () => {
+    initializePreferences: async (force = false) => {
+      if (!force && get().isInitialized) return;
       try {
         const storedPreset = (await SecureStore.getItemAsync(
           PRESET_KEY,
