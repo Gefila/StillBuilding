@@ -29,11 +29,8 @@ app/
 │   ├── _layout.tsx                 # Bottom Tabs Navigator & styling tab bar
 │   ├── home.tsx                    # Tab 1: Dashboard, Quick Tasks, Today's Summary
 │   ├── projects.tsx                # Tab 2: Daftar & Manajemen Proyek
-│   └── profile.tsx                 # Tab 3: Profil Pengguna, Pengaturan & Statistik
-│
-├── pomodoro/                       # Rute Sesi Pomodoro Tracker
-│   ├── _layout.tsx                 # Stack navigator untuk modul Pomodoro
-│   └── index.tsx                   # Layar Fokus Pomodoro Timer & Blocker Logger
+│   ├── focus.tsx                   # Tab 3: Sesi Fokus Pomodoro & Blocker
+│   └── profile.tsx                 # Tab 4: Profil Pengguna, Pengaturan & Statistik
 │
 ├── project/                        # Rute Detail & Manajemen Project
 │   ├── _layout.tsx                 # Stack navigator untuk project screens
@@ -228,11 +225,11 @@ export default function TaskDetailScreen() {
 
 ## 6. Metode Navigasi Umum
 
-| Aksi                              | Kode Expo Router                      | Keterangan                                                                                                                        |
-| :-------------------------------- | :------------------------------------ | :-------------------------------------------------------------------------------------------------------------------------------- |
-| **Pindah Halaman**                | `router.navigate('/task/123')`        | Default untuk tap/klik: push layar baru **atau** kembali ke layar yang sudah ada di stack (mencegah layar ganda saat double tap). |
-| **Paksa Layar Baru (Stack)**      | `router.push('/task/123')`            | Selalu menambah layar baru ke history stack. Hindari untuk kartu/tombol tap — double tap cepat akan menumpuk dua layar identik.   |
-| **Ganti Halaman (Replace)**       | `router.replace('/(tabs)/home')`      | Mengganti rute aktif (cocok setelah login/logout agar tidak bisa back).                                                           |
-| **Kembali ke Halaman Sebelumnya** | `router.back()`                       | Menutup layar aktif dan kembali ke layar sebelumnya.                                                                              |
-| **Buka Modal Form**               | `router.navigate('/task/create')`     | Membuka screen dalam mode modal overlay (navigate agar modal tidak dobel).                                                        |
-| **Navigasi Deklaratif**           | `<Link href="/pomodoro">Mulai</Link>` | Komponen link bawaan Expo Router untuk interaksi tombol sederhana.                                                                |
+| Aksi                              | Kode Expo Router                          | Keterangan                                                                                                                        |
+| :-------------------------------- | :---------------------------------------- | :-------------------------------------------------------------------------------------------------------------------------------- |
+| **Pindah Halaman**                | `router.navigate('/task/123')`            | Default untuk tap/klik: push layar baru **atau** kembali ke layar yang sudah ada di stack (mencegah layar ganda saat double tap). |
+| **Paksa Layar Baru (Stack)**      | `router.push('/task/123')`                | Selalu menambah layar baru ke history stack. Hindari untuk kartu/tombol tap — double tap cepat akan menumpuk dua layar identik.   |
+| **Ganti Halaman (Replace)**       | `router.replace('/(tabs)/home')`          | Mengganti rute aktif (cocok setelah login/logout agar tidak bisa back).                                                           |
+| **Kembali ke Halaman Sebelumnya** | `router.back()`                           | Menutup layar aktif dan kembali ke layar sebelumnya.                                                                              |
+| **Buka Modal Form**               | `router.navigate('/task/create')`         | Membuka screen dalam mode modal overlay (navigate agar modal tidak dobel).                                                        |
+| **Navigasi Deklaratif**           | `<Link href="/(tabs)/focus">Mulai</Link>` | Komponen link bawaan Expo Router untuk interaksi tombol sederhana.                                                                |

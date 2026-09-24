@@ -6,23 +6,22 @@ Dokumen ini berisi spesifikasi fungsional seluruh layar (_screens_) pada aplikas
 
 ## 1. Peta Ringkasan Layar (_Screens Overview Matrix_)
 
-| Route Path                | Nama Layar                     | Deskripsi Singkat                                 | Layout / Mode      |
-| :------------------------ | :----------------------------- | :------------------------------------------------ | :----------------- |
-| `app/(auth)/login.tsx`    | **Masuk Akun**                 | Form login dengan email & kata sandi              | Stack (Auth Guard) |
-| `app/(auth)/register.tsx` | **Daftar Akun**                | Form pendaftaran akun pengguna baru               | Stack (Auth Guard) |
-| `app/(tabs)/home.tsx`     | **Beranda / Dashboard**        | Ringkasan harian, task aktif, & shortcut fokus    | Bottom Tab 1       |
-| `app/(tabs)/projects.tsx` | **Daftar Proyek**              | List & filter proyek, progress tracking           | Bottom Tab 2       |
-| `app/(tabs)/focus.tsx`    | **Fokus (Pomodoro & Blocker)** | Sesi fokus mandiri / task timer & blocker log     | Bottom Tab 3       |
-| `app/(tabs)/profile.tsx`  | **Profil & Statistik**         | Statistik fokus, pengaturan akun, & logout        | Bottom Tab 4       |
-| `app/pomodoro/index.tsx`  | **Pomodoro Timer & Blocker**   | Timer interval fokus, pemilih task, blocker modal | Stack Screen       |
-| `app/task/[id].tsx`       | **Detail Tugas**               | Detail status task, riwayat sesi fokus, catatan   | Dynamic Stack      |
-| `app/task/create.tsx`     | **Tambah Tugas**               | Form pembuatan task baru & assign ke project      | Modal Sheet        |
-| `app/task/edit.tsx`       | **Edit Tugas**                 | Form pembaruan judul, prioritas, & deadline       | Stack / Modal      |
-| `app/project/[id].tsx`    | **Detail Proyek**              | Info proyek, progres, & daftar task terkait       | Dynamic Stack      |
-| `app/project/create.tsx`  | **Tambah Proyek**              | Form pembuatan project baru & pilihan warna/icon  | Modal Sheet        |
-| `app/project/edit.tsx`    | **Edit Proyek**                | Form pembaruan nama & deskripsi proyek            | Stack / Modal      |
-| `app/profile/support.tsx` | **Bantuan & Dukungan**         | Pusat FAQ, tips deep work, & kontak tim           | Stack Screen       |
-| `app/profile/about.tsx`   | **Tentang Aplikasi**           | Filosofi produk, tech stack, legal, & versi       | Stack Screen       |
+| Route Path                | Nama Layar                     | Deskripsi Singkat                                | Layout / Mode      |
+| :------------------------ | :----------------------------- | :----------------------------------------------- | :----------------- |
+| `app/(auth)/login.tsx`    | **Masuk Akun**                 | Form login dengan email & kata sandi             | Stack (Auth Guard) |
+| `app/(auth)/register.tsx` | **Daftar Akun**                | Form pendaftaran akun pengguna baru              | Stack (Auth Guard) |
+| `app/(tabs)/home.tsx`     | **Beranda / Dashboard**        | Ringkasan harian, task aktif, & shortcut fokus   | Bottom Tab 1       |
+| `app/(tabs)/projects.tsx` | **Daftar Proyek**              | List & filter proyek, progress tracking          | Bottom Tab 2       |
+| `app/(tabs)/focus.tsx`    | **Fokus (Pomodoro & Blocker)** | Sesi fokus mandiri / task timer & blocker log    | Bottom Tab 3       |
+| `app/(tabs)/profile.tsx`  | **Profil & Statistik**         | Statistik fokus, pengaturan akun, & logout       | Bottom Tab 4       |
+| `app/task/[id].tsx`       | **Detail Tugas**               | Detail status task, riwayat sesi fokus, catatan  | Dynamic Stack      |
+| `app/task/create.tsx`     | **Tambah Tugas**               | Form pembuatan task baru & assign ke project     | Modal Sheet        |
+| `app/task/edit.tsx`       | **Edit Tugas**                 | Form pembaruan judul, prioritas, & deadline      | Stack / Modal      |
+| `app/project/[id].tsx`    | **Detail Proyek**              | Info proyek, progres, & daftar task terkait      | Dynamic Stack      |
+| `app/project/create.tsx`  | **Tambah Proyek**              | Form pembuatan project baru & pilihan warna/icon | Modal Sheet        |
+| `app/project/edit.tsx`    | **Edit Proyek**                | Form pembaruan nama & deskripsi proyek           | Stack / Modal      |
+| `app/profile/support.tsx` | **Bantuan & Dukungan**         | Pusat FAQ, tips deep work, & kontak tim          | Stack Screen       |
+| `app/profile/about.tsx`   | **Tentang Aplikasi**           | Filosofi produk, tech stack, legal, & versi      | Stack Screen       |
 
 ---
 
@@ -42,10 +41,10 @@ Dokumen ini berisi spesifikasi fungsional seluruh layar (_screens_) pada aplikas
 - **Aksi Pengguna (_User Actions_)**:
   - Tap card task ➡️ Navigasi ke `app/task/[id].tsx`.
   - Toggle checkbox task ➡️ Menandai task menjadi `Done`.
-  - Tap tombol "Mulai Fokus" ➡️ Navigasi ke `app/pomodoro/index.tsx`.
+  - Tap tombol "Mulai Fokus" ➡️ Navigasi ke `app/(tabs)/focus.tsx`.
 - **Navigasi Masuk/Keluar**:
   - _Entry_: Default tab setelah login.
-  - _Exit_: Push ke `/task/[id]`, `/pomodoro`, `/task/create`.
+  - _Exit_: Push ke `/task/[id]`, `/(tabs)/focus`, `/task/create`.
 
 ---
 
@@ -85,9 +84,9 @@ Dokumen ini berisi spesifikasi fungsional seluruh layar (_screens_) pada aplikas
 
 ---
 
-### ⏱️ Pomodoro Tracker & Blocker (`app/pomodoro/index.tsx`)
+### ⏱️ Tab Utama: Fokus Pomodoro & Blocker (`app/(tabs)/focus.tsx`)
 
-- **Tujuan**: Layar deep-work untuk menjalankan interval fokus (25m kerja / 5m istirahat) dan mencatat blocker secara real-time.
+- **Tujuan**: Layar deep-work utama untuk menjalankan interval fokus, mengaitkan task aktif, dan mencatat blocker secara real-time.
 - **Komponen Utama**:
   - `ActiveTaskHeader`: Menampilkan judul task yang sedang difokuskan.
   - `PomodoroTimer` (`features/pomodoro/components/PomodoroTimer.tsx`): Tampilan jam digital countdown melingkar.
@@ -122,7 +121,7 @@ Dokumen ini berisi spesifikasi fungsional seluruh layar (_screens_) pada aplikas
   - `useGetTaskById({ id })`
   - `useUpdateTask()` & `useDeleteTask()`
 - **Aksi Pengguna (_User Actions_)**:
-  - Tap "Mulai Fokus" ➡️ Navigasi ke `app/pomodoro/index.tsx?id={taskId}`.
+  - Tap "Mulai Fokus" ➡️ Set active task & navigasi ke `app/(tabs)/focus.tsx`.
   - Tap "Edit" ➡️ Navigasi ke `app/task/edit.tsx?id={taskId}`.
   - Tap "Hapus" ➡️ Konfirmasi alert lalu hapus task dan kembali ke halaman sebelumnya.
 

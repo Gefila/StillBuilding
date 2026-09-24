@@ -729,7 +729,7 @@ export default function ZenDeskModal({
                 }}
               >
                 {transitionFinishedMode === "pomodoro"
-                  ? `${Math.round(total / 60)} menit fokus tercatat. Saatnya rehat sejenak.`
+                  ? `${total < 60 ? `${total} detik` : `${Math.round(total / 60)} menit`} fokus tercatat. Saatnya rehat sejenak.`
                   : "Pikiran kembali segar. Siap lanjut deep work?"}
               </Text>
 

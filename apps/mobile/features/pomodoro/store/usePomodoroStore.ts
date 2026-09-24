@@ -1,14 +1,23 @@
 import { create } from "zustand";
 import { usePomodoroPreferencesStore } from "./usePomodoroPreferencesStore";
-import type { FocusPresetKey } from "../types/pomodoroPreferences";
+import {
+  IS_TESTING_MODE,
+  type FocusPresetKey,
+} from "../types/pomodoroPreferences";
 
 export type PomodoroMode = "pomodoro" | "shortBreak" | "longBreak";
 
-export const DURATIONS: Record<PomodoroMode, number> = {
-  pomodoro: 25 * 60,
-  shortBreak: 5 * 60,
-  longBreak: 15 * 60,
-};
+export const DURATIONS: Record<PomodoroMode, number> = IS_TESTING_MODE
+  ? {
+      pomodoro: 10,
+      shortBreak: 5,
+      longBreak: 10,
+    }
+  : {
+      pomodoro: 25 * 60,
+      shortBreak: 5 * 60,
+      longBreak: 15 * 60,
+    };
 
 export function getPresetDurations(): Record<PomodoroMode, number> {
   try {

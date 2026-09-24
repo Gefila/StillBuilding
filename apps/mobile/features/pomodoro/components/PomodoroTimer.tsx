@@ -304,7 +304,12 @@ export default function PomodoroTimer({
   };
 
   const nextMode = CYCLE[(cycleIndex + 1) % CYCLE.length];
-  const nextLabel = `${MODE_LABELS[nextMode]} · ${Math.round(DURATIONS[nextMode] / 60)}m`;
+  const nextDurationSec = DURATIONS[nextMode];
+  const nextDurationText =
+    nextDurationSec < 60
+      ? `${nextDurationSec}d`
+      : `${Math.round(nextDurationSec / 60)}m`;
+  const nextLabel = `${MODE_LABELS[nextMode]} · ${nextDurationText}`;
 
   const handleSkip = () => {
     Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
@@ -582,8 +587,11 @@ export default function PomodoroTimer({
                 Sesi Fokus Tuntas! 🎉
               </Text>
               <Text className="text-xs text-muted text-center mt-1 mb-5 leading-relaxed">
-                Kerja bagus! {Math.round(total / 60)} menit fokus telah dicatat.
-                Saatnya rehat sejenak.
+                Kerja bagus!{" "}
+                {total < 60
+                  ? `${total} detik`
+                  : `${Math.round(total / 60)} menit`}{" "}
+                fokus telah dicatat. Saatnya rehat sejenak.
               </Text>
 
               {/* Primary Action: Start Break */}

@@ -3,6 +3,7 @@ import * as SecureStore from "expo-secure-store";
 import {
   DEFAULT_CUSTOM_DURATIONS,
   DEFAULT_KEEP_AWAKE_IN_FOCUS_TAB,
+  IS_TESTING_MODE,
   PRESET_CONFIGS,
   type CustomDurations,
   type FocusPresetKey,
@@ -18,6 +19,13 @@ export function resolvePresetDurations(
   customDurations: CustomDurations,
 ): PresetDurations {
   if (presetKey === "custom") {
+    if (IS_TESTING_MODE) {
+      return {
+        pomodoro: Math.max(5, customDurations.focusMinutes),
+        shortBreak: Math.max(3, customDurations.shortBreakMinutes),
+        longBreak: Math.max(5, customDurations.longBreakMinutes),
+      };
+    }
     return {
       pomodoro: customDurations.focusMinutes * 60,
       shortBreak: customDurations.shortBreakMinutes * 60,

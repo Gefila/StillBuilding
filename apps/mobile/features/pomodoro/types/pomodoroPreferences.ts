@@ -17,6 +17,10 @@ export interface PresetMeta {
   durations: PresetDurations;
 }
 
+// Set IS_TESTING_MODE ke true untuk durasi singkat saat testing/development (dalam hitungan detik).
+// Kembalikan ke false untuk kembali ke durasi normal (dalam hitungan menit).
+export const IS_TESTING_MODE = false;
+
 export const PRESET_CONFIGS: Record<
   Exclude<FocusPresetKey, "custom">,
   PresetMeta
@@ -24,38 +28,62 @@ export const PRESET_CONFIGS: Record<
   quickSprint: {
     key: "quickSprint",
     label: "Quick Sprint",
-    shortLabel: "15m",
+    shortLabel: IS_TESTING_MODE ? "8d" : "15m",
     tagline: "Atasi rasa malas & mulai cepat",
-    description: "15m Fokus · 3m Rehat · 10m Rehat Panjang",
-    durations: {
-      pomodoro: 15 * 60,
-      shortBreak: 3 * 60,
-      longBreak: 10 * 60,
-    },
+    description: IS_TESTING_MODE
+      ? "8d Fokus · 3d Rehat · 5d Rehat Panjang (Dev/Test)"
+      : "15m Fokus · 3m Rehat · 10m Rehat Panjang",
+    durations: IS_TESTING_MODE
+      ? {
+          pomodoro: 8,
+          shortBreak: 3,
+          longBreak: 5,
+        }
+      : {
+          pomodoro: 15 * 60,
+          shortBreak: 3 * 60,
+          longBreak: 10 * 60,
+        },
   },
   classic: {
     key: "classic",
     label: "Classic Pomodoro",
-    shortLabel: "25m",
+    shortLabel: IS_TESTING_MODE ? "10d" : "25m",
     tagline: "Ritme standar & seimbang",
-    description: "25m Fokus · 5m Rehat · 15m Rehat Panjang",
-    durations: {
-      pomodoro: 25 * 60,
-      shortBreak: 5 * 60,
-      longBreak: 15 * 60,
-    },
+    description: IS_TESTING_MODE
+      ? "10d Fokus · 5d Rehat · 10d Rehat Panjang (Dev/Test)"
+      : "25m Fokus · 5m Rehat · 15m Rehat Panjang",
+    durations: IS_TESTING_MODE
+      ? {
+          pomodoro: 10,
+          shortBreak: 5,
+          longBreak: 10,
+        }
+      : {
+          pomodoro: 25 * 60,
+          shortBreak: 5 * 60,
+          longBreak: 15 * 60,
+        },
   },
   deepFlow: {
     key: "deepFlow",
     label: "Deep Flow",
-    shortLabel: "50m",
+    shortLabel: IS_TESTING_MODE ? "15d" : "50m",
     tagline: "Koding mendalam & pemecahan masalah rumit",
-    description: "50m Fokus · 10m Rehat · 20m Rehat Panjang",
-    durations: {
-      pomodoro: 50 * 60,
-      shortBreak: 10 * 60,
-      longBreak: 20 * 60,
-    },
+    description: IS_TESTING_MODE
+      ? "15d Fokus · 6d Rehat · 12d Rehat Panjang (Dev/Test)"
+      : "50m Fokus · 10m Rehat · 20m Rehat Panjang",
+    durations: IS_TESTING_MODE
+      ? {
+          pomodoro: 15,
+          shortBreak: 6,
+          longBreak: 12,
+        }
+      : {
+          pomodoro: 50 * 60,
+          shortBreak: 10 * 60,
+          longBreak: 20 * 60,
+        },
   },
 };
 
