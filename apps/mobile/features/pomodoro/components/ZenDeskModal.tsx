@@ -11,7 +11,7 @@ import {
 import { useSafeAreaInsets } from "react-native-safe-area-context";
 import { Ionicons } from "@expo/vector-icons";
 import * as ScreenOrientation from "expo-screen-orientation";
-import { NavigationBar } from "expo-navigation-bar";
+import * as NavigationBar from "expo-navigation-bar";
 import { activateKeepAwakeAsync, deactivateKeepAwake } from "expo-keep-awake";
 import * as Haptics from "expo-haptics";
 import {
@@ -108,7 +108,7 @@ export default function ZenDeskModal({
       // Hide Android system navigation bar
       if (Platform.OS === "android") {
         try {
-          NavigationBar.setHidden(true);
+          NavigationBar.setVisibilityAsync("hidden").catch(() => {});
           NavigationBar.setStyle("dark");
         } catch (err) {
           console.warn("Failed to hide navigation bar:", err);
@@ -130,7 +130,7 @@ export default function ZenDeskModal({
 
       if (Platform.OS === "android") {
         try {
-          NavigationBar.setHidden(false);
+          NavigationBar.setVisibilityAsync("visible").catch(() => {});
           NavigationBar.setStyle("auto");
         } catch (err) {
           console.warn("Failed to restore navigation bar:", err);
@@ -149,7 +149,7 @@ export default function ZenDeskModal({
 
       if (Platform.OS === "android") {
         try {
-          NavigationBar.setHidden(false);
+          NavigationBar.setVisibilityAsync("visible").catch(() => {});
           NavigationBar.setStyle("auto");
         } catch {}
       }
@@ -251,10 +251,12 @@ export default function ZenDeskModal({
       transparent={true}
       animationType="fade"
       statusBarTranslucent={true}
+      navigationBarTranslucent={true}
+      hardwareAccelerated={true}
       supportedOrientations={["landscape", "landscape-left", "landscape-right"]}
       onRequestClose={onClose}
     >
-      <NavigationBar hidden={true} style="dark" />
+      <NavigationBar.NavigationBar hidden={true} style="dark" />
       <View
         style={{
           flex: 1,

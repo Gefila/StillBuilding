@@ -22,11 +22,7 @@
       },
       "predictiveBackGestureEnabled": false,
       "package": "com.gefila.stillbuilding",
-      "permissions": [
-        "RECEIVE_BOOT_COMPLETED",
-        "VIBRATE",
-        "WAKE_LOCK"
-      ]
+      "permissions": ["RECEIVE_BOOT_COMPLETED", "VIBRATE", "WAKE_LOCK"]
     },
     "web": {
       "output": "static",
@@ -69,7 +65,8 @@
           "icon": "./assets/images/icon.png",
           "color": "#18181b"
         }
-      ]
+      ],
+      "./plugins/withAndroidDisplayCutout"
     ],
     "experiments": {
       "typedRoutes": true,
