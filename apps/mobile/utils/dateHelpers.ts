@@ -67,3 +67,34 @@ export function formatSessionDuration(seconds?: number): string {
   const remainingMin = m % 60;
   return remainingMin > 0 ? `${h}j ${remainingMin}m` : `${h}j`;
 }
+
+export function getDeviceTimeZone(): string {
+  try {
+    const intlTz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    const offset = new Date().getTimezoneOffset(); // in minutes behind UTC (e.g. UTC+7 is -420)
+
+    // In Hermes on Android release builds, intlTz often defaults to "UTC" or "Etc/UTC"
+    // even though the device is set to an Indonesian or local timezone.
+    if (intlTz && intlTz !== "UTC" && intlTz !== "Etc/UTC") {
+      return intlTz;
+    }
+
+    // If offset is actually 0 and timezone says UTC, it is legitimately UTC
+    if (offset === 0) {
+      return "UTC";
+    }
+
+    // Indonesian timezone mappings based on standard offsets:
+    // UTC+7 (WIB: Jakarta, Sumatra, Java, West/Central Kalimantan) -> -420 minutes
+    if (offset === -420) return "Asia/Jakarta";
+    // UTC+8 (WITA: Bali, NTB, NTT, South/East/North Kalimantan, Sulawesi) -> -480 minutes
+    if (offset === -480) return "Asia/Makassar";
+    // UTC+9 (WIT: Maluku, Papua) -> -540 minutes
+    if (offset === -540) return "Asia/Jayapura";
+
+    // General fallback for Indonesia default
+    return "Asia/Jakarta";
+  } catch {
+    return "Asia/Jakarta";
+  }
+}

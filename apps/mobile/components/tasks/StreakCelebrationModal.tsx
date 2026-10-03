@@ -34,17 +34,15 @@ export const StreakCelebrationModal: React.FC = () => {
   );
 
   const handleClose = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    try {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+    } catch {}
     closeCelebration();
   };
 
-  if (!streakInfo) {
-    return null;
-  }
-
   return (
     <Modal
-      isVisible={isVisible}
+      isVisible={isVisible && !!streakInfo}
       onBackdropPress={handleClose}
       onBackButtonPress={handleClose}
       onModalHide={() => {
@@ -64,6 +62,7 @@ export const StreakCelebrationModal: React.FC = () => {
       backdropTransitionOutTiming={1}
       useNativeDriver={true}
       useNativeDriverForBackdrop={true}
+      statusBarTranslucent={true}
       style={{ margin: 24, justifyContent: "center", alignItems: "center" }}
     >
       <View className="w-full max-w-sm bg-surface rounded-3xl p-6 border border-border items-center shadow-2xl">

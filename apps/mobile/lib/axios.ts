@@ -10,6 +10,7 @@ import axios, {
 import Constants from "expo-constants";
 import { Platform } from "react-native";
 import { Toast } from "toastify-react-native";
+import { getDeviceTimeZone } from "@/utils/dateHelpers";
 
 interface CustomAxiosRequestConfig extends InternalAxiosRequestConfig {
   _retry?: boolean;
@@ -85,12 +86,7 @@ api.interceptors.request.use(async (config) => {
   config.headers["x-app-version"] = Constants.expoConfig?.version || "1.0.0";
   config.headers["x-platform"] = Platform.OS;
 
-  try {
-    config.headers["x-timezone"] =
-      Intl.DateTimeFormat().resolvedOptions().timeZone || "Asia/Jakarta";
-  } catch (_e) {
-    config.headers["x-timezone"] = "Asia/Jakarta";
-  }
+  config.headers["x-timezone"] = getDeviceTimeZone();
   return config;
 });
 

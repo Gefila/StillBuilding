@@ -28,12 +28,21 @@ export const TaskCompletionSummaryModal: React.FC<
 > = ({ visible, data, onClose, onPickNextTask }) => {
   const pendingActionRef = useRef<(() => void) | null>(null);
 
-  if (!data) return null;
+  const currentData = data ?? {
+    taskTitle: "",
+    elapsedSeconds: 0,
+    remainingSeconds: 0,
+    mode: "work" as PomodoroMode,
+    sessionNum: 1,
+    streakIncreased: false,
+  };
 
-  const hasRemainingTime = data.remainingSeconds > 0;
+  const hasRemainingTime = currentData.remainingSeconds > 0;
 
   const handlePickNext = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium);
+    try {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Medium).catch(() => {});
+    } catch {}
     pendingActionRef.current = () => {
       onPickNextTask?.();
     };
@@ -41,14 +50,16 @@ export const TaskCompletionSummaryModal: React.FC<
   };
 
   const handleCloseOnly = () => {
-    Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light);
+    try {
+      Haptics.impactAsync(Haptics.ImpactFeedbackStyle.Light).catch(() => {});
+    } catch {}
     pendingActionRef.current = null;
     onClose();
   };
 
   return (
     <Modal
-      isVisible={visible}
+      isVisible={visible && !!data}
       onBackdropPress={handleCloseOnly}
       onBackButtonPress={handleCloseOnly}
       onModalHide={() => {
@@ -68,6 +79,7 @@ export const TaskCompletionSummaryModal: React.FC<
       backdropTransitionOutTiming={1}
       useNativeDriver={true}
       useNativeDriverForBackdrop={true}
+      statusBarTranslucent={true}
       style={{ margin: 20, justifyContent: "center", alignItems: "center" }}
     >
       <View className="w-full max-w-sm bg-surface rounded-3xl p-6 border border-border items-center shadow-2xl">
@@ -91,20 +103,20 @@ export const TaskCompletionSummaryModal: React.FC<
           className="text-lg font-bold text-foreground text-center"
           numberOfLines={2}
         >
-          {data.taskTitle}
+          {currentData.taskTitle}
         </Text>
 
-        {data.projectName && (
+        {currentData.projectName && (
           <View className="flex-row items-center mt-1 gap-1">
             <Ionicons name="folder-outline" size={12} color="#71717a" />
             <Text className="text-xs text-muted" numberOfLines={1}>
-              {data.projectName}
+              {currentData.projectName}
             </Text>
           </View>
         )}
 
         {/* Streak banner if increased */}
-        {data.streakIncreased && (
+        {currentData.streakIncreased && (
           <View className="flex-row items-center gap-1.5 bg-amber-500/10 border border-amber-500/25 px-3 py-1 rounded-xl mt-2.5">
             <Ionicons name="flame" size={13} color="#f59e0b" />
             <Text className="text-[11px] font-bold text-amber-700">
@@ -125,7 +137,7 @@ export const TaskCompletionSummaryModal: React.FC<
                 </Text>
               </View>
               <Text className="text-base font-extrabold text-foreground">
-                {formatSessionDuration(data.elapsedSeconds)}
+                {formatSessionDuration(currentData.elapsedSeconds)}
               </Text>
             </View>
 
@@ -139,7 +151,7 @@ export const TaskCompletionSummaryModal: React.FC<
               </View>
               <Text className="text-base font-extrabold text-foreground">
                 {hasRemainingTime
-                  ? formatSessionDuration(data.remainingSeconds)
+                  ? formatSessionDuration(currentData.remainingSeconds)
                   : "0d"}
               </Text>
             </View>
@@ -150,7 +162,7 @@ export const TaskCompletionSummaryModal: React.FC<
             <Text className="text-[11px] text-muted text-center leading-relaxed">
               {hasRemainingTime
                 ? `Masih tersisa ${formatSessionDuration(
-                    data.remainingSeconds,
+                    currentData.remainingSeconds,
                   )} dalam sesi ini. Lanjut tugas lain?`
                 : "Sesi Pomodoro ini tuntas bersamaan dengan tugasmu!"}
             </Text>

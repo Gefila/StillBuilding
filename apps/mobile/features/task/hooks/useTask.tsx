@@ -311,7 +311,11 @@ export const useUpdateTask = ({
 
       // 7. Check if streak increased and show celebration modal
       if (data?.streak_update?.streakIncreased) {
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        try {
+          Haptics.notificationAsync(
+            Haptics.NotificationFeedbackType.Success,
+          ).catch(() => {});
+        } catch {}
         useStreakCelebrationStore.getState().showCelebration({
           currentStreak: data.streak_update.currentStreak,
           longestStreak: data.streak_update.longestStreak,
@@ -387,7 +391,11 @@ export const useCreateTask = ({
 
       // Check if streak increased and show celebration modal
       if (data?.streak_update?.streakIncreased) {
-        Haptics.notificationAsync(Haptics.NotificationFeedbackType.Success);
+        try {
+          Haptics.notificationAsync(
+            Haptics.NotificationFeedbackType.Success,
+          ).catch(() => {});
+        } catch {}
         useStreakCelebrationStore.getState().showCelebration({
           currentStreak: data.streak_update.currentStreak,
           longestStreak: data.streak_update.longestStreak,
