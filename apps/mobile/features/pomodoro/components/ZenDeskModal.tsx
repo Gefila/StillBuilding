@@ -116,24 +116,12 @@ export default function ZenDeskModal({
     videoFit,
     isInitialized: isVibeInitialized,
     setDisplayMode,
-    setVideoFit,
     initializeVibePreferences,
     getActiveVideoId,
   } = useVibeModeStore();
 
   const [vibePickerVisible, setVibePickerVisible] = useState(false);
   const [isTimerMinimized, setIsTimerMinimized] = useState(false);
-
-  const handleToggleVideoFit = async () => {
-    Haptics.selectionAsync();
-    const nextFit =
-      videoFit === "balanced"
-        ? "cover"
-        : videoFit === "cover"
-          ? "contain"
-          : "balanced";
-    await setVideoFit(nextFit);
-  };
 
   useEffect(() => {
     if (visible && !isVibeInitialized) {
@@ -506,7 +494,34 @@ export default function ZenDeskModal({
 
           {/* Right: Mode Switcher, Vibe Controls, Keep-Awake Pill, Blocker Button & Close */}
           <View style={{ flexDirection: "row", alignItems: "center", gap: 8 }}>
-            {/* Mode Switcher: Zen vs Vibe */}
+            {/* Vibe Specific Controls: Video Preset Picker (Icon Only, 34x34) */}
+            {displayMode === "vibe" && (
+              <TouchableOpacity
+                onPress={() => {
+                  Haptics.selectionAsync();
+                  setVibePickerVisible(true);
+                }}
+                activeOpacity={0.8}
+                style={{
+                  width: 34,
+                  height: 34,
+                  borderRadius: 17,
+                  backgroundColor: ZEN_THEME.subtleBg,
+                  borderWidth: 1,
+                  borderColor: ZEN_THEME.cardBorder,
+                  alignItems: "center",
+                  justifyContent: "center",
+                }}
+              >
+                <Ionicons
+                  name="film-outline"
+                  size={15}
+                  color={ZEN_THEME.textPrimary}
+                />
+              </TouchableOpacity>
+            )}
+
+            {/* Mode Switcher: Zen vs Vibe (placed immediately to the left of Blocker) */}
             <View
               style={{
                 flexDirection: "row",
@@ -528,6 +543,9 @@ export default function ZenDeskModal({
                 onPress={() => handleSetDisplayMode("zen")}
                 activeOpacity={0.8}
                 style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: 4,
                   paddingHorizontal: 10,
                   paddingVertical: 5,
                   borderRadius: 999,
@@ -535,6 +553,11 @@ export default function ZenDeskModal({
                     displayMode === "zen" ? "#27272a" : "transparent",
                 }}
               >
+                <Ionicons
+                  name="leaf-outline"
+                  size={11}
+                  color={displayMode === "zen" ? "#10b981" : "#a1a1aa"}
+                />
                 <Text
                   style={{
                     fontSize: 11,
@@ -550,6 +573,9 @@ export default function ZenDeskModal({
                 onPress={() => handleSetDisplayMode("vibe")}
                 activeOpacity={0.8}
                 style={{
+                  flexDirection: "row",
+                  alignItems: "center",
+                  gap: 4,
                   paddingHorizontal: 10,
                   paddingVertical: 5,
                   borderRadius: 999,
@@ -562,9 +588,6 @@ export default function ZenDeskModal({
                     displayMode === "vibe"
                       ? "rgba(244, 63, 94, 0.4)"
                       : "transparent",
-                  flexDirection: "row",
-                  alignItems: "center",
-                  gap: 4,
                 }}
               >
                 <Ionicons
@@ -584,144 +607,7 @@ export default function ZenDeskModal({
               </TouchableOpacity>
             </View>
 
-            {/* Vibe Specific Controls: Video Preset Picker & Quick Format Toggle */}
-            {displayMode === "vibe" && (
-              <>
-                <TouchableOpacity
-                  onPress={() => {
-                    Haptics.selectionAsync();
-                    setVibePickerVisible(true);
-                  }}
-                  activeOpacity={0.8}
-                  style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    backgroundColor: "rgba(24, 24, 27, 0.75)",
-                    borderWidth: 1,
-                    borderColor: "rgba(63, 63, 70, 0.6)",
-                    paddingHorizontal: 9,
-                    paddingVertical: 6,
-                    borderRadius: 12,
-                    gap: 4,
-                  }}
-                >
-                  <Ionicons name="film-outline" size={13} color="#fafafa" />
-                  <Text
-                    style={{
-                      fontSize: 11,
-                      fontWeight: "600",
-                      color: "#fafafa",
-                    }}
-                  >
-                    Suasana
-                  </Text>
-                </TouchableOpacity>
-
-                <TouchableOpacity
-                  onPress={handleToggleVideoFit}
-                  activeOpacity={0.8}
-                  style={{
-                    flexDirection: "row",
-                    alignItems: "center",
-                    backgroundColor: "rgba(24, 24, 27, 0.75)",
-                    borderWidth: 1,
-                    borderColor: "rgba(63, 63, 70, 0.6)",
-                    paddingHorizontal: 9,
-                    paddingVertical: 6,
-                    borderRadius: 12,
-                    gap: 4,
-                  }}
-                >
-                  <Ionicons
-                    name={
-                      videoFit === "cover"
-                        ? "expand"
-                        : videoFit === "balanced"
-                          ? "scan"
-                          : "contract"
-                    }
-                    size={12}
-                    color="#10b981"
-                  />
-                  <Text
-                    style={{
-                      fontSize: 11,
-                      fontWeight: "600",
-                      color: "#fafafa",
-                    }}
-                  >
-                    {videoFit === "cover"
-                      ? "Penuh"
-                      : videoFit === "balanced"
-                        ? "Seimbang"
-                        : "Utuh"}
-                  </Text>
-                </TouchableOpacity>
-              </>
-            )}
-            <View
-              style={{
-                flexDirection: "row",
-                alignItems: "center",
-                backgroundColor: ZEN_THEME.subtleBg,
-                paddingHorizontal: 10,
-                paddingVertical: 6,
-                borderRadius: 999,
-                borderWidth: 1,
-                borderColor: ZEN_THEME.cardBorder,
-              }}
-            >
-              <View
-                style={{
-                  width: 6,
-                  height: 6,
-                  borderRadius: 3,
-                  backgroundColor: "#10b981",
-                  marginRight: 6,
-                }}
-              />
-              <Text
-                style={{
-                  fontSize: 10,
-                  fontWeight: "600",
-                  color: ZEN_THEME.textSecondary,
-                }}
-              >
-                Keep Awake
-              </Text>
-            </View>
-
-            {/* Quick Mark Task Complete Button in Header */}
-            {activeTask && (
-              <TouchableOpacity
-                onPress={handleConfirmMarkTaskComplete}
-                activeOpacity={0.8}
-                disabled={updateTaskMutation.isPending}
-                style={{
-                  flexDirection: "row",
-                  alignItems: "center",
-                  backgroundColor: "rgba(16, 185, 129, 0.15)",
-                  borderWidth: 1,
-                  borderColor: "rgba(16, 185, 129, 0.35)",
-                  paddingHorizontal: 12,
-                  paddingVertical: 6,
-                  borderRadius: 12,
-                }}
-              >
-                <Ionicons
-                  name="checkmark-circle-outline"
-                  size={14}
-                  color="#10b981"
-                  style={{ marginRight: 4 }}
-                />
-                <Text
-                  style={{ fontSize: 12, fontWeight: "700", color: "#10b981" }}
-                >
-                  Selesai
-                </Text>
-              </TouchableOpacity>
-            )}
-
+            {/* Compact Blocker Button (Icon Only) */}
             <TouchableOpacity
               onPress={() => {
                 Haptics.selectionAsync();
@@ -729,29 +615,20 @@ export default function ZenDeskModal({
               }}
               activeOpacity={0.8}
               style={{
-                flexDirection: "row",
-                alignItems: "center",
+                width: 34,
+                height: 34,
+                borderRadius: 17,
                 backgroundColor: "rgba(220, 38, 38, 0.15)",
                 borderWidth: 1,
                 borderColor: "rgba(220, 38, 38, 0.35)",
-                paddingHorizontal: 12,
-                paddingVertical: 6,
-                borderRadius: 12,
+                alignItems: "center",
+                justifyContent: "center",
               }}
             >
-              <Ionicons
-                name="warning-outline"
-                size={13}
-                color="#f87171"
-                style={{ marginRight: 4 }}
-              />
-              <Text
-                style={{ fontSize: 12, fontWeight: "600", color: "#f87171" }}
-              >
-                Blocker
-              </Text>
+              <Ionicons name="warning-outline" size={15} color="#f87171" />
             </TouchableOpacity>
 
+            {/* Close Button */}
             <TouchableOpacity
               onPress={() => {
                 Haptics.selectionAsync();
@@ -767,7 +644,6 @@ export default function ZenDeskModal({
                 borderColor: ZEN_THEME.cardBorder,
                 alignItems: "center",
                 justifyContent: "center",
-                marginLeft: 4,
               }}
             >
               <Ionicons
