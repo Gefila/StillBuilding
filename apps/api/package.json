@@ -16,6 +16,8 @@
 	"author": "",
 	"license": "ISC",
 	"dependencies": {
+		"@modelcontextprotocol/node": "^2.1.1",
+		"@modelcontextprotocol/server": "^2.3.1",
 		"@stillbuilding/types": "workspace:*",
 		"@supabase/supabase-js": "^2.105.3",
 		"cors": "^2.8.6",

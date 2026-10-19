@@ -14,6 +14,7 @@ import type {
 export const authKeys = {
   all: ["auth"] as const,
   me: () => [...authKeys.all, "me"] as const,
+  apiToken: () => [...authKeys.all, "api-token"] as const,
 };
 
 export const useLogin = () => {
@@ -175,3 +176,28 @@ export const useChangePassword = ({
     },
   });
 };
+
+// Personal Access Token untuk AI agent (MCP)
+export const useApiTokenStatus = () =>
+  useQuery({
+    queryKey: authKeys.apiToken(),
+    queryFn: () => authService.getApiToken(),
+  });
+
+export const useGenerateApiToken = () =>
+  useMutation({
+    mutationFn: () => authService.generateApiToken(),
+    onSuccess: () =>
+      queryClient.invalidateQueries({ queryKey: authKeys.apiToken() }),
+  });
+
+export const useRevokeApiToken = () =>
+  useMutation({
+    mutationFn: () => authService.revokeApiToken(),
+    onSuccess: () => {
+      Toast.info(
+        "Token dicabut. AI agent tidak bisa mengakses akun Anda lagi.",
+      );
+      queryClient.invalidateQueries({ queryKey: authKeys.apiToken() });
+    },
+  });

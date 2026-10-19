@@ -80,6 +80,12 @@ export default function Profile() {
       icon: "timer-outline",
       onPress: () => router.navigate("/profile/pomodoro" as any),
     },
+    {
+      id: "8",
+      title: "Integrasi AI (MCP)",
+      icon: "sparkles-outline",
+      onPress: () => router.navigate("/profile/ai-integration" as any),
+    },
     { id: "5", title: "Bahasa", icon: "language-outline" },
     {
       id: "6",

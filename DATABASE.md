@@ -167,6 +167,19 @@ Mencatat kendala, hambatan, atau distraksi yang dialami selama mengerjakan proye
 
 ---
 
+### 2.6. `public.api_tokens`
+
+Personal Access Token (satu per user) untuk AI agent yang mengakses endpoint `/mcp`. Token asli tidak disimpan, hanya hash SHA-256.
+
+| Kolom          | Tipe Data     | Nullable | Default | Keterangan                                            |
+| :------------- | :------------ | :------: | :------ | :---------------------------------------------------- |
+| `user_id`      | `uuid`        |  **NO**  | -       | **Primary Key**, Foreign Key ke `public.profiles(id)` |
+| `token_hash`   | `text`        |  **NO**  | -       | SHA-256 dari token (`sb_pat_...`), unik               |
+| `created_at`   | `timestamptz` |  **NO**  | `now()` | Waktu token dibuat                                    |
+| `last_used_at` | `timestamptz` |   YES    | `NULL`  | Waktu terakhir token dipakai AI agent                 |
+
+---
+
 ## 3. Ringkasan Relasi & Foreign Key
 
 | Tabel Sumber               | Kolom FK     | Tabel Referensi   | Kolom Referensi | Hubungan  | On Delete Action |
@@ -176,6 +189,7 @@ Mencatat kendala, hambatan, atau distraksi yang dialami selama mengerjakan proye
 | `public.tasks`             | `project_id` | `public.projects` | `id`            | Many-to-1 | `CASCADE`        |
 | `public.pomodoro_sessions` | `task_id`    | `public.tasks`    | `id`            | Many-to-1 | `CASCADE`        |
 | `public.blocker_logs`      | `project_id` | `public.projects` | `id`            | Many-to-1 | `CASCADE`        |
+| `public.api_tokens`        | `user_id`    | `public.profiles` | `id`            | 1-to-1    | `CASCADE`        |
 
 ---
 
@@ -253,4 +267,13 @@ CREATE TABLE public.blocker_logs (
   CONSTRAINT blocker_logs_pkey PRIMARY KEY (id),
   CONSTRAINT blocker_logs_project_id_fkey FOREIGN KEY (project_id) REFERENCES public.projects(id) ON DELETE CASCADE
 );
+
+-- API Tokens (Personal Access Token untuk AI agent / MCP)
+CREATE TABLE public.api_tokens (
+  user_id uuid PRIMARY KEY REFERENCES public.profiles(id) ON DELETE CASCADE,
+  token_hash text NOT NULL UNIQUE,
+  created_at timestamptz NOT NULL DEFAULT now(),
+  last_used_at timestamptz
+);
+ALTER TABLE public.api_tokens ENABLE ROW LEVEL SECURITY; -- hanya diakses via service key
 ```

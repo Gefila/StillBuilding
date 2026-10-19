@@ -1,5 +1,6 @@
 import type { Request, Response } from "express";
 import { catchAsync } from "../../utils/catchAsync";
+import { mcpTokenService } from "../Mcp/mcp.service";
 import { authService } from "./auth.service";
 import type { LoginDTO, RegisterDTO } from "./auth.types";
 
@@ -61,5 +62,18 @@ export const authController = {
       status: "success",
       message: result.message,
     });
+  }),
+  // Personal Access Token untuk AI agent (MCP)
+  getApiToken: catchAsync(async (req: Request, res: Response) => {
+    const data = await mcpTokenService.status(req.user?.id as string);
+    res.json({ status: "success", data });
+  }),
+  generateApiToken: catchAsync(async (req: Request, res: Response) => {
+    const data = await mcpTokenService.generate(req.user?.id as string);
+    res.status(201).json({ status: "success", data });
+  }),
+  revokeApiToken: catchAsync(async (req: Request, res: Response) => {
+    await mcpTokenService.revoke(req.user?.id as string);
+    res.json({ status: "success", message: "API token dicabut" });
   }),
 };

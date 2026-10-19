@@ -83,4 +83,31 @@ export const authService = {
     const response = await api.put<ApiResponse>("auth/password", payload);
     return response.data;
   },
+
+  // Personal Access Token untuk AI agent (MCP)
+  getApiToken: async (): Promise<ApiTokenStatus> => {
+    const response =
+      await api.get<ApiResponse<ApiTokenStatus>>("auth/api-token");
+    return response.data.data ?? { active: false };
+  },
+
+  generateApiToken: async (): Promise<string> => {
+    const response =
+      await api.post<ApiResponse<{ token: string }>>("auth/api-token");
+    if (!response.data.data) {
+      throw new Error("Gagal membuat token");
+    }
+    return response.data.data.token;
+  },
+
+  revokeApiToken: async (): Promise<ApiResponse> => {
+    const response = await api.delete<ApiResponse>("auth/api-token");
+    return response.data;
+  },
 };
+
+export interface ApiTokenStatus {
+  active: boolean;
+  created_at?: string;
+  last_used_at?: string | null;
+}

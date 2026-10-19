@@ -7,6 +7,7 @@ import { errorHandler } from "./middlewares/error.middleware";
 import { apiLimiter } from "./middlewares/rateLimiter.middleware";
 import authRoutes from "./modules/Auth/auth.routes";
 import blockerLogRoutes from "./modules/Blocker-logs/blockerLog.routes";
+import mcpRoutes from "./modules/Mcp/mcp.routes";
 import pomodoroSessionRoutes from "./modules/Pomodoro-sessions/pomodoro_sessions.routes";
 import projectRoutes from "./modules/Projects/project.routes";
 import statsRoutes from "./modules/Stats/stats.routes";
@@ -45,6 +46,7 @@ app.use("/tasks", authMiddleware, taskRoutes);
 app.use("/pomodoro-sessions", authMiddleware, pomodoroSessionRoutes);
 app.use("/blocker-logs", authMiddleware, blockerLogRoutes);
 app.use("/stats", authMiddleware, statsRoutes);
+app.use("/mcp", mcpRoutes); // auth via Personal Access Token di dalam route
 
 // 404 catch-all handler
 app.use((req, _res, next) => {

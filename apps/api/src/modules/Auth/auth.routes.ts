@@ -43,4 +43,13 @@ router.put(
 );
 router.post("/logout", authMiddleware, authController.logout);
 
+router.get("/api-token", authMiddleware, authController.getApiToken);
+router.post(
+  "/api-token",
+  authMiddleware,
+  authLimiter,
+  authController.generateApiToken,
+);
+router.delete("/api-token", authMiddleware, authController.revokeApiToken);
+
 export default router;

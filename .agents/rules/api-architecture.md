@@ -14,6 +14,7 @@ Modules: `Auth`, `Projects`, `Tasks`, `Pomodoro-sessions`, `Blocker-logs`.
 
 - All protected routes **must** use `authMiddleware` (`src/middlewares/auth.middleware.ts`) to verify the Supabase JWT.
 - JWT is sent via `Authorization: Bearer <token>`.
+- Exception: `/mcp` (module `Mcp`) authenticates with a hashed Personal Access Token (`sb_pat_...`) instead of JWT. PATs are only valid there. MCP tools must call existing services with the token owner's `userId` (the service key bypasses RLS).
 
 ## Error Handling
 

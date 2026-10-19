@@ -14,6 +14,7 @@ export default function ProfileLayout() {
       <Stack.Screen name="support" options={{ headerShown: false }} />
       <Stack.Screen name="about" options={{ headerShown: false }} />
       <Stack.Screen name="pomodoro" options={{ headerShown: false }} />
+      <Stack.Screen name="ai-integration" options={{ headerShown: false }} />
     </Stack>
   );
 }
