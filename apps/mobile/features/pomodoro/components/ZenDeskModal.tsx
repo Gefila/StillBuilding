@@ -39,6 +39,8 @@ interface ZenDeskModalProps {
   onStart: (mode?: PomodoroMode) => Promise<void>;
   onPauseResume: () => Promise<void>;
   onRequestOpenTaskPicker?: () => void;
+  completedMode?: PomodoroMode | null;
+  onDismissCompletedMode?: () => void;
 }
 
 const ZEN_THEME = {
@@ -84,6 +86,8 @@ export default function ZenDeskModal({
   onStart,
   onPauseResume,
   onRequestOpenTaskPicker,
+  completedMode,
+  onDismissCompletedMode,
 }: ZenDeskModalProps) {
   const insets = useSafeAreaInsets();
   const updateTaskMutation = useUpdateTask();
@@ -101,14 +105,12 @@ export default function ZenDeskModal({
     startedAt,
     setActiveTask,
     advanceNextMode,
-    stopTimer,
     pauseTimer,
     resumeTimer,
     taskInitialRemaining,
   } = usePomodoroStore();
 
-  const [transitionFinishedMode, setTransitionFinishedMode] =
-    useState<PomodoroMode | null>(null);
+  const transitionFinishedMode = completedMode ?? null;
 
   const {
     displayMode,
@@ -127,7 +129,7 @@ export default function ZenDeskModal({
     if (visible && !isVibeInitialized) {
       initializeVibePreferences();
     }
-  }, [visible, isVibeInitialized]);
+  }, [visible, isVibeInitialized, initializeVibePreferences]);
 
   // Audio coordination: if Vibe Mode is active, pause ambient audio service so YouTube audio plays clean
   useEffect(() => {
@@ -195,7 +197,6 @@ export default function ZenDeskModal({
       }
 
       deactivateKeepAwake("zen-desk-mode");
-      setTransitionFinishedMode(null);
     }
 
     return () => {
@@ -215,19 +216,12 @@ export default function ZenDeskModal({
     };
   }, [visible]);
 
-  // Catch when timer finishes while in Zen Mode
-  useEffect(() => {
-    if (visible && isActive && time === 0) {
-      setTransitionFinishedMode(mode);
-    }
-  }, [visible, isActive, time, mode]);
-
   const activeTheme = ZEN_THEME.modes[mode] || ZEN_THEME.modes.pomodoro;
   const progressPercent =
     total > 0 ? Math.min(100, Math.max(0, ((total - time) / total) * 100)) : 0;
 
   const handleStartNext = async (targetMode: PomodoroMode) => {
-    setTransitionFinishedMode(null);
+    onDismissCompletedMode?.();
     await onStart(targetMode);
   };
 
@@ -275,7 +269,7 @@ export default function ZenDeskModal({
       {
         onSuccess: () => {
           setActiveTask(null);
-          setTransitionFinishedMode(null);
+          onDismissCompletedMode?.();
           onRequestOpenTaskPicker?.();
         },
       },
@@ -1414,7 +1408,7 @@ export default function ZenDeskModal({
               </View>
 
               <TouchableOpacity
-                onPress={() => setTransitionFinishedMode(null)}
+                onPress={() => onDismissCompletedMode?.()}
                 style={{ marginTop: 12, paddingVertical: 6 }}
               >
                 <Text

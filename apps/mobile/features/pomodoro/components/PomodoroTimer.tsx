@@ -12,7 +12,6 @@ import Svg, { Circle } from "react-native-svg";
 import { Ionicons } from "@expo/vector-icons";
 import * as Haptics from "expo-haptics";
 import {
-  COLORS,
   CYCLE,
   DURATIONS,
   MODE_LABELS,
@@ -27,7 +26,6 @@ import AmbientSoundModal from "./AmbientSoundModal";
 import ZenDeskModal from "./ZenDeskModal";
 import { ambientAudioService } from "../services/ambientAudioService";
 import { pomodoroNotificationService } from "../services/pomodoroNotificationService";
-import { useAmbientAudioStore } from "../store/useAmbientAudioStore";
 import { usePomodoroPreferencesStore } from "../store/usePomodoroPreferencesStore";
 import { activateKeepAwakeAsync, deactivateKeepAwake } from "expo-keep-awake";
 
@@ -76,9 +74,11 @@ export default function PomodoroTimer({
   const [completionModalVisible, setCompletionModalVisible] = useState(false);
   const [lastCompletedMode, setLastCompletedMode] =
     useState<PomodoroMode>("pomodoro");
+  const [zenCompletedMode, setZenCompletedMode] = useState<PomodoroMode | null>(
+    null,
+  );
   const pendingActionOnModalHideRef = useRef<(() => void) | null>(null);
 
-  const { soundId, isPlaying } = useAmbientAudioStore();
   const initializePreferences = usePomodoroPreferencesStore(
     (state) => state.initializePreferences,
   );
@@ -113,6 +113,7 @@ export default function PomodoroTimer({
     startedAt,
     advanceNextMode,
     createPomodoroMutation,
+    zenModalVisible,
   });
 
   useEffect(() => {
@@ -121,6 +122,7 @@ export default function PomodoroTimer({
       startedAt,
       advanceNextMode,
       createPomodoroMutation,
+      zenModalVisible,
     };
   });
 
@@ -142,11 +144,16 @@ export default function PomodoroTimer({
         activeTask: task,
         startedAt: start,
         createPomodoroMutation: mutation,
+        zenModalVisible: isZenActive,
       } = latestRef.current;
 
       const result = advance();
       setLastCompletedMode(result.finishedMode);
-      setCompletionModalVisible(true);
+      if (isZenActive) {
+        setZenCompletedMode(result.finishedMode);
+      } else {
+        setCompletionModalVisible(true);
+      }
 
       // Save to database if a task is attached (for pomodoro, shortBreak, and longBreak)
       if (task?.id) {
@@ -720,11 +727,19 @@ export default function PomodoroTimer({
       {/* Zen Desk Mode Fullscreen Landscape Overlay */}
       <ZenDeskModal
         visible={zenModalVisible}
-        onClose={() => setZenModalVisible(false)}
+        onClose={() => {
+          setZenModalVisible(false);
+          if (zenCompletedMode) {
+            setCompletionModalVisible(true);
+            setZenCompletedMode(null);
+          }
+        }}
         onOpenBlocker={handleOpenBlocker}
         onStart={handleStart}
         onPauseResume={handlePauseResume}
         onRequestOpenTaskPicker={onRequestOpenTaskPicker}
+        completedMode={zenCompletedMode}
+        onDismissCompletedMode={() => setZenCompletedMode(null)}
       />
     </View>
   );
