@@ -4,13 +4,18 @@ import { Ionicons } from "@expo/vector-icons";
 import * as WebBrowser from "expo-web-browser";
 import * as Haptics from "expo-haptics";
 import { Toast } from "@/components/Toast";
+import Constants from "expo-constants";
 import { LegalModal } from "./LegalModal";
+import { ChangelogModal } from "./ChangelogModal";
 
 export function LegalLinksCard() {
   const [isCheckingUpdate, setIsCheckingUpdate] = useState(false);
+  const [showChangelogModal, setShowChangelogModal] = useState(false);
   const [legalModalType, setLegalModalType] = useState<
     "privacy" | "terms" | null
   >(null);
+
+  const currentVersion = Constants.expoConfig?.version || "1.3.0";
 
   const handleCheckUpdate = async () => {
     if (isCheckingUpdate) return;
@@ -26,7 +31,7 @@ export function LegalLinksCard() {
         // Ignored if unsupported
       }
       Toast.success(
-        "StillBuilding Anda sudah merupakan versi terbaru (v1.0.0).",
+        `StillBuilding Anda sudah merupakan versi terbaru (v${currentVersion}).`,
       );
     } finally {
       setIsCheckingUpdate(false);
@@ -75,6 +80,30 @@ export function LegalLinksCard() {
           ) : (
             <Ionicons name="chevron-forward" size={16} color="#a1a1aa" />
           )}
+        </TouchableOpacity>
+
+        <View className="h-px bg-divider ml-16 mr-4" />
+
+        {/* Release Notes / Changelog */}
+        <TouchableOpacity
+          activeOpacity={0.7}
+          onPress={() => setShowChangelogModal(true)}
+          className="p-4 flex-row items-center justify-between"
+        >
+          <View className="flex-row items-center flex-1 mr-3">
+            <View className="w-9 h-9 rounded-xl bg-surface-subtle border border-border items-center justify-center mr-3">
+              <Ionicons name="sparkles-outline" size={18} color="#18181b" />
+            </View>
+            <View className="flex-1">
+              <Text className="text-sm font-semibold text-foreground">
+                Catatan Rilis (Changelog)
+              </Text>
+              <Text className="text-xs text-muted mt-0.5">
+                Lihat riwayat fitur baru dan perbaikan versi
+              </Text>
+            </View>
+          </View>
+          <Ionicons name="chevron-forward" size={16} color="#a1a1aa" />
         </TouchableOpacity>
 
         <View className="h-px bg-divider ml-16 mr-4" />
@@ -163,6 +192,12 @@ export function LegalLinksCard() {
         visible={legalModalType !== null}
         onClose={() => setLegalModalType(null)}
         type={legalModalType}
+      />
+
+      {/* Changelog Modal */}
+      <ChangelogModal
+        visible={showChangelogModal}
+        onClose={() => setShowChangelogModal(false)}
       />
     </View>
   );
